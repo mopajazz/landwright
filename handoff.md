@@ -1,9 +1,9 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 17, 2026 (America/New_York)  
-**Implementation baseline:** `dee5ee86b1dd5fe69d9c7915e10e969aa2b79fd8` (v2.1 UI review; previous baseline `1010122`)  
-**Displayed release:** `v2.1`  
-**Browser asset/module cache revision:** `2.1.0`  
+**Implementation baseline:** `4fd8be5d118be093d3d6fd725d532904825db741` (v2.1.1; previous baselines `dee5ee8` v2.1, `1010122` v2.0)  
+**Displayed release:** `v2.1.1`  
+**Browser asset/module cache revision:** `2.1.1`  
 **Project schema written by the application:** `4`
 
 This document describes the implemented application at the baseline above. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
@@ -262,6 +262,7 @@ Views: Terrain, Heightmap, and Biomes. Additional toggles: grid, contours, Water
 - Selected tool: filled `--selected` background plus an inset accent ring, semibold label, and a 4px edge marker.
 - Layer rows use inline SVG eye (visible/hidden) and padlock (locked/unlocked) icons in 32×32 targets. They replaced the ◉/○ and ▣/◇ glyphs. Undo/redo and zoom buttons have accessible names and at least 32px targets.
 - New world shape cards use a 3×2 grid.
+- No multi-world wording (v2.1.1). Each project is a single world, so the nav has no breadcrumb. The canvas chip reads **MAP** plus dimensions, and the World overview subtitle is "Custom terrain". Do not reintroduce "Overworld" or other dimension/world-hierarchy labels unless the product gains multiple worlds per project. The `.breadcrumb` rules left in `style.css`/`theme.css` are now unused (see item 11).
 
 ## 5. Iconography and accessibility specification
 
@@ -540,7 +541,7 @@ Before release:
 - Inspect `git status` and preserve unrelated user edits.
 - Run appropriate tests and syntax/diff checks.
 - Review renderer/picking and project migration when changing terrain data.
-- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.1.0`. Do not update only the entry script or only CSS.
+- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.1.1`. Do not update only the entry script or only CSS.
 - Update displayed footer version when appropriate; displayed release and cache-patch revision may differ intentionally.
 - Check documentation and shortcut help against implemented handlers.
 
@@ -570,7 +571,8 @@ For rollback, inspect the relevant history, revert the faulty commit(s), rerun c
 | `9c6697e` | Narrow expanded sidebar stacking |
 | `dd01447` | Path/River implementation and local water |
 | `1010122` | Focused route settings and route cursor cleanup |
-| `dee5ee8` | v2.1 UI review: contextual toolbox, opacity scope fix, Download/save badge, toggles, layer icons; current code baseline |
+| `dee5ee8` | v2.1 UI review: contextual toolbox, opacity scope fix, Download/save badge, toggles, layer icons |
+| `4fd8be5` | v2.1.1: removed Overworld breadcrumb and multi-world wording; current code baseline |
 
 ## 10. Known limitations and follow-up candidates
 
@@ -586,11 +588,10 @@ These are implementation facts or review targets, not promises of completed work
 8. **Browser-local persistence.** No server backups, collaboration, multi-project library, accounts, or cloud sync. Storage quota is finite; project downloads remain important.
 9. **No Minecraft output.** No desktop WorldPainter `.world` import, region files, schematic export, or Minecraft biome metadata. Biomes is a visual map view.
 10. **No WorldBox simulation.** No civilizations, agents, ecosystems, or time simulation.
-11. **Old style selectors remain.** Base/theme CSS contains obsolete legacy tool selectors and historical overrides. Clean them deliberately if refactoring, with narrow/collapsed visual verification.
+11. **Old style selectors remain.** Base/theme CSS contains obsolete legacy tool selectors, the now-unused `.breadcrumb`/`.smallgreen` rules, and historical overrides. Clean them deliberately if refactoring, with narrow/collapsed visual verification.
 12. **Documentation can drift.** Historical development notes and test names may refer to earlier schemas/tools. Use current handlers/validators and this baseline specification rather than reintroducing removed functionality.
 
 13. **Remaining UI review items (not done in v2.1).**
-    - The "WORLD / Overworld" breadcrumb and the "Overworld" canvas chip imply multiple worlds that don't exist.
     - The world dimensions appear in four places.
     - The right panel's "Made for world builders" filler remains.
     - The shortcut letters Land=C (reads as Coastline) and Smooth=Q are hard to recall.
@@ -653,5 +654,6 @@ A critical review of the live app compared the UI against this handoff. The inte
 | Layer lock shown as ◇; layer/water toggles 25×26 and 31×19; undo/redo unlabeled. | SVG eye/lock icons, 32px targets, aria-labels. |
 | Route preview ribbon faint and not the result colour. | Material/river-coloured outlined ribbon. |
 | New-world cards in a 5+1 grid. | 3×2 grid. |
+| "WORLD / Overworld" breadcrumb, OVERWORLD chip, and "Custom terrain · Overworld" implied multiple worlds per project. | Removed in v2.1.1 at the user's request. Chip reads MAP. |
 
 Verified by the full test suite and by screenshots in headless Chromium (Canvas fallback) at 1440×900 in dark and light themes, at 1024px, and at 390px. Real-GPU and touch-device checks are still outstanding (§9 smoke list items 10–12).
