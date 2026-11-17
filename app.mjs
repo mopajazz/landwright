@@ -1,11 +1,14 @@
-import{generate,stroke}from'./terrain.mjs?v=1.3.2';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=1.3.2';
-import{drawLandmark,createLandmarkAtlas}from'./landmarks.mjs?v=1.3.2';
-import{MATERIALS,blendPaint,brushWeight,coastStroke,noise}from'./brushes.mjs?v=1.3.2';
-import{makeShape,validShape,drawShape,drawProjectedShape}from'./shapes.mjs?v=1.3.2';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=1.3.2';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=1.3.2';
-const $=id=>document.getElementById(id),N=256,map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),stampType='tree',selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],drawingType='freehand',draft=null,drawStart=null,brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0;
+import{generate,stroke}from'./terrain.mjs?v=1.4.0';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=1.4.0';
+import{drawLandmark,createLandmarkAtlas}from'./landmarks.mjs?v=1.4.0';
+import{MATERIALS,blendPaint,brushWeight,coastStroke,noise}from'./brushes.mjs?v=1.4.0';
+import{makeShape,validShape,drawShape,drawProjectedShape}from'./shapes.mjs?v=1.4.0';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=1.4.0';
+import{toolIcon}from'./icons.mjs?v=1.4.0';
+import{touchesShape}from'./eraser.mjs?v=1.4.0';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=1.4.0';
+const $=id=>document.getElementById(id),N=256,map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),stampType='tree',selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],drawingType='freehand',draft=null,drawStart=null,brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface';
+document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',erase:'Erase from a layer (E)',stamp:'Place details (T)',draw:'Draw paths and shapes (D)',pan:'Pan the map (H)'}[button.dataset.tool];});
 const materials=MATERIALS;
 const glCanvas=$('terrain-gl'),combined=document.createElement('canvas'),composite=combined.getContext('2d');combined.width=combined.height=1024;
 const landmarkAtlas=createLandmarkAtlas();
@@ -65,8 +68,8 @@ function restoreHistory(from,to){if(draft){cancelStroke();return;}cancelStroke()
 function pointer(e){let canvas=workspaceMode==='3d'?mini:map,b=canvas.getBoundingClientRect(),sx=e.clientX-b.left,sy=e.clientY-b.top;
  if(workspaceMode==='3d'){let hit=pickTerrain(sx,sy,mini.clientWidth,mini.clientHeight,camera,heights,sea,water);return hit?{...hit,sx,sy,hit:true}:{x:NaN,y:NaN,sx,sy,hit:false};}
  let t=transform();return{x:(sx-t.x)/t.scale,y:(sy-t.y)/t.scale,sx,sy,hit:true};}
-function activeLayer(){return layers[tool==='draw'?'shapes':tool==='stamp'?'landmarks':tool==='paint'?'surface':'elevation'];}
-function opacity(){return +$('opacity').value/100;}
+function activeLayer(){return layers[tool==='erase'?eraseTarget:tool==='draw'?'shapes':tool==='stamp'?'landmarks':tool==='paint'?'surface':'elevation'];}
+function opacity(){return tool==='erase'&&eraseTarget!=='surface'?1:+$('opacity').value/100;}
 function placeMark(p,type,scatter=false){
  let alpha=opacity();if(!alpha||p.x<0||p.y<0||p.x>=N||p.y>=N||marks.length>=3000)return;
  let size=Math.max(3,Math.min(28,+$('size').value*(scatter?.12:.28)));
@@ -77,6 +80,8 @@ function placeMark(p,type,scatter=false){
 function apply(p,e){
  if(!Number.isFinite(p.x)||!Number.isFinite(p.y))return;let layer=activeLayer();if(layer.locked||!layer.visible||!opacity())return;
  let r=+$('size').value/2,alpha=opacity();
+ if(tool==='erase'&&eraseTarget==='landmarks'){marks=marks.filter(m=>Math.hypot(m.x-p.x,m.y-p.y)>r+m.size*.6);return;}
+ if(tool==='erase'&&eraseTarget==='shapes'){drawings=drawings.filter(s=>!touchesShape(s,p.x,p.y,r));return;}
  if(tool==='stamp'){
   if(e.shiftKey){marks=marks.filter(m=>Math.hypot(m.x-p.x,m.y-p.y)>r);return;}
   if(brushPreset==='forest'){
@@ -89,11 +94,11 @@ function apply(p,e){
   return;
  }
  if(tool==='land'){coastStroke(heights,N,p.x,p.y,r,sea,alpha,e.shiftKey);return;}
- if(tool==='paint'){
+ if(tool==='paint'||(tool==='erase'&&eraseTarget==='surface')){
   for(let y=Math.max(0,Math.floor(p.y-r));y<Math.min(N,p.y+r);y++)for(let x=Math.max(0,Math.floor(p.x-r));x<Math.min(N,p.x+r);x++){
    let weight=brushWeight(x,y,p.x,p.y,r,brushPreset)*alpha;if(!weight)continue;let i=y*N+x;
    if(paintStroke){if(weight<=paintStroke.coverage[i])continue;paintStroke.coverage[i]=weight;paintAlpha[i]=paintStroke.alpha[i];for(let k=0;k<3;k++)paintColors[i*3+k]=paintStroke.colors[i*3+k];}
-   blendPaint(paintColors,paintAlpha,i,materials[material-1][2],weight,e.shiftKey);paint[i]=paintAlpha[i]<.001?0:(e.shiftKey?paint[i]:material);
+   let erasing=tool==='erase'||e.shiftKey;blendPaint(paintColors,paintAlpha,i,materials[material-1][2],weight,erasing);paint[i]=paintAlpha[i]<.001?0:(erasing?paint[i]:material);
   }
   return;
  }
@@ -116,7 +121,7 @@ map.onpointerdown=e=>{
   if(last.x<0||last.y<0||last.x>=N||last.y>=N||!opacity()){down=false;return;}
   drawStart={...last};draft=makeShape(drawingType,last,last,shapeStyle(),false,N);return;
  }
- if(opacity()){snapshot();if(tool==='paint')paintStroke={colors:paintColors.slice(),alpha:paintAlpha.slice(),coverage:new Float32Array(N*N)};apply(last,e);refresh();}
+ if(opacity()){snapshot();if(tool==='paint'||(tool==='erase'&&eraseTarget==='surface'))paintStroke={colors:paintColors.slice(),alpha:paintAlpha.slice(),coverage:new Float32Array(N*N)};apply(last,e);refresh();}
 };
 map.onpointermove=e=>{
  let p=pointer(e),t=transform();brushPosition=p;
@@ -142,11 +147,11 @@ map.onpointerup=end;map.onpointercancel=()=>{if(!draft&&down)persist();cancelStr
 function changeZoom(z){zoom=Math.max(.4,Math.min(4,z));draw()}map.addEventListener('wheel',e=>{e.preventDefault();if(e.shiftKey){adjustBrush(brushDelta(e));return;}changeZoom(zoom*(e.deltaY>0?.9:1.1))},{passive:false});$('plus').onclick=()=>changeZoom(zoom*1.2);$('minus').onclick=()=>changeZoom(zoom/1.2);$('fit').onclick=()=>{zoom=1;pan={x:0,y:0};draw()};
 function selectTool(t){
  if(down)end();orbitPointer=null;orbitMode=false;$('orbit-toggle').setAttribute('aria-pressed','false');$('orbit-toggle').textContent='Orbit';tool=t;if((brushPreset==='forest'&&t!=='stamp')||(brushPreset==='coast'&&t!=='land')||(brushPreset==='grain'&&t!=='paint'))brushPreset='soft';if(t==='land')brushPreset='coast';updateBrushUI();
- $('brush-controls').hidden=t==='pan';$('size-label').hidden=t==='draw';$('size-shortcuts').hidden=t==='draw';$('strength-label').hidden=!['raise','lower','smooth','flatten'].includes(t);$('target-label').hidden=t!=='flatten';
- $('stamp-settings').hidden=t!=='stamp';$('drawing-settings').hidden=t!=='draw';$('brush-settings').hidden=t==='draw'||t==='pan';
- $('palette').closest('.section').hidden=['stamp','draw','pan'].includes(t);
+ $('erase-settings').hidden=t!=='erase';$('opacity-label').hidden=t==='erase'&&eraseTarget!=='surface';$('brush-controls').hidden=t==='pan';$('size-label').hidden=t==='draw';$('size-shortcuts').hidden=t==='draw';$('strength-label').hidden=!['raise','lower','smooth','flatten'].includes(t);$('target-label').hidden=t!=='flatten';
+ $('stamp-settings').hidden=t!=='stamp';$('drawing-settings').hidden=t!=='draw';$('brush-settings').hidden=['draw','pan','erase'].includes(t);
+ $('palette').closest('.section').hidden=['stamp','draw','pan','erase'].includes(t);
  document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('selected',b.dataset.tool===t));
- $('toolhint').textContent={raise:'Raise terrain',lower:'Lower terrain',smooth:'Smooth terrain',flatten:'Flatten to target height',paint:'Paint '+materials[material-1][0],pan:'Pan the map',land:'Shape coastline · Shift to remove land',draw:'Draw '+drawingType,stamp:'Place '+({tree:'trees',mountain:'mountains',town:'settlements'}[stampType])}[t];map.style.cursor=t==='pan'?'grab':'crosshair';
+ $('toolhint').textContent={raise:'Raise terrain',lower:'Lower terrain',smooth:'Smooth terrain',flatten:'Flatten to target height',paint:'Paint '+materials[material-1][0],pan:'Pan the map',erase:'Erase '+{surface:'surface paint',landmarks:'landmarks',shapes:'drawings'}[eraseTarget],land:'Shape coastline · Shift to remove land',draw:'Draw '+drawingType,stamp:'Place '+({tree:'trees',mountain:'mountains',town:'settlements'}[stampType])}[t];map.style.cursor=t==='pan'?'grab':'crosshair';
 }
 $('tools').onclick=e=>{let b=e.target.closest('[data-tool]');if(b)selectTool(b.dataset.tool)};$('palette').onclick=e=>{let b=e.target.closest('[data-material]');if(!b)return;material=+b.dataset.material;document.querySelectorAll('[data-material]').forEach(el=>el.classList.toggle('selected',el===b));selectTool('paint')};
 for(let id of['size','strength','target'])$(id).oninput=()=>{$(id+'out').value=$(id).value+(id==='size'?' px':id==='strength'?'%':'')};document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b));refresh()});
@@ -156,7 +161,7 @@ $('save').onclick=()=>{download(new Blob([JSON.stringify(state())],{type:'applic
 $('new').onclick=()=>{$('newdialog').returnValue='';$('newdialog').showModal();};$('newdialog').addEventListener('close',()=>{if($('newdialog').returnValue!=='generate')return;snapshot();heights=generate(N,+$('seed').value,{shape:selectedShape,relief:+$('relief').value/100});paint.fill(0);paintColors.fill(0);paintAlpha.fill(0);marks=[];drawings=[];layers=defaultLayers();sea=62;water=true;shade=true;load({...state(),name:$('newname').value||'Untitled world'});$('worldname').value=$('newname').value||'Untitled Island';$('infotitle').textContent=$('worldname').value;zoom=1;pan={x:0,y:0};refresh();persist();notify('Your new world is ready.')});$('help').onclick=()=>$('helpdialog').showModal();$('worldname').onfocus=()=>{nameEditSnapshot=state();};$('worldname').onblur=()=>{nameEditSnapshot=null;};$('worldname').oninput=()=>{if(nameEditSnapshot){snapshot(nameEditSnapshot);nameEditSnapshot=null;}$('infotitle').textContent=$('worldname').value;persist()};
 function load(input){let s=normalizeProject(input,N);heights=Float32Array.from(s.heights);paint=Uint8Array.from(s.paint);paintColors=Uint8ClampedArray.from(s.paintColors);paintAlpha=Float32Array.from(s.paintAlpha);drawings=s.shapes;sea=s.sea;water=s.water;shade=s.shade;marks=s.marks;layers=s.layers;$('worldname').value=s.name;$('infotitle').textContent=s.name;$('sea').value=sea;$('seaout').value=sea;for(let id of['water','shade']){let v=id==='water'?water:shade;$(id).classList.toggle('on',v);$(id).setAttribute('aria-pressed',v);}renderLayers();}
 $('open').onclick=()=>$('file').click();$('file').onchange=async()=>{let f=$('file').files[0];if(!f)return;try{if(f.size>12e6)throw Error('File too large (12 MB maximum)');if(f.name.endsWith('.json')){let s=normalizeProject(JSON.parse(await f.text()),N);snapshot();load(s)}else{let image=await createImageBitmap(f);snapshot();oc.clearRect(0,0,N,N);oc.drawImage(image,0,0,N,N);let d=oc.getImageData(0,0,N,N).data;for(let i=0;i<N*N;i++)heights[i]=d[i*4]*.2126+d[i*4+1]*.7152+d[i*4+2]*.0722;paint.fill(0);paintColors.fill(0);paintAlpha.fill(0);marks=[];drawings=[];image.close()}refresh();persist();notify('Imported successfully.')}catch(e){notify(e.message==='Invalid project'?'This project file is invalid.':e.message||'Could not import file.')}finally{$('file').value=''}};
-document.onkeydown=e=>{if(e.target.matches('input,textarea,select,[contenteditable=true]')||document.querySelector('dialog[open]'))return;if(e.ctrlKey||e.metaKey){if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?restoreHistory(redo,undo):restoreHistory(undo,redo)}if(e.key.toLowerCase()==='s'){e.preventDefault();$('save').click()}return}if(e.key==='Escape'){cancelStroke();return;}let delta=brushDelta(e);if(delta){e.preventDefault();adjustBrush(delta);return;}let t={r:'raise',l:'lower',q:'smooth',f:'flatten',p:'paint',b:'paint',t:'stamp',h:'pan',d:'draw',m:'land'}[e.key.toLowerCase()];if(t)selectTool(t)};
+document.onkeydown=e=>{if(e.target.matches('input,textarea,select,[contenteditable=true]')||document.querySelector('dialog[open]'))return;if(e.ctrlKey||e.metaKey){if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?restoreHistory(redo,undo):restoreHistory(undo,redo)}if(e.key.toLowerCase()==='s'){e.preventDefault();$('save').click()}return}if(e.key==='Escape'){cancelStroke();return;}let delta=brushDelta(e);if(delta){e.preventDefault();adjustBrush(delta);return;}let t={r:'raise',l:'lower',q:'smooth',f:'flatten',p:'paint',b:'paint',t:'stamp',h:'pan',d:'draw',m:'land',e:'erase'}[e.key.toLowerCase()];if(t)selectTool(t)};
 
 function adjustBrush(delta){$('size').value=resizeBrush(+$('size').value,delta);$('sizeout').value=$('size').value+' px';if(brushPosition){let t=transform();$('brush').style.width=$('brush').style.height=(+$('size').value*t.scale)+'px';}if(workspaceMode==='3d')preview();}
 $('stamp-settings').onclick=e=>{let b=e.target.closest('[data-stamp]');if(!b)return;if(brushPreset==='forest')brushPreset='soft';stampType=b.dataset.stamp;document.querySelectorAll('[data-stamp]').forEach(el=>el.classList.toggle('selected',el===b));selectTool('stamp');};
@@ -171,6 +176,7 @@ $('panel-toggle').onclick=()=>{let open=$('right-panel').classList.toggle('mobil
 $('opacity').oninput=()=>{$('opacityout').value=$('opacity').value+'%';};$('line-width').oninput=()=>{$('line-widthout').value=$('line-width').value+' px';};
 $('export').onclick=()=>$('exportdialog').showModal();$('export-map').onclick=()=>{$('exportdialog').close();flushTexture();let c=document.createElement('canvas');c.width=c.height=1536;let cx=c.getContext('2d');cx.drawImage(off,0,0,1536,1536);cx.scale(6,6);if(layers.shapes.visible&&view!=='height')for(let s of drawings)drawShape(cx,s);if(layers.landmarks.visible&&view!=='height')for(let m of marks)drawLandmark(cx,m);c.toBlob(b=>{download(b,slug()+'-map.png');notify('Your map is ready to share.');});};
 
+$('erase-target').onchange=()=>{eraseTarget=$('erase-target').value;$('erase-description').textContent={surface:'Reveal the natural terrain color. Elevation stays intact.',landmarks:'Remove whole landmarks touched by the brush. Undo to restore.',shapes:'Remove whole drawings touched by the brush. Undo to restore.'}[eraseTarget];selectTool('erase');};
 $('drawing-settings').onclick=e=>{let b=e.target.closest('[data-draw]');if(!b)return;drawingType=b.dataset.draw;document.querySelectorAll('[data-draw]').forEach(el=>{el.classList.toggle('selected',el===b);el.setAttribute('aria-pressed',el===b);});selectTool('draw');};
 function updateBrushUI(){
  document.querySelectorAll('[data-brush]').forEach(b=>{b.classList.toggle('selected',b.dataset.brush===brushPreset);b.setAttribute('aria-pressed',b.dataset.brush===brushPreset);});

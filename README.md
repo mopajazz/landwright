@@ -10,6 +10,7 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 - Sculpt elevation with Raise, Lower, Smooth, or Flatten. Size, opacity, strength, and target height are grouped in one Brush Controls section, with settings shown for the selected tool. Four brush presets cover Soft Round, organic Coastline land addition/removal, Forest Scatter, and Grain textures. Opacity controls sculpting power and stamp transparency; surface paint opacity is capped within a single stroke and builds across separate strokes.
 - Paint six surface materials. Place original tree, mountain, and settlement symbols on a separate landmark layer; drag to scatter, Shift-drag to erase. Landmarks only place on dry land while water is enabled. Limit: 3,000 landmarks.
 - Draw freehand paths, straight lines, rectangles, ellipses and triangles on a separate Drawings layer. Set ink color, line width, opacity, and fill. Hold Shift for equal-sided shapes; Escape cancels an unfinished drawing.
+- Erase (E) targets Surface paint, Landmarks, or Drawings. Surface erasing uses brush opacity and reveals the natural terrain color without changing heights. Landmark/drawing erasing removes whole touched objects; undo restores them. Hidden and locked layers are protected.
 - Hide and lock the Surface, Landmarks, Drawings, and Relief layers. Relief visibility controls shading/contours, while elevation remains the world foundation. Hidden or locked layers cannot be edited. Water has its own toggle and sea-level control.
 - Toggle the main workspace between 2D Map and 3D Terrain. All editing tools work directly on the 3D terrain. Left-drag edits with the active tool; right-drag or Alt-drag orbits and tilts; middle-drag or the Pan tool moves the camera. Scroll zooms, Shift+scroll resizes the brush, and Reset view recenters. The Orbit toggle supports touch; selecting a tool returns to editing while staying in 3D. Switch to terrain, heightmap, or biome visualization.
 - Export a 1536×1536 PNG of the current map view, including visible drawings and landmarks, or a 256×256 8-bit PNG heightmap. Map exports omit editor overlays such as grid and cursor.
@@ -26,7 +27,7 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 | Middle drag | Pan |
 | Right drag or Alt + drag in 3D | Orbit and tilt |
 | R / L / Q / F | Raise / lower / smooth / flatten |
-| B or P / T / D / M / H | Paint / details / draw / coastline / pan |
+| B or P / E / T / D / M / H | Paint / erase / details / draw / coastline / pan |
 | Shift + sculpt | Reverse elevation brush |
 | Shift + paint or details | Erase |
 | Ctrl or Cmd + Z | Undo |
