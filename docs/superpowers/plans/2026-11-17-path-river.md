@@ -23,4 +23,4 @@
 
 ## Verification
 
-Tasks 1–3 complete: 89 tests pass, including numerical river water/picking, project migration, 2D/3D route gestures, cancellation/undo, lock protection, and bounded import work. Independent review findings for margin gestures, middle-pan ordering, workload limits, and held-drag undo are fixed with regression coverage. Task 4: publish and visually verify live UI.
+Tasks 1–3 complete: 89 tests pass, including numerical river water/picking, project migration, 2D/3D route gestures, cancellation/undo, lock protection, and bounded import work. Independent review findings for margin gestures, middle-pan ordering, workload limits, and held-drag undo are fixed with regression coverage. Task 4 complete: GitHub Pages published; live preview/commit and 2D/3D river/path appearance verified. Route cursor cleanup removes the ordinary brush circle during route placement.

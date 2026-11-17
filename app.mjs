@@ -1,14 +1,14 @@
-import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.0.0';
-import{generate,stroke}from'./terrain.mjs?v=2.0.0';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.0.0';
-import{drawLandmark,createLandmarkAtlas}from'./landmarks.mjs?v=2.0.0';
-import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.0.0';
-import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.0.0';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.0.0';
-import{initUI}from'./ui.mjs?v=2.0.0';
-import{toolIcon}from'./icons.mjs?v=2.0.0';
-import{touchesShape}from'./eraser.mjs?v=2.0.0';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.0.0';
+import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.0.1';
+import{generate,stroke}from'./terrain.mjs?v=2.0.1';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.0.1';
+import{drawLandmark,createLandmarkAtlas}from'./landmarks.mjs?v=2.0.1';
+import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.0.1';
+import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.0.1';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.0.1';
+import{initUI}from'./ui.mjs?v=2.0.1';
+import{toolIcon}from'./icons.mjs?v=2.0.1';
+import{touchesShape}from'./eraser.mjs?v=2.0.1';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.0.1';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface',routes=[],routeDraft=null,routeHover=null,riverWater=new Float32Array(N*N).fill(-1),surfaceHeights=heights,riverWaterDirty=true;
 document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Shape land · Shift removes land (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',erase:'Erase from a layer (E)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 $('rail-settings').innerHTML=toolIcon('settings');
@@ -115,7 +115,7 @@ map.onpointerdown=e=>{
 };
 map.onpointermove=e=>{
  let p=pointer(e),t=transform();brushPosition=p;
- $('brush').style.cssText=`display:${workspaceMode==='3d'||tool==='pan'?'none':'block'};left:${p.sx}px;top:${p.sy}px;width:${+$('size').value*t.scale}px;height:${+$('size').value*t.scale}px`;
+ $('brush').style.cssText=`display:${workspaceMode==='3d'||tool==='pan'||isRouteTool()?'none':'block'};left:${p.sx}px;top:${p.sy}px;width:${+$('size').value*t.scale}px;height:${+$('size').value*t.scale}px`;
  let x=Math.floor(p.x),y=Math.floor(p.y);if(x>=0&&y>=0&&x<N&&y<N){let i=y*N+x;$('coords').textContent=`X: ${x}   Z: ${y}`;$('heightstatus').textContent=`Height: ${Math.round(heights[i])}`;$('terrainstatus').textContent=heights[i]<sea&&water?'Ocean':paint[i]?materials[paint[i]-1][0]:'Grassland';}
  if(workspaceMode==='3d'){preview();if(!p.hit){last=p;return;}}
  if(isRouteTool()&&routeDraft&&!last?.pan){if(p.hit&&p.x>=0&&p.y>=0&&p.x<N&&p.y<N){routeHover={x:p.x,y:p.y};if(down&&(!routeDraft.points.length||Math.hypot(p.x-routeDraft.points.at(-1).x,p.y-routeDraft.points.at(-1).y)>=2))appendRoutePoint(p);updateRouteControls();draw();}return;}
@@ -132,11 +132,11 @@ function changeZoom(z){zoom=Math.max(.4,Math.min(4,z));draw()}map.addEventListen
 function selectTool(t){
  if(t!==tool)cancelRoute(false);
  $('erase-description').textContent={surface:'Reveal the natural terrain color. Elevation stays intact.',landmarks:'Remove whole legacy landmarks touched by the brush. Undo to restore.',shapes:'Remove whole legacy drawings touched by the brush. Undo to restore.',rivers:'Remove river water along a touched route. The carved channel remains; undo restores the water.'}[eraseTarget];
- if(down)end();orbitPointer=null;orbitMode=false;$('orbit-toggle').setAttribute('aria-pressed','false');$('orbit-toggle').textContent='Orbit';tool=t;updateBrushUI();
- $('erase-settings').hidden=t!=='erase';$('opacity-label').hidden=false;$('brush-controls').hidden=false;$('size-label').hidden=false;$('size-shortcuts').hidden=false;$('size').disabled=t==='pan'||isRouteTool();$('opacity').disabled=t==='pan'||t==='river'||(t==='erase'&&eraseTarget!=='surface');$('strength-label').hidden=!['raise','lower','smooth','flatten'].includes(t);$('target-label').hidden=t!=='flatten';$('edge-protection-label').hidden=t!=='flatten';
+ if(down)end();orbitPointer=null;orbitMode=false;$('orbit-toggle').setAttribute('aria-pressed','false');$('orbit-toggle').textContent='Orbit';tool=t;if(isRouteTool()||t==='pan')$('brush').style.display='none';updateBrushUI();
+ $('erase-settings').hidden=t!=='erase';$('opacity-label').hidden=false;$('brush-controls').hidden=t==='river';$('size-label').hidden=isRouteTool();$('size-shortcuts').hidden=isRouteTool();$('size').disabled=t==='pan'||isRouteTool();$('opacity').disabled=t==='pan'||t==='river'||(t==='erase'&&eraseTarget!=='surface');$('strength-label').hidden=!['raise','lower','smooth','flatten'].includes(t);$('target-label').hidden=t!=='flatten';$('edge-protection-label').hidden=t!=='flatten';
  $('route-settings').hidden=!isRouteTool();$('route-title').textContent=t==='river'?'RIVER':'PATH';$('path-material-label').hidden=t!=='path';$('river-depth-label').hidden=t!=='river';updateRouteControls();
- $('sculpt-settings').hidden=!['raise','lower','smooth','flatten'].includes(t);$('brush-settings').hidden=false;document.querySelectorAll('[data-brush]').forEach(b=>b.disabled=!['raise','lower','smooth','flatten','paint','erase'].includes(t)||(t==='erase'&&eraseTarget!=='surface'));
- $('palette').closest('.section').hidden=false;$('paint-status').textContent=t==='paint'?`${materials[material-1][0]} · ${brushPreset==='coast'?'Coastline':brushPreset==='hard'?'Hard Round':brushPreset==='grain'?'Grain':'Soft Round'} · Shift erases paint`:`${materials[material-1][0]} selected · Use Paint (P) to apply.`;
+ $('sculpt-settings').hidden=!['raise','lower','smooth','flatten'].includes(t);$('brush-settings').hidden=isRouteTool();document.querySelectorAll('[data-brush]').forEach(b=>b.disabled=!['raise','lower','smooth','flatten','paint','erase'].includes(t)||(t==='erase'&&eraseTarget!=='surface'));
+ $('palette').closest('.section').hidden=isRouteTool();$('paint-status').textContent=t==='paint'?`${materials[material-1][0]} · ${brushPreset==='coast'?'Coastline':brushPreset==='hard'?'Hard Round':brushPreset==='grain'?'Grain':'Soft Round'} · Shift erases paint`:`${materials[material-1][0]} selected · Use Paint (P) to apply.`;
  document.querySelectorAll('[data-tool]').forEach(b=>{b.classList.toggle('selected',b.dataset.tool===t);b.setAttribute('aria-pressed',b.dataset.tool===t);});
  $('toolhint').textContent={raise:'Raise terrain',lower:'Lower terrain',smooth:'Smooth terrain',flatten:'Flatten to target height',paint:'Paint '+materials[material-1][0],pan:'Pan the map',erase:'Erase '+{surface:'surface paint',landmarks:'landmarks',shapes:'drawings',rivers:'river water'}[eraseTarget],land:'Shape coastline · Shift to remove land',path:'Place path · Enter to finish · Escape to cancel',river:'Place river downstream · Enter to finish'}[t];map.style.cursor=t==='pan'?'grab':'crosshair';
 }
