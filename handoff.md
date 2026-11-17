@@ -1,9 +1,9 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 17, 2026 (America/New_York)  
-**Implementation baseline:** `1010122f94ac3e06c1aaef7375019f6b16c30a4b`  
-**Displayed release:** `v2.0`  
-**Browser asset/module cache revision:** `2.0.1`  
+**Implementation baseline:** `dee5ee86b1dd5fe69d9c7915e10e969aa2b79fd8` (v2.1 UI review; previous baseline `1010122`)  
+**Displayed release:** `v2.1`  
+**Browser asset/module cache revision:** `2.1.0`  
 **Project schema written by the application:** `4`
 
 This document describes the implemented application at the baseline above. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
@@ -48,6 +48,9 @@ User decisions already implemented:
 - Old drawings and landmarks must survive loading, rendering, export, and saving.
 - Path and River are focused tools, not a reason to restore the general Drawing menu.
 - Storytelling is deferred until the terrain tools are complete.
+
+- The toolbox is contextual (v2.1). The always-visible paint palette was only a reaction to the old bug where choosing a material switched the tool; the user confirmed this. The palette now appears only with Paint, and the no-switching rule still holds.
+- Opacity is a paint concept only. It applies to Paint, Path, and surface Erase. Sculpt tools and Land ignore it (see §3).
 
 Do not restore Drawing, Details, Forest Scatter, the old preview thumbnail, or preset-driven tool switching merely because legacy rendering modules or historical tests exist.
 
@@ -117,7 +120,7 @@ Global editing controls:
 | Right drag or Alt + drag in 3D | Orbit/tilt |
 | Ctrl/Cmd + Z | Undo; if a route draft exists, cancel the draft first without consuming history |
 | Ctrl/Cmd + Shift + Z | Redo; draft cancellation takes precedence |
-| Ctrl/Cmd + S | Download editable project JSON |
+| Ctrl/Cmd + S | Download editable project JSON (same as the header Download button) |
 | Enter | Finish a route draft |
 | Double-click | Finish a route while a route tool is active |
 | Escape | Cancel route preview or stop the current gesture |
@@ -126,14 +129,14 @@ Global shortcuts are suppressed while typing in inputs/textareas/selects/content
 
 ### Brush and terrain-palette contract
 
-Tool action, brush footprint, and material are separate choices. Selecting a brush or material preserves the active tool. Changing tools preserves the chosen footprint. Clicking Sand while Raise is selected chooses the future paint material; it does not activate Paint. Use P/B or the Paint button to paint.
+Tool action, brush footprint, and material are separate choices. Selecting a brush or material preserves the active tool. Changing tools preserves the chosen footprint. The material palette (titled **Paint material**) is shown only while Paint is active; the selected material persists while hidden. Path keeps its own surface select.
 
 Brush controls in the ordinary brush workflow:
 
 | Control | UI bounds | Initial value |
 | --- | --- | --- |
-| Size / diameter | 4–120 | 42 |
-| Opacity | 0–100% | 100% |
+| Size / diameter | 4–120 blocks (map cells; UI shows "blocks") | 42 |
+| Opacity | 0–100%; Paint, Path and surface Erase only | 100% |
 | Sculpt strength | 1–100% | 35% |
 | Flatten target | 1–255 | 120 |
 | Preserve map edges | Boolean | Enabled |
@@ -144,6 +147,10 @@ Footprints:
 - **Hard Round:** full coverage within a circular edge.
 - **Coastline:** irregular angular boundary with a sharper interior feather; works with Sand and every other paint material without changing elevation in Paint mode.
 - **Grain:** radial soft weight multiplied by deterministic stippling; useful for textured soil, stone, and vegetation color.
+
+Toolbox order for brush tools: Brush settings (footprint) → Brush controls (Size, plus Opacity where it applies) → **Sculpt** (Strength; Flatten adds target and edge protection) → Paint material (Paint only) → Erase target (Erase only).
+
+**Opacity scope (v2.1 fix):** `usesOpacity()` is true only for Paint, Path, and Erase on the surface target. The Opacity row is hidden for every other tool, and `opacity()` returns 1 for them. Before v2.1, sculpt strength was multiplied by Opacity (`strength × 3 × opacity`) and Land's rate used it too. That made Opacity a hidden second strength slider, and Opacity 0 left over from painting silently disabled Raise/Lower/Smooth/Flatten/Land. A regression test covers this. Zero opacity still makes Paint and surface Erase no-ops.
 
 Sculpt tools also consume the selected footprint. Land always uses its own coastline operation; irrelevant footprint controls are disabled for Land. Pan and non-surface legacy erasing also disable irrelevant controls. Route tools hide ordinary brush/palette controls and expose their focused settings instead; Path retains the shared paint-opacity control.
 
@@ -173,7 +180,7 @@ Land converges upward toward sea +22 or, under Shift, downward toward sea −18,
 ### Path and River route workflow
 
 1. Select Path (J) or River (V).
-2. Click source/control points, or drag to add them. A smoothed width ribbon, dashed centerline, and point handles preview the route.
+2. Click source/control points, or drag to add them. A smoothed width ribbon, dashed centerline, and point handles preview the route. The ribbon is filled with the chosen Path material colour (alpha scaled by opacity) or river blue, outlined in dark so it reads over stone and snow. Handles have dark rings. The footer hint reads "W/S route width" while a route tool is active.
 3. Adjust settings in the route panel; the collapsed rail's Settings button exposes it.
 4. Finish using Enter, double-click, or the on-map Finish route button.
 5. Escape or Cancel discards the preview. Changing tools or 2D/3D view also cancels it.
@@ -250,6 +257,11 @@ Views: Terrain, Heightmap, and Biomes. Additional toggles: grid, contours, Water
 - Divider supports pointer resizing, arrows by 10px, Shift+arrows by 40px, Home/End to current bounds.
 - New visitors below 800px default to collapsed. Saved preferences take precedence.
 - Light and dark modes are persistent. The toggle label names the destination mode.
+- Header: the world-name badge (`#save-badge`) mirrors autosave: "Saving…", "Saved in browser", or "Not saved · download" on storage failure. The download button reads **Download** (aria-label "Download project file"; tooltip explains that autosave already happens). It shows text above 800px, icon-only below, and **remains visible at ≤500px**. Previously it was hidden on phones, leaving no export path.
+- Grid and Contours are on/off toggles (`.toggle`, `aria-pressed`) with a dot indicator. They are deliberately styled differently from the Terrain/Heightmap/Biomes and 2D/3D choices, which use filled selected buttons.
+- Selected tool: filled `--selected` background plus an inset accent ring, semibold label, and a 4px edge marker.
+- Layer rows use inline SVG eye (visible/hidden) and padlock (locked/unlocked) icons in 32×32 targets. They replaced the ◉/○ and ▣/◇ glyphs. Undo/redo and zoom buttons have accessible names and at least 32px targets.
+- New world shape cards use a 3×2 grid.
 
 ## 5. Iconography and accessibility specification
 
@@ -472,7 +484,9 @@ Open `http://localhost:8000/`. Serve over HTTP rather than opening `index.html` 
 
 ### Test suite
 
-At the implementation baseline, **89 tests pass**. The full suite was rerun during this handoff task on November 17, 2026: **89 passed, 0 failed**. Main test responsibilities:
+At the implementation baseline, **92 tests pass** (v2.1 added: palette/opacity contextual visibility, zero paint opacity does not disable sculpting, route key hint). The full suite was rerun on November 17, 2026: **92 passed, 0 failed**.
+
+Note: `interactions.test.mjs` compares whole project states with `deepEqual`. If such an assertion fails, Node's diff of 65k-element arrays can exhaust memory and the file dies with SIGKILL/heap OOM instead of a readable failure. When that happens, suspect a failing state assertion before suspecting the environment. Run the file alone with `node --test --test-reporter=spec tests/interactions.test.mjs` to see which test it was. Main test responsibilities:
 
 | Test file | Coverage |
 | --- | --- |
@@ -526,7 +540,7 @@ Before release:
 - Inspect `git status` and preserve unrelated user edits.
 - Run appropriate tests and syntax/diff checks.
 - Review renderer/picking and project migration when changing terrain data.
-- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.0.1`. Do not update only the entry script or only CSS.
+- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.1.0`. Do not update only the entry script or only CSS.
 - Update displayed footer version when appropriate; displayed release and cache-patch revision may differ intentionally.
 - Check documentation and shortcut help against implemented handlers.
 
@@ -555,7 +569,8 @@ For rollback, inspect the relevant history, revert the faulty commit(s), rerun c
 | `351e4c5` | New silhouette family and tool grouping |
 | `9c6697e` | Narrow expanded sidebar stacking |
 | `dd01447` | Path/River implementation and local water |
-| `1010122` | Focused route settings and route cursor cleanup; current code baseline |
+| `1010122` | Focused route settings and route cursor cleanup |
+| `dee5ee8` | v2.1 UI review: contextual toolbox, opacity scope fix, Download/save badge, toggles, layer icons; current code baseline |
 
 ## 10. Known limitations and follow-up candidates
 
@@ -574,7 +589,16 @@ These are implementation facts or review targets, not promises of completed work
 11. **Old style selectors remain.** Base/theme CSS contains obsolete legacy tool selectors and historical overrides. Clean them deliberately if refactoring, with narrow/collapsed visual verification.
 12. **Documentation can drift.** Historical development notes and test names may refer to earlier schemas/tools. Use current handlers/validators and this baseline specification rather than reintroducing removed functionality.
 
-Protect the fixes already covered by regression tests: no preset-driven tool switching, correct opacity per stroke, frozen Flatten perimeter by default, no edge-shrink reinterpretation, frame-coalesced rendering, real 3D picking, safe draft cancellation, no route→sculpt fallthrough, correct middle-pan ordering, and delayed conditional eraser-target reconciliation.
+13. **Remaining UI review items (not done in v2.1).**
+    - The "WORLD / Overworld" breadcrumb and the "Overworld" canvas chip imply multiple worlds that don't exist.
+    - The world dimensions appear in four places.
+    - The right panel's "Made for world builders" filler remains.
+    - The shortcut letters Land=C (reads as Coastline) and Smooth=Q are hard to recall.
+    - Shortcut letters on tool buttons are ~9px.
+    - The new toggle dot, layer icons, and selected-tool ring are outside `contrast.test.mjs`.
+    - Shortcuts help is still hidden below 800px.
+
+Protect the fixes already covered by regression tests: zero paint opacity never disables sculpting, no preset-driven tool switching, correct opacity per stroke, frozen Flatten perimeter by default, no edge-shrink reinterpretation, frame-coalesced rendering, real 3D picking, safe draft cancellation, no route→sculpt fallthrough, correct middle-pan ordering, and delayed conditional eraser-target reconciliation.
 
 ## 11. Holler Maps assets — exact status
 
@@ -611,3 +635,23 @@ Possible future anchors include named locations, paths, rivers, and settlements,
 - Keep icons/groups consistent and paint selections independent.
 - Test meaningful behavior, review the result, verify deployment, and report real limitations plainly.
 - Reconfirm source availability before Holler Maps integration; revisit storytelling only at the appropriate phase.
+
+## 14. UI review — November 17, 2026 (v2.1)
+
+A critical review of the live app compared the UI against this handoff. The interaction model (tool/footprint/material independence, route draft safety) was sound. The layout did not reflect it. Findings and their resolution:
+
+| Finding | Resolution |
+| --- | --- |
+| Toolbox ordered by component type. With Raise active, the irrelevant paint palette sat above Strength, which was below the fold (toolbox ~1,500px in a 745px viewport). | Sculpt section moved up beside brush controls. Palette shown only for Paint. Filler tip removed. Toolbox is ~1,100px. |
+| Opacity and Strength both active on sculpt tools. Opacity silently multiplied strength; Opacity 0 disabled sculpting with no feedback. | Opacity is scoped to Paint, Path, and surface Erase (§3). Regression test added. |
+| Size labelled "px" but measured in map cells (~2.4 screen px per cell at 100% zoom on Large). | Labelled "blocks". |
+| Footer said "W/S brush size" in Path/River, where W/S changes route width. | Hint is tool-specific. |
+| Save/Shortcuts/world name hidden at phone widths, and no Ctrl+S on touch, so no export path. | Download stays visible as an icon at ≤500px. Shortcuts remain hidden on small screens. |
+| "Save project" actually downloads; autosave status was buried at the bottom of the toolbox. | Renamed Download. Header badge shows autosave state. |
+| Grid/Contours toggles looked identical to the view radio choices. | Distinct toggle style with `aria-pressed`. |
+| Selected tool barely distinguishable in dark mode. | Accent ring, bolder label, wider edge marker. |
+| Layer lock shown as ◇; layer/water toggles 25×26 and 31×19; undo/redo unlabeled. | SVG eye/lock icons, 32px targets, aria-labels. |
+| Route preview ribbon faint and not the result colour. | Material/river-coloured outlined ribbon. |
+| New-world cards in a 5+1 grid. | 3×2 grid. |
+
+Verified by the full test suite and by screenshots in headless Chromium (Canvas fallback) at 1440×900 in dark and light themes, at 1024px, and at 390px. Real-GPU and touch-device checks are still outstanding (§9 smoke list items 10–12).
