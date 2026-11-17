@@ -1,5 +1,8 @@
 // One 24-unit family. Silhouette carries meaning; color and arrows are not required.
 const paths={
+ path:'<path d="M5 22c0-7 14-13 14-20M11 22c0-7 14-13 14-20" transform="translate(-2 0)"/><path d="m10 17 2-2m2-4 2-2m1-4 1-2"/>',
+ river:'<path d="M6 2c-8 8 17 12 6 20M14 2c-8 8 17 12 6 20"/><path d="m4 14 3 2m-2-2-1-3"/>',
+
  raise:'<path d="M2 21 9 5l7 16Z" fill="currentColor" fill-opacity=".2"/><path d="m6 12 3 3 3-3M18 3v7m-3-3.5h6"/>',
  lower:'<path d="M2 6h4c1 0 1 13 6 13S17 6 18 6h4v16H2Z" fill="currentColor" fill-opacity=".2"/><path d="M9 10h6"/>',
  smooth:'<path d="m7 4 14 5-4 10-14-5Z" fill="currentColor" fill-opacity=".2"/><path d="m3 14 14 5m-12-8 14 5M2 19h4m2 3h5"/>',

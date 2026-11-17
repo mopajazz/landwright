@@ -89,3 +89,18 @@ input[type=range]::-moz-range-track{height:4px;background:var(--border);border-r
 #left-panel{container-type:inline-size;overflow-x:hidden}
 #brush-presets{grid-template-columns:repeat(2,minmax(0,1fr))}
 @container(max-width:210px){.tool-group-buttons{grid-template-columns:minmax(0,1fr)}}
+#route-settings select{width:100%;margin-top:8px;padding:9px;background:var(--input);color:var(--fg);border:1px solid var(--border);border-radius:5px}
+.route-actions{display:flex;gap:6px}.route-actions button{border-color:var(--border);background:var(--surface);flex:1;font-size:10px}
+#route-instructions{line-height:1.7}
+#tools [data-tool=land],#tools [data-tool=path]{grid-column:auto}
+#route-bar{position:absolute;z-index:6;top:64px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;max-width:calc(100% - 24px);padding:8px 10px;background:var(--hud);color:var(--fg);border:1px solid var(--border);border-radius:7px;box-shadow:0 3px 16px #0003}
+#route-bar strong{font-size:10px;white-space:nowrap;font-weight:500}
+#route-bar .route-actions{flex-shrink:0}#route-bar button{white-space:nowrap;font-size:10px}
+@media(max-width:800px){#route-bar{flex-wrap:wrap;justify-content:center;gap:6px;min-width:190px}}
+/* Keep ten route/terrain tools readable without pushing Settings off a typical rail. */
+.sidebar-collapsed #tools{padding-bottom:4px}
+.sidebar-collapsed #tools button,.sidebar-collapsed #tools button:last-child{height:40px;min-height:40px}
+.sidebar-collapsed .tool-group-buttons{gap:4px}
+.sidebar-collapsed .tool-group+.tool-group{margin-top:8px;padding-top:8px}
+.sidebar-collapsed .rail-settings{margin-top:4px;margin-bottom:8px}
+#tools [data-tool=erase]{grid-column:1/-1}
