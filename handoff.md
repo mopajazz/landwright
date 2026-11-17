@@ -1,9 +1,9 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 17, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.1 River upgrade; use Git history for its final commit (previous code baseline: `1010122`)<br>
-**Displayed release:** `v2.1`<br>
-**Browser asset/module cache revision:** `2.1.0`<br>
+**Implementation baseline:** v2.1.2 River upgrade merged with `bca1a80`; previous UI baseline `4fd8be5`. See Git history for the final merge commit.
+**Displayed release:** `v2.1.2`
+**Browser asset/module cache revision:** `2.1.2`<br>
 **Project schema written by the application:** `4`
 
 This document describes the implemented application at the baseline above. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
@@ -48,6 +48,9 @@ User decisions already implemented:
 - Old drawings and landmarks must survive loading, rendering, export, and saving.
 - Path and River are focused tools, not a reason to restore the general Drawing menu.
 - Storytelling is deferred until the terrain tools are complete.
+
+- The toolbox is contextual (v2.1). The always-visible paint palette was only a reaction to the old bug where choosing a material switched the tool; the user confirmed this. The palette now appears only with Paint, and the no-switching rule still holds.
+- Opacity is a paint concept only. It applies to Paint, Path, and surface Erase. Sculpt tools and Land ignore it (see §3).
 
 Do not restore Drawing, Details, Forest Scatter, the old preview thumbnail, or preset-driven tool switching merely because legacy rendering modules or historical tests exist.
 
@@ -117,7 +120,7 @@ Global editing controls:
 | Right drag or Alt + drag in 3D | Orbit/tilt |
 | Ctrl/Cmd + Z | Undo; if a route draft exists, cancel the draft first without consuming history |
 | Ctrl/Cmd + Shift + Z | Redo; draft cancellation takes precedence |
-| Ctrl/Cmd + S | Download editable project JSON |
+| Ctrl/Cmd + S | Download editable project JSON (same as the header Download button) |
 | Enter | Finish a route draft |
 | Double-click | Finish a route while a route tool is active |
 | Escape | Cancel route preview or stop the current gesture |
@@ -126,14 +129,14 @@ Global shortcuts are suppressed while typing in inputs/textareas/selects/content
 
 ### Brush and terrain-palette contract
 
-Tool action, brush footprint, and material are separate choices. Selecting a brush or material preserves the active tool. Changing tools preserves the chosen footprint. Clicking Sand while Raise is selected chooses the future paint material; it does not activate Paint. Use P/B or the Paint button to paint.
+Tool action, brush footprint, and material are separate choices. Selecting a brush or material preserves the active tool. Changing tools preserves the chosen footprint. The material palette (titled **Paint material**) is shown only while Paint is active; the selected material persists while hidden. Path keeps its own surface select.
 
 Brush controls in the ordinary brush workflow:
 
 | Control | UI bounds | Initial value |
 | --- | --- | --- |
-| Size / diameter | 4–120 | 42 |
-| Opacity | 0–100% | 100% |
+| Size / diameter | 4–120 blocks (map cells; UI shows "blocks") | 42 |
+| Opacity | 0–100%; Paint, Path and surface Erase only | 100% |
 | Sculpt strength | 1–100% | 35% |
 | Flatten target | 1–255 | 120 |
 | Preserve map edges | Boolean | Enabled |
@@ -144,6 +147,10 @@ Footprints:
 - **Hard Round:** full coverage within a circular edge.
 - **Coastline:** irregular angular boundary with a sharper interior feather; works with Sand and every other paint material without changing elevation in Paint mode.
 - **Grain:** radial soft weight multiplied by deterministic stippling; useful for textured soil, stone, and vegetation color.
+
+Toolbox order for brush tools: Brush settings (footprint) → Brush controls (Size, plus Opacity where it applies) → **Sculpt** (Strength; Flatten adds target and edge protection) → Paint material (Paint only) → Erase target (Erase only).
+
+**Opacity scope (v2.1 fix):** `usesOpacity()` is true only for Paint, Path, and Erase on the surface target. The Opacity row is hidden for every other tool, and `opacity()` returns 1 for them. Before v2.1, sculpt strength was multiplied by Opacity (`strength × 3 × opacity`) and Land's rate used it too. That made Opacity a hidden second strength slider, and Opacity 0 left over from painting silently disabled Raise/Lower/Smooth/Flatten/Land. A regression test covers this. Zero opacity still makes Paint and surface Erase no-ops.
 
 Sculpt tools also consume the selected footprint. Land always uses its own coastline operation; irrelevant footprint controls are disabled for Land. Pan and non-surface legacy erasing also disable irrelevant controls. Route tools hide ordinary brush/palette controls and expose their focused settings instead; Path retains the shared paint-opacity control.
 
@@ -173,7 +180,7 @@ Land converges upward toward sea +22 or, under Shift, downward toward sea −18,
 ### Path and River route workflow
 
 1. Select Path (J) or River (V).
-2. Click source/control points, or drag to add them. A smoothed width ribbon, dashed centerline, and point handles preview the route.
+2. Click source/control points, or drag to add them. A smoothed width ribbon, dashed centerline, and point handles preview the route. The ribbon is filled with the chosen Path material colour (alpha scaled by opacity) or river blue, outlined in dark so it reads over stone and snow. Handles have dark rings. The footer hint reads "W/S route width" while a route tool is active.
 3. Adjust settings in the route panel; the collapsed rail's Settings button exposes it.
 4. Finish using Enter, double-click, or the on-map Finish route button.
 5. Escape or Cancel discards the preview. Changing tools or 2D/3D view also cancels it.
@@ -187,8 +194,6 @@ An unfinished route does not mutate project terrain/paint or enter saved route d
 | Path opacity | Shared 0–100% control | Zero-opacity finish cancels without edits |
 | River depth | 1–16 blocks; default 4 | Bed-depth parameter; softened banks |
 | River opacity | Fixed 1 internally | No river opacity slider |
-| Taper | Checkbox, enabled by default | Source-to-mouth widening; hidden for Path |
-| Meander | 0–100%, default 25% | Deterministic centerline offsets, exact endpoints; hidden for Path |
 
 **Path:** rasterizes material color into the ordinary paint arrays with a feathered edge and one coverage value per cell. Does not change heights. The sampled route record is retained, but its visible result is baked surface paint, not a separate editable vector layer. Surface erasing removes path paint. It does not automatically remove the stored Path record.
 
@@ -196,14 +201,14 @@ An unfinished route does not mutate project terrain/paint or enter saved route d
 
 River footprint rasterization:
 
-- River radius is width/2 without taper. Taper uses `width/2 × (0.25 + 0.75t)` for normalized cumulative arc length t, with a 0.75-cell minimum radius so narrow sources survive rasterization. Preview, carve, local water, and hit testing share this rule.
+- Radius is width/2.
 - For normalized distance d, target bed is `level − depth × (0.25 + 0.75 × max(0, 1 − d²))`.
 - Full carving weight inside d≤1; bank weight tapers to zero at d=1.5.
 - Carving only lowers terrain and never goes below 0.
 - Local water exists inside d≤1. Multiple rivers combine by maximum local water level.
 - Ocean sea level is unchanged. Water off reveals the carved bed. Hiding River water hides local river water, not the carved channel or global ocean.
 
-This is authored terrain, not fluid simulation or a hydrological solver. Profiles do not rerun automatically after later sculpting. **World Settings → Reflow rivers** recalculates all saved river levels from one current-height snapshot, then recuts the channels under those levels and refreshes local water in one undoable action. The action is visible whenever rivers exist and disabled if Relief or River water is hidden/locked. It cancels active gestures/drafts first. Because the specified formula samples the already carved bed, repeated reflow can deepen channels; the UI explicitly discloses this. Undo restores the complete prior bed and profiles. Junctions/intersections are not physically solved. Finished route control points cannot yet be repositioned.
+This is authored terrain, not fluid simulation or a hydrological solver. Profiles stay fixed after commit and do not rerun automatically after later sculpting. Junctions/intersections are not physically solved. Finished route control points cannot yet be repositioned.
 
 Limits are enforced for generated and imported route data:
 
@@ -252,6 +257,12 @@ Views: Terrain, Heightmap, and Biomes. Additional toggles: grid, contours, Water
 - Divider supports pointer resizing, arrows by 10px, Shift+arrows by 40px, Home/End to current bounds.
 - New visitors below 800px default to collapsed. Saved preferences take precedence.
 - Light and dark modes are persistent. The toggle label names the destination mode.
+- Header: the world-name badge (`#save-badge`) mirrors autosave: "Saving…", "Saved in browser", or "Not saved · download" on storage failure. The download button reads **Download** (aria-label "Download project file"; tooltip explains that autosave already happens). It shows text above 800px, icon-only below, and **remains visible at ≤500px**. Previously it was hidden on phones, leaving no export path.
+- Grid and Contours are on/off toggles (`.toggle`, `aria-pressed`) with a dot indicator. They are deliberately styled differently from the Terrain/Heightmap/Biomes and 2D/3D choices, which use filled selected buttons.
+- Selected tool: filled `--selected` background plus an inset accent ring, semibold label, and a 4px edge marker.
+- Layer rows use inline SVG eye (visible/hidden) and padlock (locked/unlocked) icons in 32×32 targets. They replaced the ◉/○ and ▣/◇ glyphs. Undo/redo and zoom buttons have accessible names and at least 32px targets.
+- New world shape cards use a 3×2 grid.
+- No multi-world wording (v2.1.1). Each project is a single world, so the nav has no breadcrumb. The canvas chip reads **MAP** plus dimensions, and the World overview subtitle is "Custom terrain". Do not reintroduce "Overworld" or other dimension/world-hierarchy labels unless the product gains multiple worlds per project. The `.breadcrumb` rules left in `style.css`/`theme.css` are now unused (see item 11).
 
 ## 5. Iconography and accessibility specification
 
@@ -387,7 +398,7 @@ type PathRoute = {
   points: XY[];
 };
 type RiverRoute = {
-  type: 'river'; width: number; opacity: number; depth: number; taper?: boolean;
+  type: 'river'; width: number; opacity: number; depth: number;
   points: (XY & { level: number })[];
 };
 type ProjectV4 = {
@@ -416,7 +427,7 @@ type ProjectV4 = {
 
 Schema notes:
 
-- All saved routes use sampled geometry, not the original interactive control points. River points carry saved local levels. Optional `taper` is persisted as Boolean; missing means uniform width for old v4 records. Meander is baked into sampled coordinates and needs no new saved setting. The schema version remains 4. Meander uses a deterministic source-coordinate hash, a smooth perpendicular sine offset of at most width/2 times the slider fraction, an endpoint-zero envelope, and map-bound clamping. Work validation uses actual displaced segment lengths and the maximum configured width, not the narrow source width.
+- All saved routes use sampled geometry, not the original interactive control points. River points carry fixed local levels.
 - Route coordinates must be finite and within 0..N−1. River levels must be finite 0..255 and non-increasing. Route opacity is validated 0..1; newly authored rivers use 1.
 - Every default layer is visible and unlocked, including conditional legacy/river layers that may not have a visible UI row yet.
 - Legacy landmarks support `tree`, `mountain`, `town`; up to 3,000 records, positions in the map, size 2–40, opacity 0–1 (default 1).
@@ -474,7 +485,9 @@ Open `http://localhost:8000/`. Serve over HTTP rather than opening `index.html` 
 
 ### Test suite
 
-The pre-upgrade baseline had 89 passing tests. The v2.1 suite was run on November 17, 2026: **98 passed, 0 failed**, including taper, meander, reflow, compatibility, thin-source continuity, and workload-budget regression checks. Main test responsibilities:
+At the implementation baseline, **92 tests pass** (v2.1 added: palette/opacity contextual visibility, zero paint opacity does not disable sculpting, route key hint). The full suite was rerun on November 17, 2026: **92 passed, 0 failed**.
+
+Note: `interactions.test.mjs` compares whole project states with `deepEqual`. If such an assertion fails, Node's diff of 65k-element arrays can exhaust memory and the file dies with SIGKILL/heap OOM instead of a readable failure. When that happens, suspect a failing state assertion before suspecting the environment. Run the file alone with `node --test --test-reporter=spec tests/interactions.test.mjs` to see which test it was. Main test responsibilities:
 
 | Test file | Coverage |
 | --- | --- |
@@ -528,7 +541,7 @@ Before release:
 - Inspect `git status` and preserve unrelated user edits.
 - Run appropriate tests and syntax/diff checks.
 - Review renderer/picking and project migration when changing terrain data.
-- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.1.0`. Do not update only the entry script or only CSS.
+- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.1.2`. Do not update only the entry script or only CSS.
 - Update displayed footer version when appropriate; displayed release and cache-patch revision may differ intentionally.
 - Check documentation and shortcut help against implemented handlers.
 
@@ -557,7 +570,9 @@ For rollback, inspect the relevant history, revert the faulty commit(s), rerun c
 | `351e4c5` | New silhouette family and tool grouping |
 | `9c6697e` | Narrow expanded sidebar stacking |
 | `dd01447` | Path/River implementation and local water |
-| `1010122` | Focused route settings and route cursor cleanup; pre-v2.1 code baseline |
+| `1010122` | Focused route settings and route cursor cleanup |
+| `dee5ee8` | v2.1 UI review: contextual toolbox, opacity scope fix, Download/save badge, toggles, layer icons |
+| `4fd8be5` | v2.1.1: removed Overworld breadcrumb and multi-world wording; current code baseline |
 
 ## 10. Known limitations and follow-up candidates
 
@@ -565,7 +580,7 @@ These are implementation facts or review targets, not promises of completed work
 
 1. **No finished-route point editing.** Saved geometry is sampled. Width, surface, depth, or control-point changes after committing require undo/recreation or future route-editing work.
 2. **Baked Path paint.** Surface erasing/overpainting does not remove its route record. Such records still count against route/point/work limits. A route manager or explicit record cleanup is a possible follow-up.
-3. **Authored river approximation.** Manual Reflow updates profiles and recuts the bed; there is no automatic reflow, physical flow, erosion simulation, automatic watershed/source detection, or junction solver. Junctions still use max levels. Repeated Reflow can deepen channels because it samples the current bed.
+3. **Authored river approximation.** Water profile is fixed, junctions use max levels, and there is no physical flow, erosion simulation, automatic watershed/source detection, or recomputation after sculpting.
 4. **River erasing retains the channel.** Removing water is not restoring pre-carve terrain. Undo the original commit for atomic bed-and-water rollback.
 5. **Performance limits are estimates.** Very complex valid scenes can still be slow, especially on Canvas fallback. Full-grid picking and coarse fallback drawing can visually differ around small features.
 6. **Desktop-first editing.** Pointer events and Orbit affordances exist, but touch/mobile usability and comprehensive accessibility have not been fully audited.
@@ -573,10 +588,18 @@ These are implementation facts or review targets, not promises of completed work
 8. **Browser-local persistence.** No server backups, collaboration, multi-project library, accounts, or cloud sync. Storage quota is finite; project downloads remain important.
 9. **No Minecraft output.** No desktop WorldPainter `.world` import, region files, schematic export, or Minecraft biome metadata. Biomes is a visual map view.
 10. **No WorldBox simulation.** No civilizations, agents, ecosystems, or time simulation.
-11. **Old style selectors remain.** Base/theme CSS contains obsolete legacy tool selectors and historical overrides. Clean them deliberately if refactoring, with narrow/collapsed visual verification.
+11. **Old style selectors remain.** Base/theme CSS contains obsolete legacy tool selectors, the now-unused `.breadcrumb`/`.smallgreen` rules, and historical overrides. Clean them deliberately if refactoring, with narrow/collapsed visual verification.
 12. **Documentation can drift.** Historical development notes and test names may refer to earlier schemas/tools. Use current handlers/validators and this baseline specification rather than reintroducing removed functionality.
 
-Protect the fixes already covered by regression tests: no preset-driven tool switching, correct opacity per stroke, frozen Flatten perimeter by default, no edge-shrink reinterpretation, frame-coalesced rendering, real 3D picking, safe draft cancellation, no route→sculpt fallthrough, correct middle-pan ordering, and delayed conditional eraser-target reconciliation.
+13. **Remaining UI review items (not done in v2.1).**
+    - The world dimensions appear in four places.
+    - The right panel's "Made for world builders" filler remains.
+    - The shortcut letters Land=C (reads as Coastline) and Smooth=Q are hard to recall.
+    - Shortcut letters on tool buttons are ~9px.
+    - The new toggle dot, layer icons, and selected-tool ring are outside `contrast.test.mjs`.
+    - Shortcuts help is still hidden below 800px.
+
+Protect the fixes already covered by regression tests: zero paint opacity never disables sculpting, no preset-driven tool switching, correct opacity per stroke, frozen Flatten perimeter by default, no edge-shrink reinterpretation, frame-coalesced rendering, real 3D picking, safe draft cancellation, no route→sculpt fallthrough, correct middle-pan ordering, and delayed conditional eraser-target reconciliation.
 
 ## 11. Holler Maps assets — exact status
 
@@ -613,3 +636,36 @@ Possible future anchors include named locations, paths, rivers, and settlements,
 - Keep icons/groups consistent and paint selections independent.
 - Test meaningful behavior, review the result, verify deployment, and report real limitations plainly.
 - Reconfirm source availability before Holler Maps integration; revisit storytelling only at the appropriate phase.
+
+## 14. UI review — November 17, 2026 (v2.1)
+
+A critical review of the live app compared the UI against this handoff. The interaction model (tool/footprint/material independence, route draft safety) was sound. The layout did not reflect it. Findings and their resolution:
+
+| Finding | Resolution |
+| --- | --- |
+| Toolbox ordered by component type. With Raise active, the irrelevant paint palette sat above Strength, which was below the fold (toolbox ~1,500px in a 745px viewport). | Sculpt section moved up beside brush controls. Palette shown only for Paint. Filler tip removed. Toolbox is ~1,100px. |
+| Opacity and Strength both active on sculpt tools. Opacity silently multiplied strength; Opacity 0 disabled sculpting with no feedback. | Opacity is scoped to Paint, Path, and surface Erase (§3). Regression test added. |
+| Size labelled "px" but measured in map cells (~2.4 screen px per cell at 100% zoom on Large). | Labelled "blocks". |
+| Footer said "W/S brush size" in Path/River, where W/S changes route width. | Hint is tool-specific. |
+| Save/Shortcuts/world name hidden at phone widths, and no Ctrl+S on touch, so no export path. | Download stays visible as an icon at ≤500px. Shortcuts remain hidden on small screens. |
+| "Save project" actually downloads; autosave status was buried at the bottom of the toolbox. | Renamed Download. Header badge shows autosave state. |
+| Grid/Contours toggles looked identical to the view radio choices. | Distinct toggle style with `aria-pressed`. |
+| Selected tool barely distinguishable in dark mode. | Accent ring, bolder label, wider edge marker. |
+| Layer lock shown as ◇; layer/water toggles 25×26 and 31×19; undo/redo unlabeled. | SVG eye/lock icons, 32px targets, aria-labels. |
+| Route preview ribbon faint and not the result colour. | Material/river-coloured outlined ribbon. |
+| New-world cards in a 5+1 grid. | 3×2 grid. |
+| "WORLD / Overworld" breadcrumb, OVERWORLD chip, and "Custom terrain · Overworld" implied multiple worlds per project. | Removed in v2.1.1 at the user's request. Chip reads MAP. |
+
+Verified by the full test suite and by screenshots in headless Chromium (Canvas fallback) at 1440×900 in dark and light themes, at 1024px, and at 390px. Real-GPU and touch-device checks are still outstanding (§9 smoke list items 10–12).
+
+## 14. River Taper, Meander and Reflow upgrade
+
+Merged with the contextual-toolbox review and Overworld removal; those UI changes are preserved. No toolbar tool or project schema version was added.
+
+New rivers default to Taper enabled and Meander 25% (slider 0–100%). These controls are hidden for Path. Taper is optional Boolean river metadata in v4; missing metadata means uniform width for older rivers. Meander is baked into sampled coordinates.
+
+Effective radius is `max(0.75, width/2 × (0.25 + 0.75t))` for tapered rivers, where t is normalized cumulative arc length; untapered radius stays width/2. The minimum avoids subcell sources disappearing between terrain samples. Carving, river water, preview, and hit testing share it. Meander uses a deterministic source-coordinate hash and smooth perpendicular sine offset, bounded by width/2 times the slider fraction, clamped to map bounds and exactly zero at both endpoint handles. Work budgets use actual displaced segment lengths and maximum configured width; the 8,000,000/32,000,000 limits are unchanged.
+
+World Settings offers **Reflow rivers** whenever a saved river exists. It is disabled if Relief or River water is hidden/locked. One action cancels pending gestures, samples all profiles against the same current heights snapshot using `level=max(0,min(previousLevel,nearestGroundHeight-0.5))`, recuts beds below the recalculated levels, rebuilds local water/effective geometry, and refreshes. It has one complete undo/redo group and leaves Path data and ocean settings unchanged. Because this formula samples an already carved bed, **repeated Reflow can deepen channels**; this is disclosed beside the button and covered by tests. Undo restores prior bed and levels. No automatic hydrology or finished-point editing is implemented.
+
+Additional coverage includes taper save/load and old v4 compatibility, source/mouth width, thin-source continuity, deterministic bounded endpoint-pinned meander, maximum-width budgets, reflow profiles/recutting, and UI locks/undo/redo. Final merged release verification: **101 tests passed, 0 failed** on November 17, 2026.

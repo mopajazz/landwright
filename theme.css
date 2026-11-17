@@ -104,5 +104,25 @@ input[type=range]::-moz-range-track{height:4px;background:var(--border);border-r
 .sidebar-collapsed .tool-group+.tool-group{margin-top:8px;padding-top:8px}
 .sidebar-collapsed .rail-settings{margin-top:4px;margin-bottom:8px}
 #tools [data-tool=erase]{grid-column:1/-1}
+/* v2.1 UI review: clearer selection, toggles distinct from mode choices, reachable save, larger targets. */
+#tools button.selected{box-shadow:inset 0 0 0 1px var(--accent);font-weight:600}
+#tools button.selected:before{width:4px;left:-2px;top:6px;bottom:6px}
+nav .toggle{background:transparent;border-color:transparent;display:inline-flex;align-items:center;gap:6px}
+nav .toggle:after{content:'';width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor;box-sizing:border-box;flex:none}
+nav .toggle.active{background:transparent;border-color:transparent;color:var(--fg)}
+nav .toggle.active:after{background:var(--accent);border-color:var(--accent)}
+.layer-row{grid-template-columns:32px 1fr 32px;gap:8px}
+.layer-row button{display:grid;place-items:center;min-width:32px;min-height:32px;padding:0}
+.layer-row button[aria-pressed=true]{color:var(--accent)}
+.layer-icon{width:18px;height:18px;display:block}
+#water,#shade{min-width:36px;min-height:22px}
+#undo,#redo{min-width:32px;min-height:32px}
+#save-badge{text-transform:none;letter-spacing:.3px;font-size:10px}
+.shape-presets{grid-template-columns:repeat(3,1fr)}
+.shape-presets canvas{max-height:96px;object-fit:contain}
+@media(max-width:1100px){.header-actions button span.keep{display:inline}}
+@media(max-width:800px){.header-actions button span.keep{display:none}}
+@media(max-width:500px){.header-actions #save{display:flex;align-items:center;justify-content:center;min-width:40px}#undo,#redo{min-width:32px}}
+
 #reflow-rivers{width:100%;margin-top:12px;border:1px solid var(--border);background:var(--surface);color:var(--fg);text-align:center}
 #reflow-note{line-height:1.6;margin-bottom:0}
