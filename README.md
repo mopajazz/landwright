@@ -51,3 +51,5 @@ WebGL renders a resident 256×256 indexed terrain mesh (130,050 triangles), a ca
 Collapse the toolbox to an icon rail, drag its edge to resize it, or use arrow keys on the divider. Light and dark themes persist locally. Flatten preserves the outer map boundary by default; uncheck **Preserve map edges** to reshape it.
 
 UI palette contrast checks and their scope are documented in [the contrast audit](docs/contrast-audit.md).
+
+New world includes a **Flat grass** preset: a completely level grass field at elevation 80. Select **Small (128 × 128)**, **Medium (192 × 192)**, or **Large (256 × 256)** before creation. Size is retained in project files and undo history; existing projects open at their original 256 × 256 size.
