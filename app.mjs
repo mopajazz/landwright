@@ -1,6 +1,6 @@
-import{generate,stroke}from'./terrain.mjs?v=1.1.1';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=1.1.1';
-import{drawLandmark}from'./landmarks.mjs?v=1.1.1';
+import{generate,stroke}from'./terrain.mjs?v=1.1.2';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=1.1.2';
+import{drawLandmark}from'./landmarks.mjs?v=1.1.2';
 const $=id=>document.getElementById(id),N=256,map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),stampType='tree',selectedShape='island',brushPosition=null,nameEditSnapshot=null;
 const materials=[['Grass','#728958',[111,143,79]],['Sand','#c1ad7f',[193,173,127]],['Stone','#85877c',[133,135,124]],['Forest','#355e43',[53,94,67]],['Snow','#dde2d7',[221,226,215]],['Dirt','#89704f',[137,112,79]]];
 $('palette').innerHTML=materials.map((m,i)=>`<button data-material="${i+1}" class="${i===0?'selected':''}" title="Paint ${m[0]}"><span class="swatch" style="--c:${m[1]}"></span><span>${m[0]}</span></button>`).join('');
