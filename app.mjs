@@ -1,10 +1,10 @@
-import{generate,stroke}from'./terrain.mjs?v=1.3.1';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=1.3.1';
-import{drawLandmark,createLandmarkAtlas}from'./landmarks.mjs?v=1.3.1';
-import{MATERIALS,blendPaint,brushWeight,coastStroke,noise}from'./brushes.mjs?v=1.3.1';
-import{makeShape,validShape,drawShape}from'./shapes.mjs?v=1.3.1';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=1.3.1';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=1.3.1';
+import{generate,stroke}from'./terrain.mjs?v=1.3.2';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=1.3.2';
+import{drawLandmark,createLandmarkAtlas}from'./landmarks.mjs?v=1.3.2';
+import{MATERIALS,blendPaint,brushWeight,coastStroke,noise}from'./brushes.mjs?v=1.3.2';
+import{makeShape,validShape,drawShape,drawProjectedShape}from'./shapes.mjs?v=1.3.2';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=1.3.2';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=1.3.2';
 const $=id=>document.getElementById(id),N=256,map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),stampType='tree',selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],drawingType='freehand',draft=null,drawStart=null,brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0;
 const materials=MATERIALS;
 const glCanvas=$('terrain-gl'),combined=document.createElement('canvas'),composite=combined.getContext('2d');combined.width=combined.height=1024;
@@ -30,9 +30,9 @@ function texture(){let img=pixels;for(let i=0;i<N*N;i++){let c=color(i);if(conto
 function flushTexture(){if(textureDirty){texture();textureDirty=false;}}
 function transform(){let w=map.clientWidth,h=map.clientHeight;let scale=Math.min((w-70)/N,(h-135)/N)*zoom;return{scale,x:(w-N*scale)/2+pan.x,y:(h-N*scale)/2+pan.y-6}}
 function draw(){if(workspaceMode==='3d'){sceneDirty=true;scheduleFrame();return;}let w=map.clientWidth,h=map.clientHeight;ctx.clearRect(0,0,w,h);let t=transform();ctx.save();ctx.shadowColor='#0005';ctx.shadowBlur=36;ctx.drawImage(off,t.x,t.y,N*t.scale,N*t.scale);ctx.restore();if(layers.shapes.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);ctx.beginPath();ctx.rect(0,0,N,N);ctx.clip();for(let shape of drawings)drawShape(ctx,shape);if(draft)drawShape(ctx,draft,true);ctx.restore();}if(layers.landmarks.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);for(let m of marks)drawLandmark(ctx,m);ctx.restore();}ctx.strokeStyle='#84988045';ctx.strokeRect(t.x,t.y,N*t.scale,N*t.scale);if(grid){ctx.strokeStyle='#dae5c62a';ctx.lineWidth=.5;for(let i=0;i<=N;i+=16){ctx.beginPath();ctx.moveTo(t.x+i*t.scale,t.y);ctx.lineTo(t.x+i*t.scale,t.y+N*t.scale);ctx.stroke();ctx.beginPath();ctx.moveTo(t.x,t.y+i*t.scale);ctx.lineTo(t.x+N*t.scale,t.y+i*t.scale);ctx.stroke()}}$('zoomtext').textContent=Math.round(zoom*100)+'%'}
-function composeSurface(){
+function composeSurface(includeDrawings=true){
  composite.setTransform(1,0,0,1,0,0);composite.clearRect(0,0,1024,1024);composite.drawImage(off,0,0,1024,1024);composite.scale(4,4);
- if(layers.shapes.visible&&view!=='height'){for(let s of drawings)drawShape(composite,s);if(draft)drawShape(composite,draft,true);}
+ if(includeDrawings&&layers.shapes.visible&&view!=='height'){for(let s of drawings)drawShape(composite,s);if(draft)drawShape(composite,draft,true);}
  if(grid){composite.strokeStyle='#e1ebd43d';composite.lineWidth=.25;composite.beginPath();for(let i=0;i<N;i+=16){composite.moveTo(i,0);composite.lineTo(i,N);composite.moveTo(0,i);composite.lineTo(N,i);}composite.stroke();}
 }
 function draw3DBrush(){
@@ -46,10 +46,10 @@ function renderFrame(time){
  if(workspaceMode!=='3d'){draw();return;}
  let started=performance.now(),w=mini.clientWidth,h=mini.clientHeight;if(!w||!h)return;
  if(!gpu&&!gpuFailed){try{gpu=createGPUTerrain(glCanvas);if(!gpu){gpuFailed=true;gpuFailureReason='WebGL context unavailable';}}catch(error){gpuFailed=true;gpuFailureReason=error.message;}glCanvas.hidden=!gpu;}
- if(sceneDirty){composeSurface();if(gpu)gpu.update(heights,combined,layers.landmarks.visible&&view!=='height'?marks:[],sea,water);else{tinyCtx.clearRect(0,0,N,N);tinyCtx.drawImage(combined,0,0,N,N);fallbackPixels=tinyCtx.getImageData(0,0,N,N).data;}sceneDirty=false;}
+ if(sceneDirty){composeSurface(!!gpu);if(gpu)gpu.update(heights,combined,layers.landmarks.visible&&view!=='height'?marks:[],sea,water);else{tinyCtx.clearRect(0,0,N,N);tinyCtx.drawImage(combined,0,0,N,N);fallbackPixels=tinyCtx.getImageData(0,0,N,N).data;}sceneDirty=false;}
  mc.clearRect(0,0,w,h);
  if(gpu)gpu.draw(w,h,camera);
- else{renderTerrain(mc,w,h,heights,i=>[fallbackPixels[i*4],fallbackPixels[i*4+1],fallbackPixels[i*4+2]],sea,water,camera,orbitPointer?6:3);if(layers.landmarks.visible&&view!=='height')for(let m of marks){let p=projectTerrain(m.x,m.y,sampleTerrain(m.x,m.y,heights,sea,water),w,h,camera),scale=Math.max(.1,Math.min((w-50)/365,(h-100)/290))*camera.zoom;let size=m.size*64/44*scale,kind={tree:0,mountain:1,town:2}[m.type];mc.globalAlpha=m.opacity??1;mc.drawImage(landmarkAtlas,kind*64,0,64,64,p.x-size/2,p.y-size/2,size,size);mc.globalAlpha=1;}}
+ else{renderTerrain(mc,w,h,heights,i=>[fallbackPixels[i*4],fallbackPixels[i*4+1],fallbackPixels[i*4+2]],sea,water,camera,orbitPointer?6:3);if(layers.shapes.visible&&view!=='height'){const project=(x,y)=>projectTerrain(x,y,sampleTerrain(x,y,heights,sea,water)+.2,w,h,camera);for(let shape of drawings)drawProjectedShape(mc,shape,project);if(draft)drawProjectedShape(mc,draft,project);}if(layers.landmarks.visible&&view!=='height')for(let m of marks){let p=projectTerrain(m.x,m.y,sampleTerrain(m.x,m.y,heights,sea,water),w,h,camera),scale=Math.max(.1,Math.min((w-50)/365,(h-100)/290))*camera.zoom;let size=m.size*64/44*scale,kind={tree:0,mountain:1,town:2}[m.type];mc.globalAlpha=m.opacity??1;mc.drawImage(landmarkAtlas,kind*64,0,64,64,p.x-size/2,p.y-size/2,size,size);mc.globalAlpha=1;}}
  draw3DBrush();
  let duration=performance.now()-started,delta=time-lastFrameTime;if(lastFrameTime&&delta>0&&delta<200&&(orbitPointer||down)){let fps=1000/delta;averageFps=averageFps?averageFps*.8+fps*.2:fps;}lastFrameTime=time;
  $('render-stats').textContent=(gpu?'GPU':'Canvas')+(averageFps?' · '+Math.round(averageFps)+' fps':'');$('render-stats').dataset.renderMs=duration.toFixed(2);$('render-stats').dataset.fps=averageFps.toFixed(1);$('render-stats').dataset.renderer=gpu?'webgl':'canvas';$('render-stats').dataset.fallbackReason=gpu?'':gpuFailureReason;$('render-stats').title=gpu?'WebGL rendering':'Canvas fallback: '+gpuFailureReason;
