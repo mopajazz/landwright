@@ -1,5 +1,5 @@
-import {sampleTerrain,terrainScale} from './terrain3d.mjs?v=1.9.0';
-import {createLandmarkAtlas} from './landmarks.mjs?v=1.9.0';
+import {sampleTerrain,terrainScale} from './terrain3d.mjs?v=1.9.1';
+import {createLandmarkAtlas} from './landmarks.mjs?v=1.9.1';
 const vertex=`
 attribute vec3 a_position;
 attribute vec2 a_uv;
