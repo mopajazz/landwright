@@ -4,12 +4,14 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 
 **Live app:** https://mopajazz.github.io/worldpainter-studio/
 
+**Complete product and engineering handoff:** [handoff.md](handoff.md)
+
 ## Create → sculpt → paint
 
-- Start with Island, Archipelago, Continent, Atoll, or Open ocean. Each has a generated preview. Seed and relief live under Advanced generation.
+- Start with Island, Archipelago, Continent, Atoll, Open ocean, or Flat grass. Each has a generated preview. Seed and relief live under Advanced generation.
 - Sculpt elevation with Raise, Lower, Smooth, or Flatten. Brushes, size/opacity, and the terrain palette stay in fixed positions. Tool-specific settings follow below. Four independent brush footprints cover Soft Round, Hard Round, Coastline, and Grain. Brush and material selections keep the current tool and survive tool changes. Coastline paints any selected material without changing height; use the explicit Land tool (C or M) to add or remove terrain. Opacity controls sculpting power; surface paint opacity is capped within a single stroke and builds across separate strokes.
 - Paint six surface materials. Drawing and Details creation tools have been removed to keep the toolbox focused on terrain. Existing drawings and landmarks still load, render, export, and save.
-- Erase (E) targets Surface paint, Landmarks, or Drawings. Surface erasing uses brush opacity and reveals the natural terrain color without changing heights. Landmark/drawing erasing removes whole touched objects; undo restores them. Hidden and locked layers are protected.
+- Erase (E) always offers Surface paint, with River water and legacy Landmarks/Drawings targets when that content exists. Surface erasing uses brush opacity and reveals the natural terrain color without changing heights. Landmark/drawing erasing removes whole touched objects; undo restores them. Hidden and locked layers are protected.
 - Hide and lock Surface and Relief. Legacy Drawings and Landmarks layers appear only when a project contains that content. Relief visibility controls shading/contours, while elevation remains the world foundation. Hidden or locked layers cannot be edited. Water has its own toggle and sea-level control.
 - Toggle the main workspace between 2D Map and 3D Terrain. All editing tools work directly on the 3D terrain. Left-drag edits with the active tool; right-drag or Alt-drag orbits and tilts; middle-drag or the Pan tool moves the camera. Scroll zooms, Shift+scroll resizes the brush, and Reset view recenters. The Orbit toggle supports touch; selecting a tool returns to editing while staying in 3D. Switch to terrain, heightmap, or biome visualization.
 - Export a 1536×1536 PNG of the current map view, including visible drawings and landmarks, or an 8-bit PNG heightmap at the selected world size. Map exports omit editor overlays such as grid and cursor.
@@ -26,9 +28,11 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 | Middle drag | Pan |
 | Right drag or Alt + drag in 3D | Orbit and tilt |
 | R / L / Q / F | Raise / lower / smooth / flatten |
-| B or P / E / T / D / M / H | Paint / erase / details / draw / coastline / pan |
-| Shift + sculpt | Reverse elevation brush |
-| Shift + paint or details | Erase |
+| B or P / E / C or M / H | Paint / erase / land / pan |
+| J / V | Path / river |
+| Enter or double-click / Escape | Finish route / cancel preview |
+| Shift + Raise/Lower or Land | Reverse elevation direction / remove land |
+| Shift + paint | Erase surface paint |
 | Ctrl or Cmd + Z | Undo |
 | Ctrl or Cmd + Shift + Z | Redo |
 | Ctrl or Cmd + S | Download editable project |
@@ -43,7 +47,7 @@ The app is a map builder, without WorldBox's civilization simulation. It does no
 
 ## 3D rendering
 
-WebGL renders a resident 256×256 indexed terrain mesh (130,050 triangles), a cached map texture, and a batched landmark atlas. Orbiting changes camera uniforms rather than rebuilding CPU triangle paths. Content changes update the cached surface and height data. Animation-frame scheduling combines input updates into one render per display frame. The HUD reports the rendering path and a smoothed rate during interaction; actual frame rate depends on hardware and scene complexity. Devices without WebGL use a Canvas fallback with a lighter mesh while orbiting, full detail on release, and cached landmark sprites. Picking traverses terrain cells and intersects the exact mesh triangles, including water surfaces and isolated peaks.
+WebGL renders a resident indexed terrain mesh at the selected world size (130,050 triangles at 256×256), a cached map texture, and a batched landmark atlas. Orbiting changes camera uniforms rather than rebuilding CPU triangle paths. Content changes update the cached surface and height data. Animation-frame scheduling combines input updates into one render per display frame. The HUD reports the rendering path and a smoothed rate during interaction; actual frame rate depends on hardware and scene complexity. Devices without WebGL use a Canvas fallback with a lighter mesh while orbiting, full detail on release, and cached landmark sprites. Picking traverses terrain cells and intersects the exact mesh triangles, including water surfaces and isolated peaks.
 
 ### Workspace and appearance
 
@@ -53,7 +57,7 @@ UI palette contrast checks and their scope are documented in [the contrast audit
 
 New world includes a **Flat grass** preset: a completely level grass field at elevation 80. Select **Small (128 × 128)**, **Medium (192 × 192)**, or **Large (256 × 256)** before creation. Size is retained in project files and undo history; existing projects open at their original 256 × 256 size.
 
-The toolbox is grouped by function: **Terrain** (Raise, Lower, Smooth, Flatten, Land), **Surface** (Paint, Erase), and **Navigate** (Pan). Group separators remain visible in the collapsed rail. Icons share a 24-unit grid, 1.9-unit stroke, and 28px display size: peak/add, excavated basin/remove, sanding block, spirit level, shoreline, brush, eraser, and hand. Labels, shortcut hints, accessible names, and a selected-edge marker supplement the silhouettes.
+The toolbox is grouped by function: **Terrain** (Raise, Lower, Smooth, Flatten, River, Land), **Surface** (Path, Paint, Erase), and **Navigate** (Pan). Group separators remain visible in the collapsed rail. Icons share a 24-unit grid, 1.9-unit stroke, and 28px display size: peak/add, excavated basin/remove, sanding block, spirit level, shoreline, brush, eraser, and hand. Labels, shortcut hints, accessible names, and a selected-edge marker supplement the silhouettes.
 
 ## Paths and rivers
 
