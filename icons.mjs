@@ -1,12 +1,13 @@
-// A single original icon family: 24-unit grid, restrained fills and clear silhouettes.
+// One 24-unit family. Silhouette carries meaning; color and arrows are not required.
 const paths={
- land:'<path d="m2 15 4-4 3 1 3-7 4 5 6-1M2 19c4-4 6 4 10 0s6 4 10 0"/>',
- raise:'<path d="M2 20 8 10l6 10H2Z"/><path d="m6 13 2 2 2-2M17 16V4m-4 4 4-4 4 4"/><path d="M12 21h10"/>',
- lower:'<path d="M2 6c4 0 4 14 9 14s5-14 9-14"/><path d="M11 4v10m-4-4 4 4 4-4M2 22h20"/>',
- smooth:'<path d="M2 15c4 0 4-8 8-8s4 8 8 8h4M2 20h20"/><path d="m15 5 2-2 2 2m-2-2v7"/>',
- flatten:'<path d="M3 16h18M5 20h14M12 3v9m-4-4 4 4 4-4"/><path d="m3 16 3-3m15 3-3-3"/>',
- paint:'<path d="m9 13 9-10 3 3-10 9-2-2Z"/><path d="M10 14c-5-2-6 3-5 5-1 1-2 1-3 1 5 3 11 0 9-5"/>',
- erase:'<path d="m4 13 8-9a2 2 0 0 1 3 0l6 5a2 2 0 0 1 0 3l-8 9H9l-5-5a2 2 0 0 1 0-3Z"/><path d="m8 9 10 9M12 21h10"/>',
- pan:'<path d="M12 2v20M2 12h20m-13-7 3-3 3 3m-6 14 3 3 3-3M5 9l-3 3 3 3m14-6 3 3-3 3"/>'
+ raise:'<path d="M2 21 9 5l7 16Z" fill="currentColor" fill-opacity=".2"/><path d="m6 12 3 3 3-3M18 3v7m-3-3.5h6"/>',
+ lower:'<path d="M2 6h4c1 0 1 13 6 13S17 6 18 6h4v16H2Z" fill="currentColor" fill-opacity=".2"/><path d="M9 10h6"/>',
+ smooth:'<path d="m7 4 14 5-4 10-14-5Z" fill="currentColor" fill-opacity=".2"/><path d="m3 14 14 5m-12-8 14 5M2 19h4m2 3h5"/>',
+ flatten:'<rect x="2" y="8" width="20" height="9" rx="2" fill="currentColor" fill-opacity=".2"/><circle cx="12" cy="12.5" r="2"/><path d="M5 11v3m14-3v3M2 21h20"/>',
+ land:'<path d="M3 12 7 4l5 2 5-2 4 6-5 4-7-1-4 3Z" fill="currentColor" fill-opacity=".2"/><path d="M2 20c3-3 5 3 8 0s5 3 8 0 3-1 4-1"/>',
+ paint:'<path d="m8 13 9-10 4 4-10 9Z" fill="currentColor" fill-opacity=".2"/><path d="m15 5 4 4M9 15c-5-1-3 5-7 6 6 2 11-1 9-5"/>',
+ erase:'<path d="m3 14 9-10a2 2 0 0 1 3 0l6 5a2 2 0 0 1 0 3l-8 9H9l-6-5a2 2 0 0 1 0-2Z" fill="currentColor" fill-opacity=".2"/><path d="m8 9 10 9M13 21h9"/>',
+ pan:'<path d="M8 12V5a2 2 0 0 1 4 0v6-8a2 2 0 0 1 4 0v8-6a2 2 0 0 1 4 0v10c0 5-3 7-7 7h-1c-3 0-4-1-6-4l-3-4a2 2 0 0 1 3-3l2 2Z" fill="currentColor" fill-opacity=".2"/>',
+ settings:'<path d="M3 6h18M3 12h18M3 18h18"/><circle cx="8" cy="6" r="2" fill="var(--panel)"/><circle cx="16" cy="12" r="2" fill="var(--panel)"/><circle cx="9" cy="18" r="2" fill="var(--panel)"/>'
 };
-export function toolIcon(name){return `<svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${paths[name]||paths.paint}</svg>`;}
+export function toolIcon(name){return `<svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${paths[name]||paths.paint}</svg>`;}

@@ -52,3 +52,5 @@ Collapse the toolbox to an icon rail, drag its edge to resize it, or use arrow k
 UI palette contrast checks and their scope are documented in [the contrast audit](docs/contrast-audit.md).
 
 New world includes a **Flat grass** preset: a completely level grass field at elevation 80. Select **Small (128 × 128)**, **Medium (192 × 192)**, or **Large (256 × 256)** before creation. Size is retained in project files and undo history; existing projects open at their original 256 × 256 size.
+
+The toolbox is grouped by function: **Terrain** (Raise, Lower, Smooth, Flatten, Land), **Surface** (Paint, Erase), and **Navigate** (Pan). Group separators remain visible in the collapsed rail. Icons share a 24-unit grid, 1.9-unit stroke, and 28px display size: peak/add, excavated basin/remove, sanding block, spirit level, shoreline, brush, eraser, and hand. Labels, shortcut hints, accessible names, and a selected-edge marker supplement the silhouettes.

@@ -66,3 +66,23 @@ input[type=range]::-moz-range-track{height:4px;background:var(--border);border-r
 #paint-status{min-height:3em;line-height:1.6}
 #brush-description{height:6.5em;overflow:auto;margin-bottom:0;line-height:1.6}
 #paint-status{height:3.5em;overflow:auto;min-height:0}
+/* Toolbar: one icon metric, explicit functional groups, no tool-specific scaling. */
+#tools{display:flex;flex-direction:column;gap:0;padding:0 12px 14px}
+.tool-group+.tool-group{border-top:1px solid var(--border);margin-top:12px;padding-top:12px}
+.tool-group-label{font-size:9px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);margin:0 0 8px 2px}
+.tool-group-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+#tools button,#tools button:last-child{height:48px;min-height:48px;display:flex;flex-direction:row;justify-content:flex-start;gap:7px;padding:7px 6px;font-size:10px;border-radius:6px;position:relative}
+#tools button .tool-icon,#tools [data-tool=raise] .tool-icon,#tools [data-tool=lower] .tool-icon{width:28px;height:28px;flex:0 0 28px}
+#tools button span,#tools button:last-child span{margin-left:auto}
+#tools [data-tool=land],#tools [data-tool=pan]{grid-column:1/-1}
+#tools button.selected:before{content:'';position:absolute;left:-1px;top:10px;bottom:10px;width:3px;background:var(--accent);border-radius:2px}
+#tools [data-tool=erase].selected{background:var(--selected);color:var(--fg);border-color:var(--accent)}
+#tools [data-tool=erase].selected .tool-icon,#tools [data-tool=erase].selected span{color:var(--accent)}
+.sidebar-collapsed #tools{padding:0 7px 10px}
+.sidebar-collapsed .tool-group-label{display:none}
+.sidebar-collapsed .tool-group+.tool-group{margin-top:10px;padding-top:10px}
+.sidebar-collapsed .tool-group-buttons{grid-template-columns:minmax(0,1fr);gap:5px}
+.sidebar-collapsed #tools button,.sidebar-collapsed #tools button:last-child{height:46px;min-height:46px;justify-content:center;gap:0;padding:6px;font-size:0}
+.sidebar-collapsed #tools button .tool-icon{width:28px;height:28px;flex-basis:28px}
+.sidebar-collapsed .rail-settings .tool-icon{width:24px;height:24px}
+@media(max-width:1100px){#tools{padding-left:8px;padding-right:8px}#tools button,#tools button:last-child{font-size:9px;gap:4px;padding-left:4px;padding-right:4px}}
