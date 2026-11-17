@@ -1,0 +1,3 @@
+export function luminance(hex){let channels=hex.replace('#','').match(/../g).map(s=>parseInt(s,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return channels[0]*.2126+channels[1]*.7152+channels[2]*.0722;}
+export function contrast(a,b){let x=luminance(a),y=luminance(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
+export function parseThemes(css){let result={};for(let mode of['dark','light']){let block=css.match(new RegExp(':root\\[data-theme="'+mode+'"\\]\\s*\\{([^}]+)\\}'));if(!block)throw Error('Missing theme '+mode);result[mode]=Object.fromEntries([...block[1].matchAll(/--([\w-]+)\s*:\s*(#[0-9a-f]{6})/gi)].map(m=>[m[1],m[2]]));}return result;}

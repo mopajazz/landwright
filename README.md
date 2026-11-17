@@ -1,4 +1,4 @@
-# WorldPainter Studio
+# Landwright
 
 A minimalist, dependency-free browser map builder, inspired by WorldPainter's terrain workflow, WorldBox's approachable world creation, and Inkarnate's mapmaking controls. All code and landmark artwork are independently implemented.
 
@@ -45,3 +45,9 @@ The app is a map builder, without WorldBox's civilization simulation. It does no
 ## 3D rendering
 
 WebGL renders a resident 256×256 indexed terrain mesh (130,050 triangles), a cached map texture, and a batched landmark atlas. Orbiting changes camera uniforms rather than rebuilding CPU triangle paths. Content changes update the cached surface and height data. Animation-frame scheduling combines input updates into one render per display frame. The HUD reports the rendering path and a smoothed rate during interaction; actual frame rate depends on hardware and scene complexity. Devices without WebGL use a Canvas fallback with a lighter mesh while orbiting, full detail on release, and cached landmark sprites. Picking traverses terrain cells and intersects the exact mesh triangles, including water surfaces and isolated peaks.
+
+### Workspace and appearance
+
+Collapse the toolbox to an icon rail, drag its edge to resize it, or use arrow keys on the divider. Light and dark themes persist locally. Flatten preserves the outer map boundary by default; uncheck **Preserve map edges** to reshape it.
+
+UI palette contrast checks and their scope are documented in [the contrast audit](docs/contrast-audit.md).
