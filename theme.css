@@ -104,3 +104,5 @@ input[type=range]::-moz-range-track{height:4px;background:var(--border);border-r
 .sidebar-collapsed .tool-group+.tool-group{margin-top:8px;padding-top:8px}
 .sidebar-collapsed .rail-settings{margin-top:4px;margin-bottom:8px}
 #tools [data-tool=erase]{grid-column:1/-1}
+#reflow-rivers{width:100%;margin-top:12px;border:1px solid var(--border);background:var(--surface);color:var(--fg);text-align:center}
+#reflow-note{line-height:1.6;margin-bottom:0}

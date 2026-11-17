@@ -1,9 +1,9 @@
 # Landwright — engineering and product handoff
 
-**Documentation date:** November 17, 2026 (America/New_York)  
-**Implementation baseline:** `1010122f94ac3e06c1aaef7375019f6b16c30a4b`  
-**Displayed release:** `v2.0`  
-**Browser asset/module cache revision:** `2.0.1`  
+**Documentation date:** November 17, 2026 (America/New_York)<br>
+**Implementation baseline:** v2.1 River upgrade; use Git history for its final commit (previous code baseline: `1010122`)<br>
+**Displayed release:** `v2.1`<br>
+**Browser asset/module cache revision:** `2.1.0`<br>
 **Project schema written by the application:** `4`
 
 This document describes the implemented application at the baseline above. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
@@ -187,6 +187,8 @@ An unfinished route does not mutate project terrain/paint or enter saved route d
 | Path opacity | Shared 0–100% control | Zero-opacity finish cancels without edits |
 | River depth | 1–16 blocks; default 4 | Bed-depth parameter; softened banks |
 | River opacity | Fixed 1 internally | No river opacity slider |
+| Taper | Checkbox, enabled by default | Source-to-mouth widening; hidden for Path |
+| Meander | 0–100%, default 25% | Deterministic centerline offsets, exact endpoints; hidden for Path |
 
 **Path:** rasterizes material color into the ordinary paint arrays with a feathered edge and one coverage value per cell. Does not change heights. The sampled route record is retained, but its visible result is baked surface paint, not a separate editable vector layer. Surface erasing removes path paint. It does not automatically remove the stored Path record.
 
@@ -194,14 +196,14 @@ An unfinished route does not mutate project terrain/paint or enter saved route d
 
 River footprint rasterization:
 
-- Radius is width/2.
+- River radius is width/2 without taper. Taper uses `width/2 × (0.25 + 0.75t)` for normalized cumulative arc length t, with a 0.75-cell minimum radius so narrow sources survive rasterization. Preview, carve, local water, and hit testing share this rule.
 - For normalized distance d, target bed is `level − depth × (0.25 + 0.75 × max(0, 1 − d²))`.
 - Full carving weight inside d≤1; bank weight tapers to zero at d=1.5.
 - Carving only lowers terrain and never goes below 0.
 - Local water exists inside d≤1. Multiple rivers combine by maximum local water level.
 - Ocean sea level is unchanged. Water off reveals the carved bed. Hiding River water hides local river water, not the carved channel or global ocean.
 
-This is authored terrain, not fluid simulation or a hydrological solver. Profiles stay fixed after commit and do not rerun automatically after later sculpting. Junctions/intersections are not physically solved. Finished route control points cannot yet be repositioned.
+This is authored terrain, not fluid simulation or a hydrological solver. Profiles do not rerun automatically after later sculpting. **World Settings → Reflow rivers** recalculates all saved river levels from one current-height snapshot, then recuts the channels under those levels and refreshes local water in one undoable action. The action is visible whenever rivers exist and disabled if Relief or River water is hidden/locked. It cancels active gestures/drafts first. Because the specified formula samples the already carved bed, repeated reflow can deepen channels; the UI explicitly discloses this. Undo restores the complete prior bed and profiles. Junctions/intersections are not physically solved. Finished route control points cannot yet be repositioned.
 
 Limits are enforced for generated and imported route data:
 
@@ -385,7 +387,7 @@ type PathRoute = {
   points: XY[];
 };
 type RiverRoute = {
-  type: 'river'; width: number; opacity: number; depth: number;
+  type: 'river'; width: number; opacity: number; depth: number; taper?: boolean;
   points: (XY & { level: number })[];
 };
 type ProjectV4 = {
@@ -414,7 +416,7 @@ type ProjectV4 = {
 
 Schema notes:
 
-- All saved routes use sampled geometry, not the original interactive control points. River points carry fixed local levels.
+- All saved routes use sampled geometry, not the original interactive control points. River points carry saved local levels. Optional `taper` is persisted as Boolean; missing means uniform width for old v4 records. Meander is baked into sampled coordinates and needs no new saved setting. The schema version remains 4. Meander uses a deterministic source-coordinate hash, a smooth perpendicular sine offset of at most width/2 times the slider fraction, an endpoint-zero envelope, and map-bound clamping. Work validation uses actual displaced segment lengths and the maximum configured width, not the narrow source width.
 - Route coordinates must be finite and within 0..N−1. River levels must be finite 0..255 and non-increasing. Route opacity is validated 0..1; newly authored rivers use 1.
 - Every default layer is visible and unlocked, including conditional legacy/river layers that may not have a visible UI row yet.
 - Legacy landmarks support `tree`, `mountain`, `town`; up to 3,000 records, positions in the map, size 2–40, opacity 0–1 (default 1).
@@ -472,7 +474,7 @@ Open `http://localhost:8000/`. Serve over HTTP rather than opening `index.html` 
 
 ### Test suite
 
-At the implementation baseline, **89 tests pass**. The full suite was rerun during this handoff task on November 17, 2026: **89 passed, 0 failed**. Main test responsibilities:
+The pre-upgrade baseline had 89 passing tests. The v2.1 suite was run on November 17, 2026: **98 passed, 0 failed**, including taper, meander, reflow, compatibility, thin-source continuity, and workload-budget regression checks. Main test responsibilities:
 
 | Test file | Coverage |
 | --- | --- |
@@ -526,7 +528,7 @@ Before release:
 - Inspect `git status` and preserve unrelated user edits.
 - Run appropriate tests and syntax/diff checks.
 - Review renderer/picking and project migration when changing terrain data.
-- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.0.1`. Do not update only the entry script or only CSS.
+- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.1.0`. Do not update only the entry script or only CSS.
 - Update displayed footer version when appropriate; displayed release and cache-patch revision may differ intentionally.
 - Check documentation and shortcut help against implemented handlers.
 
@@ -555,7 +557,7 @@ For rollback, inspect the relevant history, revert the faulty commit(s), rerun c
 | `351e4c5` | New silhouette family and tool grouping |
 | `9c6697e` | Narrow expanded sidebar stacking |
 | `dd01447` | Path/River implementation and local water |
-| `1010122` | Focused route settings and route cursor cleanup; current code baseline |
+| `1010122` | Focused route settings and route cursor cleanup; pre-v2.1 code baseline |
 
 ## 10. Known limitations and follow-up candidates
 
@@ -563,7 +565,7 @@ These are implementation facts or review targets, not promises of completed work
 
 1. **No finished-route point editing.** Saved geometry is sampled. Width, surface, depth, or control-point changes after committing require undo/recreation or future route-editing work.
 2. **Baked Path paint.** Surface erasing/overpainting does not remove its route record. Such records still count against route/point/work limits. A route manager or explicit record cleanup is a possible follow-up.
-3. **Authored river approximation.** Water profile is fixed, junctions use max levels, and there is no physical flow, erosion simulation, automatic watershed/source detection, or recomputation after sculpting.
+3. **Authored river approximation.** Manual Reflow updates profiles and recuts the bed; there is no automatic reflow, physical flow, erosion simulation, automatic watershed/source detection, or junction solver. Junctions still use max levels. Repeated Reflow can deepen channels because it samples the current bed.
 4. **River erasing retains the channel.** Removing water is not restoring pre-carve terrain. Undo the original commit for atomic bed-and-water rollback.
 5. **Performance limits are estimates.** Very complex valid scenes can still be slow, especially on Canvas fallback. Full-grid picking and coarse fallback drawing can visually differ around small features.
 6. **Desktop-first editing.** Pointer events and Orbit affordances exist, but touch/mobile usability and comprehensive accessibility have not been fully audited.

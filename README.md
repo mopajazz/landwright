@@ -68,3 +68,11 @@ Use W/S or Shift+wheel to adjust route width (2–32 blocks); Shift+W/S changes 
 The **River water** layer controls visibility/locking of local water; Relief locking also blocks river carving. The Water toggle reveals the bed. Erase → River water removes whole touched river water routes while retaining the carved channel; undo restores them. Surface erasing removes path paint. Route geometry and river levels save in v4 projects; v1–v3 projects migrate automatically. Finished routes cannot yet have individual points repositioned. Map PNGs include visible water; heightmaps export the actual carved bed.
 
 Up to 64 routes / 32,768 sampled points are supported, with an additional shared raster-work budget to keep large or imported routes responsive.
+
+### v2.1 — river taper, meander, and reflow
+
+New River settings include **Taper** (on by default) and deterministic **Meander** (0–100%, default 25%). Taper follows cumulative route distance from 25% to 100% of configured width, with a 0.75-cell minimum radius for tiny sources. Meander is bounded to half the width at 100% and pins endpoints exactly. Paths are unchanged.
+
+**World Settings → Reflow rivers** recalculates saved levels against the current terrain snapshot and recuts the channels beneath them, in one undoable action. It respects Relief/River water visibility and locks. **Repeated reflow can deepen the current bed**; undo restores the previous terrain and river levels. This follows the current-bed sampling formula and is not an automatic hydrology simulation.
+
+v4 stays compatible: optional river `taper` metadata is saved; absent metadata means uniform width for old rivers. Meander is baked into sampled coordinates. No tools or schema version were added. Existing raster-work budgets still use maximum width and actual meandering centerline length.
