@@ -1,5 +1,6 @@
 // A single original icon family: 24-unit grid, restrained fills and clear silhouettes.
 const paths={
+ land:'<path d="m2 15 4-4 3 1 3-7 4 5 6-1M2 19c4-4 6 4 10 0s6 4 10 0"/>',
  raise:'<path d="M2 20 8 10l6 10H2Z"/><path d="m6 13 2 2 2-2M17 16V4m-4 4 4-4 4 4"/><path d="M12 21h10"/>',
  lower:'<path d="M2 6c4 0 4 14 9 14s5-14 9-14"/><path d="M11 4v10m-4-4 4 4 4-4M2 22h20"/>',
  smooth:'<path d="M2 15c4 0 4-8 8-8s4 8 8 8h4M2 20h20"/><path d="m15 5 2-2 2 2m-2-2v7"/>',

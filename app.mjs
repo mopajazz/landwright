@@ -1,15 +1,15 @@
-import{generate,stroke}from'./terrain.mjs?v=1.6.0';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=1.6.0';
-import{drawLandmark,createLandmarkAtlas}from'./landmarks.mjs?v=1.6.0';
-import{MATERIALS,blendPaint,brushWeight,coastStroke,noise}from'./brushes.mjs?v=1.6.0';
-import{makeShape,validShape,drawShape,drawProjectedShape}from'./shapes.mjs?v=1.6.0';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=1.6.0';
-import{initUI}from'./ui.mjs?v=1.6.0';
-import{toolIcon}from'./icons.mjs?v=1.6.0';
-import{touchesShape}from'./eraser.mjs?v=1.6.0';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=1.6.0';
+import{generate,stroke}from'./terrain.mjs?v=1.7.0';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=1.7.0';
+import{drawLandmark,createLandmarkAtlas}from'./landmarks.mjs?v=1.7.0';
+import{MATERIALS,blendPaint,brushWeight,coastStroke,noise}from'./brushes.mjs?v=1.7.0';
+import{makeShape,validShape,drawShape,drawProjectedShape}from'./shapes.mjs?v=1.7.0';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=1.7.0';
+import{initUI}from'./ui.mjs?v=1.7.0';
+import{toolIcon}from'./icons.mjs?v=1.7.0';
+import{touchesShape}from'./eraser.mjs?v=1.7.0';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=1.7.0';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),stampType='tree',selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],drawingType='freehand',draft=null,drawStart=null,brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface';
-document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',erase:'Erase from a layer (E)',stamp:'Place details (T)',draw:'Draw paths and shapes (D)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
+document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={land:'Shape land · Shift removes land (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',erase:'Erase from a layer (E)',stamp:'Place details (T)',draw:'Draw paths and shapes (D)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 const materials=MATERIALS;
 const glCanvas=$('terrain-gl'),combined=document.createElement('canvas'),composite=combined.getContext('2d');combined.width=combined.height=1024;
 const landmarkAtlas=createLandmarkAtlas();
@@ -85,13 +85,7 @@ function apply(p,e){
  if(tool==='erase'&&eraseTarget==='shapes'){drawings=drawings.filter(s=>!touchesShape(s,p.x,p.y,r));return;}
  if(tool==='stamp'){
   if(e.shiftKey){marks=marks.filter(m=>Math.hypot(m.x-p.x,m.y-p.y)>r);return;}
-  if(brushPreset==='forest'){
-   let spacing=Math.max(3,r*.29),startX=Math.floor((p.x-r)/spacing),startY=Math.floor((p.y-r)/spacing);
-   for(let gy=startY;gy<=(p.y+r)/spacing;gy++)for(let gx=startX;gx<=(p.x+r)/spacing;gx++){
-    let x=(gx+.2+noise(gx,gy)*.6)*spacing,y=(gy+.2+noise(gy,gx)*.6)*spacing;
-    if(Math.hypot(x-p.x,y-p.y)<r*.9&&noise(gx+4,gy+7)>.22)placeMark({x,y},'tree',true);
-   }
-  }else placeMark(p,stampType);
+  placeMark(p,stampType);
   return;
  }
  if(tool==='land'){coastStroke(heights,N,p.x,p.y,r,sea,alpha,e.shiftKey);return;}
@@ -104,7 +98,7 @@ function apply(p,e){
   return;
  }
  let active=tool;if(e.shiftKey){if(tool==='raise')active='lower';else if(tool==='lower')active='raise';}
- stroke(heights,N,p.x,p.y,r,+$('strength').value/100*3*alpha,active,+$('target').value,{preserveBoundary:$('preserve-edges').checked});
+ stroke(heights,N,p.x,p.y,r,+$('strength').value/100*3*alpha,active,+$('target').value,{preserveBoundary:$('preserve-edges').checked,preset:brushPreset});
 }
 function shapeStyle(){return{color:$('ink-color').value,width:+$('line-width').value,opacity:opacity(),filled:$('shape-fill').checked};}
 function updateDraft(p,e){
@@ -147,14 +141,14 @@ function cancelStroke(){if(down&&!draft&&!last?.pan)persist();draft=null;drawSta
 map.onpointerup=end;map.onpointercancel=()=>{if(!draft&&down)persist();cancelStroke();};map.onpointerleave=()=>{brushPosition=null;$('brush').style.display='none';};
 function changeZoom(z){zoom=Math.max(.4,Math.min(4,z));draw()}map.addEventListener('wheel',e=>{e.preventDefault();if(e.shiftKey){adjustBrush(brushDelta(e));return;}changeZoom(zoom*(e.deltaY>0?.9:1.1))},{passive:false});$('plus').onclick=()=>changeZoom(zoom*1.2);$('minus').onclick=()=>changeZoom(zoom/1.2);$('fit').onclick=()=>{zoom=1;pan={x:0,y:0};draw()};
 function selectTool(t){
- if(down)end();orbitPointer=null;orbitMode=false;$('orbit-toggle').setAttribute('aria-pressed','false');$('orbit-toggle').textContent='Orbit';tool=t;if((brushPreset==='forest'&&t!=='stamp')||(brushPreset==='coast'&&t!=='land')||(brushPreset==='grain'&&t!=='paint'))brushPreset='soft';if(t==='land')brushPreset='coast';updateBrushUI();
- $('erase-settings').hidden=t!=='erase';$('opacity-label').hidden=t==='erase'&&eraseTarget!=='surface';$('brush-controls').hidden=t==='pan';$('size-label').hidden=t==='draw';$('size-shortcuts').hidden=t==='draw';$('strength-label').hidden=!['raise','lower','smooth','flatten'].includes(t);$('target-label').hidden=t!=='flatten';$('edge-protection-label').hidden=t!=='flatten';
- $('stamp-settings').hidden=t!=='stamp';$('drawing-settings').hidden=t!=='draw';$('brush-settings').hidden=['draw','pan','erase'].includes(t);
- $('palette').closest('.section').hidden=['stamp','draw','pan','erase'].includes(t);
+ if(down)end();orbitPointer=null;orbitMode=false;$('orbit-toggle').setAttribute('aria-pressed','false');$('orbit-toggle').textContent='Orbit';tool=t;updateBrushUI();
+ $('erase-settings').hidden=t!=='erase';$('opacity-label').hidden=false;$('brush-controls').hidden=false;$('size-label').hidden=false;$('size-shortcuts').hidden=false;$('size').disabled=['pan','draw'].includes(t);$('opacity').disabled=t==='pan'||(t==='erase'&&eraseTarget!=='surface');$('strength-label').hidden=!['raise','lower','smooth','flatten'].includes(t);$('target-label').hidden=t!=='flatten';$('edge-protection-label').hidden=t!=='flatten';
+ $('sculpt-settings').hidden=!['raise','lower','smooth','flatten'].includes(t);$('stamp-settings').hidden=t!=='stamp';$('drawing-settings').hidden=t!=='draw';$('brush-settings').hidden=false;document.querySelectorAll('[data-brush]').forEach(b=>b.disabled=!['raise','lower','smooth','flatten','paint','erase'].includes(t)||(t==='erase'&&eraseTarget!=='surface'));
+ $('palette').closest('.section').hidden=false;$('paint-status').textContent=t==='paint'?`${materials[material-1][0]} · ${brushPreset==='coast'?'Coastline':brushPreset==='hard'?'Hard Round':brushPreset==='grain'?'Grain':'Soft Round'} · Shift erases paint`:`${materials[material-1][0]} selected · Use Paint (P) to apply.`;
  document.querySelectorAll('[data-tool]').forEach(b=>{b.classList.toggle('selected',b.dataset.tool===t);b.setAttribute('aria-pressed',b.dataset.tool===t);});
  $('toolhint').textContent={raise:'Raise terrain',lower:'Lower terrain',smooth:'Smooth terrain',flatten:'Flatten to target height',paint:'Paint '+materials[material-1][0],pan:'Pan the map',erase:'Erase '+{surface:'surface paint',landmarks:'landmarks',shapes:'drawings'}[eraseTarget],land:'Shape coastline · Shift to remove land',draw:'Draw '+drawingType,stamp:'Place '+({tree:'trees',mountain:'mountains',town:'settlements'}[stampType])}[t];map.style.cursor=t==='pan'?'grab':'crosshair';
 }
-$('tools').onclick=e=>{let b=e.target.closest('[data-tool]');if(b)selectTool(b.dataset.tool)};$('palette').onclick=e=>{let b=e.target.closest('[data-material]');if(!b)return;material=+b.dataset.material;document.querySelectorAll('[data-material]').forEach(el=>el.classList.toggle('selected',el===b));selectTool('paint')};
+$('tools').onclick=e=>{let b=e.target.closest('[data-tool]');if(b)selectTool(b.dataset.tool)};$('palette').onclick=e=>{let b=e.target.closest('[data-material]');if(!b)return;material=+b.dataset.material;document.querySelectorAll('[data-material]').forEach(el=>el.classList.toggle('selected',el===b));selectTool(tool)};
 for(let id of['size','strength','target'])$(id).oninput=()=>{$(id+'out').value=$(id).value+(id==='size'?' px':id==='strength'?'%':'')};document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b));refresh()});
 $('grid').onclick=()=>{grid=!grid;$('grid').classList.toggle('active',grid);draw()};$('contours').onclick=()=>{contours=!contours;$('contours').classList.toggle('active',contours);refresh()};$('sea').onpointerdown=()=>snapshot();$('sea').onkeydown=e=>{if(e.key.startsWith('Arrow')||['Home','End','PageUp','PageDown'].includes(e.key))snapshot()};$('sea').oninput=()=>{sea=+$('sea').value;$('seaout').value=sea;refresh();persist()};for(let id of['water','shade'])$(id).onclick=()=>{snapshot();if(id==='water')water=!water;else shade=!shade;let v=id==='water'?water:shade;$(id).classList.toggle('on',v);$(id).setAttribute('aria-pressed',v);refresh();persist()};$('undo').onclick=()=>restoreHistory(undo,redo);$('redo').onclick=()=>restoreHistory(redo,undo);
 function download(blob,name){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}function slug(){return $('worldname').value.replace(/[^a-z0-9 -]/gi,'').trim()||'world'}
@@ -163,10 +157,10 @@ $('new').onclick=()=>{$('newdialog').returnValue='';$('newdialog').showModal();}
 function setWorldSize(n){if(![128,192,256].includes(n))throw Error('Invalid project');N=n;camera.size=N;off.width=off.height=tiny.width=tiny.height=N;pixels=oc.createImageData(N,N);grainNoise=Float32Array.from({length:N*N},(_,i)=>(Math.sin(i*78.233)*43758.5453)%1*4);paint=new Uint8Array(N*N);paintColors=new Uint8ClampedArray(N*N*3);paintAlpha=new Float32Array(N*N);document.querySelectorAll('[data-dimensions]').forEach(el=>el.textContent=`${N} × ${N}`);$('heightmap-dimensions').textContent=`PNG · ${N} × ${N}`;document.querySelector('.map-scale').innerHTML=`<span></span>${N/2} blocks`;$('world-size').value=String(N);textureDirty=true;brushPosition=null;}
 function load(input){let s=normalizeProject(input);setWorldSize(s.size);heights=Float32Array.from(s.heights);paint=Uint8Array.from(s.paint);paintColors=Uint8ClampedArray.from(s.paintColors);paintAlpha=Float32Array.from(s.paintAlpha);drawings=s.shapes;sea=s.sea;water=s.water;shade=s.shade;marks=s.marks;layers=s.layers;$('worldname').value=s.name;$('infotitle').textContent=s.name;$('sea').value=sea;$('seaout').value=sea;for(let id of['water','shade']){let v=id==='water'?water:shade;$(id).classList.toggle('on',v);$(id).setAttribute('aria-pressed',v);}renderLayers();}
 $('open').onclick=()=>$('file').click();$('file').onchange=async()=>{let f=$('file').files[0];if(!f)return;try{if(f.size>12e6)throw Error('File too large (12 MB maximum)');if(f.name.endsWith('.json')){let s=normalizeProject(JSON.parse(await f.text()));snapshot();load(s)}else{let image=await createImageBitmap(f);snapshot();oc.clearRect(0,0,N,N);oc.drawImage(image,0,0,N,N);let d=oc.getImageData(0,0,N,N).data;for(let i=0;i<N*N;i++)heights[i]=d[i*4]*.2126+d[i*4+1]*.7152+d[i*4+2]*.0722;paint.fill(0);paintColors.fill(0);paintAlpha.fill(0);marks=[];drawings=[];image.close()}refresh();persist();notify('Imported successfully.')}catch(e){notify(e.message==='Invalid project'?'This project file is invalid.':e.message||'Could not import file.')}finally{$('file').value=''}};
-document.onkeydown=e=>{if(e.target.matches('input,textarea,select,[contenteditable=true]')||document.querySelector('dialog[open]'))return;if(e.ctrlKey||e.metaKey){if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?restoreHistory(redo,undo):restoreHistory(undo,redo)}if(e.key.toLowerCase()==='s'){e.preventDefault();$('save').click()}return}if(e.key==='Escape'){cancelStroke();return;}let delta=brushDelta(e);if(delta){e.preventDefault();adjustBrush(delta);return;}let t={r:'raise',l:'lower',q:'smooth',f:'flatten',p:'paint',b:'paint',t:'stamp',h:'pan',d:'draw',m:'land',e:'erase'}[e.key.toLowerCase()];if(t)selectTool(t)};
+document.onkeydown=e=>{if(e.target.matches('input,textarea,select,[contenteditable=true]')||document.querySelector('dialog[open]'))return;if(e.ctrlKey||e.metaKey){if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?restoreHistory(redo,undo):restoreHistory(undo,redo)}if(e.key.toLowerCase()==='s'){e.preventDefault();$('save').click()}return}if(e.key==='Escape'){cancelStroke();return;}let delta=brushDelta(e);if(delta){e.preventDefault();adjustBrush(delta);return;}let t={r:'raise',l:'lower',q:'smooth',f:'flatten',p:'paint',b:'paint',t:'stamp',h:'pan',d:'draw',m:'land',c:'land',e:'erase'}[e.key.toLowerCase()];if(t)selectTool(t)};
 
 function adjustBrush(delta){$('size').value=resizeBrush(+$('size').value,delta);$('sizeout').value=$('size').value+' px';if(brushPosition){let t=transform();$('brush').style.width=$('brush').style.height=(+$('size').value*t.scale)+'px';}if(workspaceMode==='3d')preview();}
-$('stamp-settings').onclick=e=>{let b=e.target.closest('[data-stamp]');if(!b)return;if(brushPreset==='forest')brushPreset='soft';stampType=b.dataset.stamp;document.querySelectorAll('[data-stamp]').forEach(el=>el.classList.toggle('selected',el===b));selectTool('stamp');};
+$('stamp-settings').onclick=e=>{let b=e.target.closest('[data-stamp]');if(!b)return;stampType=b.dataset.stamp;document.querySelectorAll('[data-stamp]').forEach(el=>el.classList.toggle('selected',el===b));selectTool('stamp');};
 function renderLayers(){let names={shapes:['Drawings','Paths, borders & shapes'],landmarks:['Landmarks','Trees, mountains & settlements'],surface:['Surface','Terrain & biome paint'],elevation:['Relief','Sculpting, shading & contours']};$('layers').innerHTML=Object.entries(names).map(([key,[name,desc]])=>`<div class="layer-row ${layers[key].visible?'':'is-hidden'}"><button data-layer="${key}" data-action="visible" aria-label="${layers[key].visible?'Hide':'Show'} ${name}" aria-pressed="${layers[key].visible}" title="Toggle visibility">${layers[key].visible?'◉':'○'}</button><div class="layer-name">${name}<small>${desc}</small></div><button data-layer="${key}" data-action="locked" aria-label="${layers[key].locked?'Unlock':'Lock'} ${name}" aria-pressed="${layers[key].locked}" title="${layers[key].locked?'Unlock':'Lock'} layer">${layers[key].locked?'▣':'◇'}</button></div>`).join('');}
 $('layers').onclick=e=>{let b=e.target.closest('[data-layer]');if(!b)return;snapshot();layers[b.dataset.layer][b.dataset.action]=!layers[b.dataset.layer][b.dataset.action];renderLayers();refresh();persist();};
 const shapes=[['island','Island'],['archipelago','Archipelago'],['continent','Continent'],['atoll','Atoll'],['blank','Open ocean'],['flat','Flat grass']];
@@ -182,12 +176,11 @@ $('erase-target').onchange=()=>{eraseTarget=$('erase-target').value;$('erase-des
 $('drawing-settings').onclick=e=>{let b=e.target.closest('[data-draw]');if(!b)return;drawingType=b.dataset.draw;document.querySelectorAll('[data-draw]').forEach(el=>{el.classList.toggle('selected',el===b);el.setAttribute('aria-pressed',el===b);});selectTool('draw');};
 function updateBrushUI(){
  document.querySelectorAll('[data-brush]').forEach(b=>{b.classList.toggle('selected',b.dataset.brush===brushPreset);b.setAttribute('aria-pressed',b.dataset.brush===brushPreset);});
- $('brush-description').textContent={soft:'Soft transitions for elevation and terrain paint.',coast:'Rugged edges for land and inlets. Shift removes land.',forest:'Scatter varied trees across dry land. Shift erases.',grain:'Stippled color for textured soil, rocks and vegetation.'}[brushPreset];
+ $('brush-description').textContent={soft:'Soft transitions for elevation and terrain paint.',coast:'Irregular footprint for rugged painted edges. Use Land to add or remove terrain.',hard:'Solid circular coverage with crisp edges. Useful for fills and clean boundaries.',grain:'Stippled color for textured soil, rocks and vegetation.'}[brushPreset];
 }
 function chooseBrush(preset){
  brushPreset=preset;
- if(preset==='coast')selectTool('land');else if(preset==='forest'){stampType='tree';document.querySelectorAll('[data-stamp]').forEach(b=>b.classList.toggle('selected',b.dataset.stamp==='tree'));selectTool('stamp');}else if(preset==='grain')selectTool('paint');else if(['land','stamp'].includes(tool))selectTool('raise');
- updateBrushUI();
+ selectTool(tool);
 }
 $('brush-presets').onclick=e=>{let b=e.target.closest('[data-brush]');if(b)chooseBrush(b.dataset.brush);};
 function setMode(mode){
