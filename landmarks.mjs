@@ -4,3 +4,6 @@ if(m.type==='tree'){c.fillStyle='#536b3e';c.beginPath();c.moveTo(0,-7);c.lineTo(
 if(m.type==='mountain'){c.fillStyle='#9b9d7a';c.beginPath();c.moveTo(-7,5);c.lineTo(0,-7);c.lineTo(7,5);c.closePath();c.fill();c.stroke();c.fillStyle='#59684c';c.beginPath();c.moveTo(0,-7);c.lineTo(2,5);c.lineTo(7,5);c.closePath();c.fill();c.fillStyle='#e6e5c4';c.beginPath();c.moveTo(0,-7);c.lineTo(-2,-3.5);c.lineTo(0,-4);c.lineTo(1,-2.5);c.lineTo(2,-3.5);c.closePath();c.fill();}
 if(m.type==='town'){c.fillStyle='#ccba8c';c.beginPath();c.rect(-5,-1,4,6);c.rect(0,-3,5,8);c.fill();c.stroke();c.fillStyle='#735544';c.beginPath();c.moveTo(-6,-1);c.lineTo(-3,-5);c.lineTo(0,-1);c.closePath();c.moveTo(-1,-3);c.lineTo(2.5,-7);c.lineTo(6,-3);c.closePath();c.fill();c.stroke();c.fillStyle='#3a4936';c.fillRect(1,1,1.6,4);c.fillRect(-4,1,1,1.5);c.fillRect(3,-1,1,1);}
 c.restore();}
+
+// Shared vector-to-bitmap atlas keeps repeated 3D object drawing inexpensive.
+export function createLandmarkAtlas(){let sheet=document.createElement('canvas');sheet.width=192;sheet.height=64;let c=sheet.getContext('2d');for(let [i,type]of['tree','mountain','town'].entries()){c.save();c.translate(i*64+32,32);drawLandmark(c,{type,x:0,y:0,size:44,opacity:1});c.restore();}return sheet;}

@@ -1,13 +1,14 @@
-import{generate,stroke}from'./terrain.mjs?v=1.3.0';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=1.3.0';
-import{drawLandmark}from'./landmarks.mjs?v=1.3.0';
-import{MATERIALS,blendPaint,brushWeight,coastStroke,noise}from'./brushes.mjs?v=1.3.0';
-import{makeShape,validShape,drawShape}from'./shapes.mjs?v=1.3.0';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=1.3.0';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=1.3.0';
-const $=id=>document.getElementById(id),N=256,map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),stampType='tree',selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],drawingType='freehand',draft=null,drawStart=null,brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,orbitMode=false,lastFrameTime=0,averageFps=0;
+import{generate,stroke}from'./terrain.mjs?v=1.3.1';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=1.3.1';
+import{drawLandmark,createLandmarkAtlas}from'./landmarks.mjs?v=1.3.1';
+import{MATERIALS,blendPaint,brushWeight,coastStroke,noise}from'./brushes.mjs?v=1.3.1';
+import{makeShape,validShape,drawShape}from'./shapes.mjs?v=1.3.1';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=1.3.1';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=1.3.1';
+const $=id=>document.getElementById(id),N=256,map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),stampType='tree',selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],drawingType='freehand',draft=null,drawStart=null,brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0;
 const materials=MATERIALS;
 const glCanvas=$('terrain-gl'),combined=document.createElement('canvas'),composite=combined.getContext('2d');combined.width=combined.height=1024;
+const landmarkAtlas=createLandmarkAtlas();
 const tiny=document.createElement('canvas');tiny.width=tiny.height=N;const tinyCtx=tiny.getContext('2d');let fallbackPixels=null;
 const grainNoise=Float32Array.from({length:N*N},(_,i)=>(Math.sin(i*78.233)*43758.5453)%1*4),pixels=oc.createImageData(N,N);
 const scheduleFrame=createFrameScheduler(renderFrame);
@@ -44,14 +45,14 @@ function renderFrame(time){
  flushTexture();
  if(workspaceMode!=='3d'){draw();return;}
  let started=performance.now(),w=mini.clientWidth,h=mini.clientHeight;if(!w||!h)return;
- if(!gpu&&!gpuFailed){try{gpu=createGPUTerrain(glCanvas);if(!gpu)gpuFailed=true;}catch{gpuFailed=true;}glCanvas.hidden=!gpu;}
+ if(!gpu&&!gpuFailed){try{gpu=createGPUTerrain(glCanvas);if(!gpu){gpuFailed=true;gpuFailureReason='WebGL context unavailable';}}catch(error){gpuFailed=true;gpuFailureReason=error.message;}glCanvas.hidden=!gpu;}
  if(sceneDirty){composeSurface();if(gpu)gpu.update(heights,combined,layers.landmarks.visible&&view!=='height'?marks:[],sea,water);else{tinyCtx.clearRect(0,0,N,N);tinyCtx.drawImage(combined,0,0,N,N);fallbackPixels=tinyCtx.getImageData(0,0,N,N).data;}sceneDirty=false;}
  mc.clearRect(0,0,w,h);
  if(gpu)gpu.draw(w,h,camera);
- else{renderTerrain(mc,w,h,heights,i=>[fallbackPixels[i*4],fallbackPixels[i*4+1],fallbackPixels[i*4+2]],sea,water,camera);if(layers.landmarks.visible&&view!=='height')for(let m of marks){let p=projectTerrain(m.x,m.y,sampleTerrain(m.x,m.y,heights,sea,water),w,h,camera),scale=Math.max(.1,Math.min((w-50)/365,(h-100)/290))*camera.zoom;drawLandmark(mc,{...m,x:p.x,y:p.y,size:m.size*scale});}}
+ else{renderTerrain(mc,w,h,heights,i=>[fallbackPixels[i*4],fallbackPixels[i*4+1],fallbackPixels[i*4+2]],sea,water,camera,orbitPointer?6:3);if(layers.landmarks.visible&&view!=='height')for(let m of marks){let p=projectTerrain(m.x,m.y,sampleTerrain(m.x,m.y,heights,sea,water),w,h,camera),scale=Math.max(.1,Math.min((w-50)/365,(h-100)/290))*camera.zoom;let size=m.size*64/44*scale,kind={tree:0,mountain:1,town:2}[m.type];mc.globalAlpha=m.opacity??1;mc.drawImage(landmarkAtlas,kind*64,0,64,64,p.x-size/2,p.y-size/2,size,size);mc.globalAlpha=1;}}
  draw3DBrush();
  let duration=performance.now()-started,delta=time-lastFrameTime;if(lastFrameTime&&delta>0&&delta<200&&(orbitPointer||down)){let fps=1000/delta;averageFps=averageFps?averageFps*.8+fps*.2:fps;}lastFrameTime=time;
- $('render-stats').textContent=(gpu?'GPU':'Canvas')+(averageFps?' · '+Math.round(averageFps)+' fps':'');$('render-stats').dataset.renderMs=duration.toFixed(2);$('render-stats').dataset.fps=averageFps.toFixed(1);$('render-stats').dataset.renderer=gpu?'webgl':'canvas';
+ $('render-stats').textContent=(gpu?'GPU':'Canvas')+(averageFps?' · '+Math.round(averageFps)+' fps':'');$('render-stats').dataset.renderMs=duration.toFixed(2);$('render-stats').dataset.fps=averageFps.toFixed(1);$('render-stats').dataset.renderer=gpu?'webgl':'canvas';$('render-stats').dataset.fallbackReason=gpu?'':gpuFailureReason;$('render-stats').title=gpu?'WebGL rendering':'Canvas fallback: '+gpuFailureReason;
 }
 function preview(){scheduleFrame();}
 function refresh(){textureDirty=true;sceneDirty=true;scheduleFrame();}

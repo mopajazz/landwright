@@ -1,5 +1,5 @@
-import {sampleTerrain,terrainScale} from './terrain3d.mjs?v=1.3.0';
-import {drawLandmark} from './landmarks.mjs?v=1.3.0';
+import {sampleTerrain,terrainScale} from './terrain3d.mjs?v=1.3.1';
+import {createLandmarkAtlas} from './landmarks.mjs?v=1.3.1';
 const vertex=`
 attribute vec3 a_position;
 attribute vec2 a_uv;
@@ -35,7 +35,7 @@ export function createGPUTerrain(canvas){
  let next=0;for(let y=0;y<255;y++)for(let x=0;x<255;x++){let a=y*256+x,b=a+1,c=a+256,d=c+1;indexData.set([a,b,d,a,d,c],next);next+=6;}
  gl.bindBuffer(gl.ARRAY_BUFFER,terrain);gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.DYNAMIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indices);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indexData,gl.STATIC_DRAW);
  function texture(){let t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t;}
- const surface=texture(),atlas=texture(),sheet=document.createElement('canvas');sheet.width=192;sheet.height=64;const c=sheet.getContext('2d');for(let [i,type] of ['tree','mountain','town'].entries()){c.save();c.translate(i*64+32,32);drawLandmark(c,{type,x:0,y:0,size:44,opacity:1});c.restore();}gl.bindTexture(gl.TEXTURE_2D,atlas);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,sheet);
+ const surface=texture(),atlas=texture(),sheet=createLandmarkAtlas();gl.bindTexture(gl.TEXTURE_2D,atlas);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,sheet);
  let marks=[],spriteData=new Float32Array(0),lastYaw=NaN,lastPitch=NaN;
  function bind(buffer){gl.bindBuffer(gl.ARRAY_BUFFER,buffer);for(let [i,[size,offset]] of [[3,0],[2,12],[2,20],[1,28]].entries()){gl.enableVertexAttribArray(attrs[i]);gl.vertexAttribPointer(attrs[i],size,gl.FLOAT,false,32,offset);}}
  return {
