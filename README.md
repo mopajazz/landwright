@@ -6,6 +6,8 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 
 **Complete product and engineering handoff:** [handoff.md](handoff.md)
 
+**Reusable development skill:** [landwright-development](.agents/skills/landwright-development/SKILL.md). Copy the entire skill folder into a supported skills directory (commonly `~/.agents/skills/`) for use in another checkout or agent runtime. The skill includes a portable handoff snapshot; the current root handoff and source remain authoritative.
+
 ## Create → sculpt → paint
 
 - Start with Island, Archipelago, Continent, Atoll, Open ocean, or Flat grass. Each has a generated preview. Seed and relief live under Advanced generation.

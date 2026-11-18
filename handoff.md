@@ -1,7 +1,7 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 17, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.2 Living World; previous baseline `e2320cb`. See Git history for the final release commit.
+**Implementation baseline:** v2.2 Living World, commit `03c1199`; previous baseline `e2320cb`. This documentation/skill refresh does not change runtime behavior.
 **Displayed release:** `v2.2`
 **Browser asset/module cache revision:** `2.2.0`<br>
 **Project schema written by the application:** `4`
@@ -48,6 +48,8 @@ User decisions already implemented:
 - Old drawings and landmarks must survive loading, rendering, export, and saving.
 - Path and River are focused tools, not a reason to restore the general Drawing menu.
 - Storytelling is deferred until the terrain tools are complete.
+- Living World begins with optional visual water/atmosphere effects, behind one World Settings toggle; additional life must preserve the compact toolbar.
+- Maintain the tutorial and knowledge base with each feature. Teach low Strength before Raise/Lower: start around 5–10%, use short strokes, inspect, and increase gradually.
 
 - The toolbox is contextual (v2.1). The always-visible paint palette was only a reaction to the old bug where choosing a material switched the tool; the user confirmed this. The palette now appears only with Paint, and the no-switching rule still holds.
 - Opacity is a paint concept only. It applies to Paint, Path, and surface Erase. Sculpt tools and Land ignore it (see §3).
@@ -194,6 +196,8 @@ An unfinished route does not mutate project terrain/paint or enter saved route d
 | Path opacity | Shared 0–100% control | Zero-opacity finish cancels without edits |
 | River depth | 1–16 blocks; default 4 | Bed-depth parameter; softened banks |
 | River opacity | Fixed 1 internally | No river opacity slider |
+| River taper | Boolean; default on for new rivers | Source-to-mouth radius growth; missing saved flag means uniform (§15) |
+| River meander | 0–100%; default 25% | Deterministic, endpoint-pinned offset baked into sampled coordinates (§15) |
 
 **Path:** rasterizes material color into the ordinary paint arrays with a feathered edge and one coverage value per cell. Does not change heights. The sampled route record is retained, but its visible result is baked surface paint, not a separate editable vector layer. Surface erasing removes path paint. It does not automatically remove the stored Path record.
 
@@ -201,7 +205,7 @@ An unfinished route does not mutate project terrain/paint or enter saved route d
 
 River footprint rasterization:
 
-- Radius is width/2.
+- Untapered radius is width/2. Tapered radius is `max(0.75, width/2 × (0.25 + 0.75t))`, where t is normalized cumulative arc length; see §15.
 - For normalized distance d, target bed is `level − depth × (0.25 + 0.75 × max(0, 1 − d²))`.
 - Full carving weight inside d≤1; bank weight tapers to zero at d=1.5.
 - Carving only lowers terrain and never goes below 0.
@@ -320,6 +324,9 @@ This is a static, buildless HTML/CSS/ES-module application. No React, bundler, a
 | `gpu-terrain.mjs` | WebGL mesh/buffers, shader program, texture and legacy billboard batches |
 | `editor.mjs` | Project normalization/migration, default layers, sizing shortcuts |
 | `ui.mjs` | Persistent theme/sidebar preferences, resize/collapse/flyout handlers |
+| `living.mjs` | Wet-mask scene sampling, separate bounded atmosphere renderer, pausable 30Hz animation loop |
+| `docs/tutorial.md`, `docs/kb/` | Beginner workflow and topic-based user documentation, linked in Help |
+| `.agents/skills/landwright-development/` | Reusable development skill and portable handoff snapshot |
 | `icons.mjs` | Tool/settings SVG family |
 | `shapes.mjs` | Validation/rendering/hit-compatible geometry helpers for legacy drawings; not a live Drawing tool |
 | `landmarks.mjs` | Original legacy symbol rendering and cached atlas |
@@ -376,7 +383,7 @@ Cloud-browser live checks used the Canvas fallback because that browser did not 
 
 ## 7. Editable project schema and compatibility
 
-Project downloads are JSON named `<sanitized-world-name>.world.json`. The UI's Save project action downloads data and schedules autosave. This is not a WorldPainter desktop `.world` format.
+Project downloads are JSON named `<sanitized-world-name>.world.json`. The UI's Download action (accessible name: Download project file) downloads data and schedules autosave. This is not a WorldPainter desktop `.world` format.
 
 Current normalized object shape (descriptive TypeScript, not a separate runtime dependency):
 
@@ -399,6 +406,7 @@ type PathRoute = {
 };
 type RiverRoute = {
   type: 'river'; width: number; opacity: number; depth: number;
+  taper?: boolean; // absent means uniform width for old v4 rivers
   points: (XY & { level: number })[];
 };
 type ProjectV4 = {
@@ -449,11 +457,12 @@ Schema notes:
 | Key | Contents |
 | --- | --- |
 | `worldpainter-project` | Current v4 project JSON; name retained for existing-user compatibility |
+| `landwright-living` | `{ enabled: boolean, clouds: boolean, waterMotion: boolean }`; browser preferences only |
 | `landwright-ui` | `{ theme: 'dark'|'light', sidebarWidth: number, collapsed: boolean }` |
 
 Autosave is debounced by 600ms. Storage failure produces a save-to-file message rather than silently claiming success. Data is origin/browser-specific. Moving to another URL/origin will not migrate local storage; provide a downloaded project first. There is no cloud sync or account recovery.
 
-The following are not part of the project snapshot: undo/redo stacks, current tool/material/footprint, brush/route setting sliders, workspace mode, camera, zoom/pan, visualization mode, grid/contours, generation seed/shape/relief metadata, and unfinished route draft. Theme/sidebar preferences are stored separately. Generation is reproducible by seed/options, but those options are not persisted as a reconstructive project recipe.
+The following are not part of the project snapshot: undo/redo stacks, current tool/material/footprint, brush/route setting sliders, workspace mode, camera, zoom/pan, visualization mode, grid/contours, generation seed/shape/relief metadata, and unfinished route draft. Theme/sidebar and Living World preferences are stored separately; Living World changes do not create undo entries or project autosaves. Generation is reproducible by seed/options, but those options are not persisted as a reconstructive project recipe.
 
 Undo retains up to 35 complete project snapshots in memory. Starting an edit clears redo. Route finishing is atomic; name typing forms a focus-session undo group. Undo/redo restores size-dependent buffers and route water. Undo with a draft cancels it first, including held-pointer state. A stopped ordinary brush stroke is not automatically rolled back by Escape; route cancellation is distinct from undoing an already applied brush.
 
@@ -465,7 +474,7 @@ Undo retains up to 35 complete project snapshots in memory. Starting an edit cle
 | Map PNG | 1536×1536 | Top-down current visualization, visible paint/water/legacy overlays |
 | Heightmap PNG | N×N, 8-bit grayscale | Rounded/clamped actual heights/river bed, no local/ocean water fill |
 
-Map export is not a screenshot of the 3D orbit. It omits grid, cursor, route draft, point handles, selection/tool UI, compass, labels, and HUD. World size changes export scaling to 1536/N. Respect layer visibility and Heightmap visualization when composing legacy overlays. Filenames use `-map.png` or `-heightmap.png` after the sanitized world name.
+Map export is not a screenshot of the 3D orbit. It omits grid, cursor, route draft, point handles, selection/tool UI, compass, labels, HUD, and the Living World atmosphere overlay. World size changes export scaling to 1536/N. Respect layer visibility and Heightmap visualization when composing legacy overlays. Filenames use `-map.png` or `-heightmap.png` after the sanitized world name.
 
 ## 9. Development, verification, and deployment
 
@@ -485,7 +494,7 @@ Open `http://localhost:8000/`. Serve over HTTP rather than opening `index.html` 
 
 ### Test suite
 
-At the implementation baseline, **92 tests pass** (v2.1 added: palette/opacity contextual visibility, zero paint opacity does not disable sculpting, route key hint). The full suite was rerun on November 17, 2026: **92 passed, 0 failed**.
+At the v2.2 implementation baseline, **106 tests passed, 0 failed** on November 17, 2026. This includes river taper/meander/reflow and Living World lifecycle/data-isolation checks. Test counts are baseline evidence; rerun the suite against the actual checkout before claiming a new result.
 
 Note: `interactions.test.mjs` compares whole project states with `deepEqual`. If such an assertion fails, Node's diff of 65k-element arrays can exhaust memory and the file dies with SIGKILL/heap OOM instead of a readable failure. When that happens, suspect a failing state assertion before suspecting the environment. Run the file alone with `node --test --test-reporter=spec tests/interactions.test.mjs` to see which test it was. Main test responsibilities:
 
@@ -503,8 +512,12 @@ Note: `interactions.test.mjs` compares whole project states with `deepEqual`. If
 | `ui.test.mjs` | Preference normalization and responsive sidebar width bounds |
 | `contrast.test.mjs` | Actual theme-token color-pair thresholds |
 | `assets.test.mjs` | Consistent entry stylesheet/module cache revisions |
+| `living.test.mjs` | Wet-mask bounds, deterministic scene budget, immutable project data, loop pause/cancel/resume, bounded projected drawing |
+| `living-interactions.test.mjs` | Queued-frame 2D stroke pause/resume regression |
 
 Interaction tests use jsdom and stub canvas drawing because jsdom does not implement browser rasterization. They verify real application data/event behavior, not PNG encoding, GPU pixels, native accessibility usability, or subjective icon recognition.
+
+Living World tests must use asynchronous/queued animation frames. Bind the loop to `document.defaultView.requestAnimationFrame`, not a global synchronous test stub: synchronous recursion never yields. `tests/living-interactions.test.mjs` demonstrates a queued window/global RAF harness. Its DOM remains alive through the 600ms autosave timer before closing; premature teardown causes asynchronous null-DOM errors. Test project/history isolation separately from preference persistence.
 
 Useful checks:
 
@@ -512,6 +525,7 @@ Useful checks:
 npm test
 node --check app.mjs
 node --check routes.mjs
+node --check living.mjs
 node --check editor.mjs
 node --check gpu-terrain.mjs
 git diff --check
@@ -531,6 +545,8 @@ Manual smoke checks before a feature release:
 10. Both themes, collapsed rail, 180px expanded sidebar, short/small viewports, settings flyout, route Finish/Cancel bar.
 11. Map/heightmap PNGs and legacy overlay visibility; real browser output, not only test stubs.
 12. GPU-enabled browser plus Canvas fallback; do not infer GPU performance from the cloud fallback.
+13. Living World on/off and independent cloud/water choices in 2D/3D; motion pauses and clears during edits, orbit/pan, route drafts, diagnostic views, hidden tabs, and reduced motion, then resumes appropriately. Effects remain absent from project JSON/history and exported PNGs.
+14. Help links to tutorial/KB, low-Strength instructions, and documented control names match the UI.
 
 ### GitHub Pages release process
 
@@ -541,7 +557,7 @@ Before release:
 - Inspect `git status` and preserve unrelated user edits.
 - Run appropriate tests and syntax/diff checks.
 - Review renderer/picking and project migration when changing terrain data.
-- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.1.2`. Do not update only the entry script or only CSS.
+- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.2.0`. Documentation-only updates do not require a cache or footer version bump. Do not update only the entry script or only CSS.
 - Update displayed footer version when appropriate; displayed release and cache-patch revision may differ intentionally.
 - Check documentation and shortcut help against implemented handlers.
 
@@ -572,7 +588,10 @@ For rollback, inspect the relevant history, revert the faulty commit(s), rerun c
 | `dd01447` | Path/River implementation and local water |
 | `1010122` | Focused route settings and route cursor cleanup |
 | `dee5ee8` | v2.1 UI review: contextual toolbox, opacity scope fix, Download/save badge, toggles, layer icons |
-| `4fd8be5` | v2.1.1: removed Overworld breadcrumb and multi-world wording; current code baseline |
+| `4fd8be5` | v2.1.1: removed Overworld breadcrumb and multi-world wording |
+| `10961f0` | River taper, deterministic meander, and undoable reflow |
+| `e2320cb` | Merged river upgrade with current UI refinements |
+| `03c1199` | v2.2 Living World and tutorial/KB; current runtime baseline |
 
 ## 10. Known limitations and follow-up candidates
 
@@ -580,7 +599,7 @@ These are implementation facts or review targets, not promises of completed work
 
 1. **No finished-route point editing.** Saved geometry is sampled. Width, surface, depth, or control-point changes after committing require undo/recreation or future route-editing work.
 2. **Baked Path paint.** Surface erasing/overpainting does not remove its route record. Such records still count against route/point/work limits. A route manager or explicit record cleanup is a possible follow-up.
-3. **Authored river approximation.** Water profile is fixed, junctions use max levels, and there is no physical flow, erosion simulation, automatic watershed/source detection, or recomputation after sculpting.
+3. **Authored river approximation.** Water profiles stay fixed until explicit Reflow; junctions use max levels. There is no physical flow, erosion simulation, automatic watershed/source detection, or automatic recomputation after sculpting. Manual Reflow samples the current bed and may deepen it when repeated (§15).
 4. **River erasing retains the channel.** Removing water is not restoring pre-carve terrain. Undo the original commit for atomic bed-and-water rollback.
 5. **Performance limits are estimates.** Very complex valid scenes can still be slow, especially on Canvas fallback. Full-grid picking and coarse fallback drawing can visually differ around small features.
 6. **Desktop-first editing.** Pointer events and Orbit affordances exist, but touch/mobile usability and comprehensive accessibility have not been fully audited.
@@ -658,7 +677,7 @@ A critical review of the live app compared the UI against this handoff. The inte
 
 Verified by the full test suite and by screenshots in headless Chromium (Canvas fallback) at 1440×900 in dark and light themes, at 1024px, and at 390px. Real-GPU and touch-device checks are still outstanding (§9 smoke list items 10–12).
 
-## 14. River Taper, Meander and Reflow upgrade
+## 15. River Taper, Meander and Reflow upgrade
 
 Merged with the contextual-toolbox review and Overworld removal; those UI changes are preserved. No toolbar tool or project schema version was added.
 
@@ -670,7 +689,7 @@ World Settings offers **Reflow rivers** whenever a saved river exists. It is dis
 
 Additional coverage includes taper save/load and old v4 compatibility, source/mouth width, thin-source continuity, deterministic bounded endpoint-pinned meander, maximum-width budgets, reflow profiles/recutting, and UI locks/undo/redo. Final merged release verification: **101 tests passed, 0 failed** on November 17, 2026.
 
-## 15. v2.2 Living World and user documentation
+## 16. v2.2 Living World and user documentation
 
 `living.mjs` renders a separate `living-overlay` Canvas, with a capped 30Hz effect loop rather than continuously re-rendering terrain. Water shimmer samples visible wet cells; route streaks follow source-to-mouth point order; four drifting clouds add stylized projected soft shadows. This is visual atmosphere, not water/lighting/civilization simulation. No vegetation, population, day/night, or storytelling is delivered here.
 
@@ -681,3 +700,16 @@ World Settings offers one Living World toggle (default on) and an expandable cho
 Maintain these user docs alongside new features: location, procedure, what changes, save/undo/export behavior, limitations, and common mistakes. Keep planned features clearly separate from shipped behavior.
 
 v2.2 verification: **106 tests passed, 0 failed**. Tutorial/KB local links and syntax/diff checks pass. Living World rendering is deliberately separate from project data, undo and PNG composition; queued-frame tests cover pause/resume after 2D edits.
+
+
+## 17. Reusable development skill and next session
+
+The repository-scoped skill is [landwright-development](.agents/skills/landwright-development/SKILL.md). It applies to Landwright feature work, regressions, releases, onboarding/tutorial/KB updates, and Holler Maps or storytelling planning. Its `references/handoff.md` is a portable snapshot of this document, not a separate specification. When updating this handoff, refresh that snapshot in the same change; its skill link is rebased to `../SKILL.md`, and its contrast-audit link uses the bundled `references/docs/contrast-audit.md`. Refresh that audit copy if its source changes. In an active checkout, source/tests and this root handoff take precedence over an older installed skill snapshot.
+
+To install elsewhere, copy the entire `landwright-development` directory into that runtime's supported skills directory (commonly `~/.agents/skills/`); retain `SKILL.md` and `references/handoff.md`. A skill file in this repository does not mean it is installed into every ChatGPT session or published to the plugin catalog. The portable `.skill` archive is a ZIP of that directory; extract it into the supported skills directory.
+
+For a fresh session, request: **“Use landwright-development to continue Landwright. Read the current handoff, inspect HEAD and working-tree changes, and implement the requested change while keeping the tutorial and KB current.”** Discover the checkout and remote rather than relying on the cloud path above.
+
+Latest shipped state: v2.2 at `03c1199`, published through successful Pages run `44207290868`. Live-browser smoke checks confirmed the Living World switch/status/options in 2D and Canvas-fallback 3D. These checks do not establish real-GPU performance or a full accessibility audit. No runtime code changes are included in this handoff/skill refresh.
+
+Suggested next product discussion: add a small amount of visual vegetation/life inside the existing Living World controls, with a measured budget and clear persistence/export semantics. This is a candidate, not an implemented or fully specified feature. Holler Maps originals remain unavailable (§11); storytelling remains deferred (§12).
