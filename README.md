@@ -17,7 +17,7 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 - Hide and lock Surface and Relief. Legacy Drawings and Landmarks layers appear only when a project contains that content. Relief visibility controls shading/contours, while elevation remains the world foundation. Hidden or locked layers cannot be edited. Water has its own toggle and sea-level control.
 - Toggle the main workspace between 2D Map and 3D Terrain. All editing tools work directly on the 3D terrain. Left-drag edits with the active tool; right-drag or Alt-drag orbits and tilts; middle-drag or the Pan tool moves the camera. Scroll zooms, Shift+scroll resizes the brush, and Reset view recenters. The Orbit toggle supports touch; selecting a tool returns to editing while staying in 3D. Switch to terrain, heightmap, or biome visualization.
 - Export a 1536×1536 PNG of the current map view, including visible drawings and landmarks, or an 8-bit PNG heightmap at the selected world size. Map exports omit editor overlays such as grid and cursor.
-- Undo/redo retains 35 states, including stamps, layer settings, names, translucent paint, drawings, and world generation. Editable project files and local autosaves use schema v5 and accept v1–v4 projects. Older Forest paint remains color, without automatically adding trees.
+- Undo/redo retains 35 states, including stamps, layer settings, names, translucent paint, drawings, and world generation. Editable project files and local autosaves use schema v6 and accept v1–v5 projects. Older Forest paint remains color, without automatically adding trees.
 
 ## Shortcuts
 
@@ -81,7 +81,7 @@ The river upgrade retained v4 compatibility (v2.3 now writes v5 for forests): op
 
 ## Living World and user documentation
 
-World Settings → **Living World** adds a visual-only, separately rendered overlay: water shimmer, downstream river streaks, drifting clouds, and soft cloud shadows in 2D/3D. It is on by default, with separate Water motion / Clouds options. Effects pause during editing, route previews, hidden tabs, reduced motion, and diagnostic views. The overlay targets 30 draws/sec, leaves project data/history unchanged, and is excluded from PNG exports. Preferences use `landwright-living`. Atmosphere does not include simulation, inhabitants, settlements, day/night, or storytelling. Static forests are saved separately in v5; optional Canopy breeze animates bounded foliage glints.
+World Settings → **Living World** adds a visual-only, separately rendered overlay: water shimmer, downstream river streaks, drifting clouds, and soft cloud shadows in 2D/3D. It is on by default, with separate Water motion / Clouds options. Effects pause during editing, route previews, hidden tabs, reduced motion, and diagnostic views. The overlay targets 30 draws/sec, leaves project data/history unchanged, and is excluded from PNG exports. Preferences use `landwright-living`. Atmosphere does not include simulation, inhabitants, day/night, or storytelling. Static forests are saved separately in v5; optional Canopy breeze animates bounded foliage glints.
 
 Start with the [tutorial](docs/tutorial.md) or [knowledge base](docs/kb/index.md), also linked from in-app Help. **Before Raise or Lower, start around 5–10% Strength, use short strokes, inspect, and increase gradually.** Paint Opacity does not reduce sculpting power.
 
@@ -98,3 +98,9 @@ Forest painting now produces connected, textured canopy with irregular edges, na
 The same cached woodland texture appears in 2D, 3D and visible Map PNGs. A shallow derived canopy surface gives 3D woodland volume and consistent picking without changing the saved ground or Heightmap PNG. Canvas fallback texture-maps wooded cells and restores detail after orbit. Pattern caches, bounding-box rasterization and frame-coalesced texture updates keep repeated brush events from rebuilding the full texture synchronously.
 
 Verified with 123 passing tests and actual browser Map/Heightmap exports. Real-GPU performance remains hardware-dependent and has not been established in the cloud Canvas browser. See [woodland guidance](docs/kb/forests.md) and the [art-direction reference](docs/design/README.md); the reference is concept art, not a screenshot.
+
+## v2.5 — settlements and named places
+
+Expand **Settlements** in the right sidebar to place a Hamlet, Village, or Town on gentle dry land. Original deterministic clusters use muted roofs and shallow display relief in both 2D and 3D. Preview suitability before committing; select, name, rotate, resize, move or delete a place. The toolbar stays at ten tools.
+
+Settlements have a conditional visible/locked layer and whole-object erasing. Their clearings retain underlying forest density; placement never changes ground heights. Map PNG includes visible buildings and labels; Heightmap stays bed-only. Schema6 saves at most64 records and imports versions1–6. Older apps cannot read schema6. See the [settlements guide](docs/kb/settlements.md) and [tutorial](docs/tutorial.md). No Holler source library or civilization simulation is included.

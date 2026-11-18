@@ -1,12 +1,12 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 17, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.4 terrain-integrated woodland; previous release `e56269b` (v2.3). See Git history and GitHub Pages for the release commit/deployment.
-**Displayed release:** `v2.4`
-**Browser asset/module cache revision:** `2.4.0`<br>
-**Project schema written by the application:** `5`
+**Implementation baseline:** v2.5 settlements; previous release `95c5ea6` (v2.4). See Git history and GitHub Pages for the release commit/deployment.
+**Displayed release:** `v2.5`
+**Browser asset/module cache revision:** `2.5.0`<br>
+**Project schema written by the application:** `6`
 
-Sections 1–18 retain engineering context and release history; §19 defines the v2.4 woodland renderer and supersedes earlier forest rendering details. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
+§20 defines the current settlements/schema6 contracts and supersedes older statements that settlements are deferred. Sections 1–18 retain engineering context and release history; §19 defines the v2.4 woodland renderer and supersedes earlier forest rendering details. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
 
 ## 1. Identity, ownership, and locations
 
@@ -821,3 +821,31 @@ git diff --check
 The local preview server was restarted as `python3 -m http.server 8765 --bind 0.0.0.0`, with output at `/tmp/woodland-http.log`. It may need restarting in another environment. Browser local storage is tied to the 8765 origin; a different port will not load the same map. Browser tab IDs are ephemeral.
 
 Do not use `/workspace/shared/landwright-forests.jpg` as a v2.4 acceptance image: it shows the rejected v2.3 stamps. Capture fresh screenshots through the supported browser tool. The generated concept is not a substitute for testing the implemented renderer.
+
+## 20. v2.5 settlements — current Codex continuation
+
+### Scope and interaction
+
+The user explicitly authorized implementing and deploying settlements. Preserve ten terrain/surface/navigation tools. The right-sidebar collapsed Settlements panel contains Hamlet/Village/Town, Place, Select, existing-place dropdown, Name, Size, Rotation, Move, Delete and Back to terrain. It is separate from removed Drawing/Details tools. Original deterministic muted roof clusters replace any assumption of access to Holler originals. No inhabitants, growth, roads between places, auto-relocation or narrative authoring shipped.
+
+Place/Move are transient modes with stable seed and exact chosen fields. Pointer preview validates without mutation; click/Enter commits one snapshot. Escape, selecting a tool, view changes, New world or imports clear the draft. Pointer events must not fall through into sculpting. Selecting/renaming/moving works in 2D and 3D. Middle-pan and right/Alt orbit remain available. Form fields retain normal text editing. Move must compare the full record, not only x/y, so same-position rotation/scale/name changes commit.
+
+### Authoritative persistence and validation
+
+`editor.mjs` writes schema6, imports1–6, migrates older versions with settlements[]. Required v6 list: max64, unique IDs, canonical fields `{id,kind,x,y,scale,rotation,seed,name}`. ID is1–40 ASCII alphanumeric/underscore/hyphen; name is nonblank plain text up to80 chars without control characters. Kind is hamlet/village/town; finite scale0.5–1.5, rotation0–360, unsigned32-bit integer seed. Entire circular footprint fits the grid. Unknown fields are stripped. Validate imports before replacing active project/history. Never insert names into HTML; use textContent and Canvas text. Autosave/history use the same authoritative records, no roof fields.
+
+### Site and rendering contracts
+
+`settlements.mjs` owns deterministic layout, validation, derived fields and Canvas composition. Base radii6/9/13; bounded packing targets6/15/30 irregular buildings with curved internal lanes. Every footprint cell must be at least sea+1 and dry against raw riverWater even when hidden. Ground range<=8 and adjacent differences<=3; circular footprints cannot overlap (one-cell separation). Failure reports a reason. Prepare ground manually with Flatten, or reduce size; placement never sculpts. Terrain changes can leave an existing record unsuitable; do not silently remove it.
+
+`settlementFields` builds bounded mask and shallow gable heights; cache by records-array identity/N. All committed edits replace the array immutably. Combine visible footprints with woodland suppression masks without changing saved forest density. Derived roofs add only to `surfaceHeights`, capped255, shared by GPU/Canvas/picking. Bed, river reflow, saved heights and Heightmap remain untouched. Hiding Settlements removes roofs and allows eligible woodland to return. Separate cached1024² settlement texture is reused during orbit and composited into2D/3D/MapPNG. Names remain overlay text, clamped/flipped inside actual N for export and screen projection in3D. Heightmap view suppresses labels/buildings. Conditional layer and Erase target remove whole objects regardless of Opacity; visibility/locks protect edits.
+
+Living World pauses during Place/Move drafts. UI themes use existing tokens. No claim of full WCAG conformance or real-GPU performance is established by Node tests or Canvas screenshots.
+
+### Verification and maintenance
+
+Fresh full `npm test`: **135 passed, 0 failed**, including5 settlement module tests and7 DOM integration tests. Coverage includes deterministic bounded layout, whole-footprint suitability, derived-height isolation, schema migration and rejection, label edges, safe names, cancel/undo/redo, locks/erasing, all types placed in3D, same-position Move transform, image-import draft cleanup and malformed-import atomicity. Reviewer confirmed the three reproduced bugs fixed, with no concrete remaining blocker. Node DOM tests stub Canvas; actual browser visual/export checks remain separately required for release.
+
+Update tutorial, `docs/kb/settlements.md`, KB index, projects/brush guidance and README with behavior changes. Preserve the mandatory5–10% initial Raise/Lower Strength lesson. Refresh this skill's reference copy with its relative skill link rebased. Deployment remains GitHub Pages `main:/`; verify actual successful run and live footer2.5 before claiming release. All root module/style query revisions are2.5.0. Prior v2.4 release95c5ea6 remains historical. See Git history for this release commit.
+
+Actual v2.5 local-browser verification: placed Village Willowbank and Hamlet Northwatch in Evergreen Island after explicitly preparing a flat site. Inspected light/dark controls and2D/Canvas3D composition. Downloaded schema6 retained both names/types. MapPNG is1536² and includes roofs/lanes/labels. The256² Heightmap matched every rounded saved bed pixel; visible/hidden Settlements heightmaps were byte-identical. No real-GPU frame-rate claim is made.

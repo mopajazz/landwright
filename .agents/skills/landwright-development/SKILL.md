@@ -13,7 +13,7 @@ Repository: https://github.com/mopajazz/worldpainter-studio
 
 Live app: https://mopajazz.github.io/worldpainter-studio/
 
-Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.4/cache `2.4.0` replaces generated stamps with integrated woodland (previous release `e56269b`). Read handoff §19 first. Schema **5**, imports **1–5** remain. Verify HEAD/status before editing.
+Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.5/cache `2.5.0` adds original terrain-integrated settlements (previous release `95c5ea6`). Read handoff §20 first, then §19 for woodland. Schema **6**, imports **1–6** remain. Verify HEAD/status before editing.
 
 ## Find the contract
 
@@ -23,6 +23,7 @@ Discover the checkout and remote; cloud paths and remote aliases vary. This is s
 | Paths/rivers/reflow | `routes.mjs`, `editor.mjs`; §§3, 7, 15 |
 | 3D/performance | `terrain3d.mjs`, `gpu-terrain.mjs`; §6 |
 | Forest density/placement | `forests.mjs`, app composition/lifecycle; §§18–19 |
+| Settlements | `settlements.mjs`, app placement/composition; §20 |
 | Living World | `living.mjs`, app lifecycle; §16 |
 | Saves/undo/export | `editor.mjs`, app state/composition; §§7–8 |
 | Verification/release | `tests/`, `package.json`; §9 |
@@ -50,3 +51,5 @@ Woodland coverage, canopy height and RGBA are derived, never saved. Keep picking
 - Treating visual river flow as hydrology; repeated Reflow can deepen beds.
 - Assuming Holler originals are accessible: Windows paths/ChatGPT Library references are not downloaded assets. Locate files and tell the user they were found before integration.
 - Assuming inhabitants, day/night, or storytelling shipped. Revisit storytelling after terrain; do not add it implicitly.
+
+Settlements remain a sidebar panel, never an eleventh toolbar tool. Keep drafts transient and gestures isolated; validate whole dry/gentle footprints. Cache fields by immutable records identity. Roofs and clearings are derived, never bed edits or forest-density deletion. Names are plain text. Schema6 keeps at most64 canonical records; older schemas migrate with an empty list. Check cancel/import/undo and actual2D/3D/export behavior. No simulation or Holler-source integration is implied.

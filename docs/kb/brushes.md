@@ -27,3 +27,7 @@ Flatten approaches Target height. Preserve map edges holds the perimeter fixed a
 ## Why did my mountain jump so quickly?
 
 Undo, reduce Strength, and use smaller/shorter gestures. Low Strength is the first control to try; a smaller brush only reduces area. Check whether you held the pointer in one place or made many passes before releasing.
+
+## Erase settlements
+
+When places exist, Erase offers Settlements. A stroke removes whole touched places; Opacity does not fade buildings. Hidden or locked Settlements are protected. Undo restores removal. See [Settlements](settlements.md).
