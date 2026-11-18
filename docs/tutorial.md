@@ -1,6 +1,6 @@
 # Landwright: your first living landscape
 
-This tutorial covers the current v2.5 interface. It takes you from a flat field to a sculpted map with a path, river, forests, settlements, and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
+This tutorial covers the current v2.5.1 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
 
 ## Before your first stroke: start with low Strength
 
@@ -25,7 +25,7 @@ Other starts include Island, Archipelago, Continent, Atoll, and Open ocean. Adva
 4. Select **Lower (L)**. Keep Strength low and make a shallow valley beside the ridge.
 5. Use **Smooth (Q)** lightly if transitions become too abrupt.
 
-Switch to **3D Terrain** to inspect your slopes. Right-drag or Alt-drag orbits; middle-drag pans; the wheel zooms. All terrain tools work in 3D as well as 2D.
+Switch to **3D Terrain** to inspect your slopes. Right-drag or Alt-drag orbits; hold Space and left-drag to pan from any tool, or middle-drag; the wheel zooms. All terrain tools work in 3D as well as 2D.
 
 If you need a level area, **Flatten (F)** approaches its target height. Preserve map edges is on by default so flattening does not move the outer rim in 3D. Only turn it off when you want to reshape the border itself.
 
@@ -71,16 +71,7 @@ Use Water off/on to inspect the bed. The River water layer hides local river wat
 
 Trees avoid water, steep slopes, and saved path corridors. Density remains saved where unsuitable terrain hides trees; erase it if you want permanent removal. See [Forests and clearings](kb/forests.md) for target density, old-map compatibility, and path-corridor limits.
 
-## 7. Give the landscape a place to gather
-
-1. Expand **Settlements** in the right sidebar. Choose Hamlet and click **Place settlement**.
-2. Preview a gentle, dry site. If rejected, try a smaller size or prepare level ground with Flatten.
-3. Click to place it. Rename it, rotate it, or choose Move selected to try another site.
-4. Use Escape or Back to terrain when finished. Undo restores edits, and the Settlements layer can hide or lock places.
-
-Visible places make clearings without deleting forest density. They work in 2D and 3D and appear with names in Map PNGs; Heightmap still exports ground only. See [Settlements](kb/settlements.md).
-
-## 8. Let the landscape breathe
+## 7. Let the landscape breathe
 
 World Settings contains **Living World**, enabled by default. It adds subtle water shimmer, downstream river streaks, drifting clouds, and gentle cloud shadows. Expand Atmosphere settings to choose Water motion, Clouds & soft shadows, or Canopy breeze separately. Canopy breeze adds subtle moving foliage glints; trees remain visible when animation is off.
 
@@ -92,7 +83,7 @@ World Settings contains **Living World**, enabled by default. It adds subtle wat
 
 The effects do not enter project history or exports. See [Living World](kb/living-world.md) for scope and performance details. Growth simulation, boats, travelers, day/night, and storytelling remain future topics.
 
-## 9. Save something you can return to
+## 8. Save something you can return to
 
 Use **Download project** in the header, or Ctrl/Cmd+S. Keep the `.world.json` file: it contains editable terrain, paint, forest density, river records, settlement records, and layer settings. Browser autosave is useful but tied to this browser and hosting origin.
 
@@ -103,7 +94,7 @@ Export Map image for a 1536×1536 top-down PNG. Export Heightmap for the actual 
 - [Brush strength and painting](kb/brushes.md)
 - [Rivers, paths, and reflow](kb/routes.md)
 - [Forests and clearings](kb/forests.md)
-- [Settlements and named places](kb/settlements.md)
+- [Saved settlement compatibility](kb/settlements.md)
 - [Living World](kb/living-world.md)
 - [Saving, exporting, and troubleshooting](kb/projects.md)
 - [Engineering handoff](../handoff.md)

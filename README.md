@@ -27,7 +27,7 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 | Shift + W / S | Change brush size by 10 |
 | Shift + mouse wheel | Resize brush |
 | Mouse wheel | Zoom |
-| Middle drag | Pan |
+| Space + left drag / Middle drag | Pan |
 | Right drag or Alt + drag in 3D | Orbit and tilt |
 | R / L / Q / F | Raise / lower / smooth / flatten |
 | B or P / E / C or M / H | Paint / erase / land / pan |
@@ -99,8 +99,8 @@ The same cached woodland texture appears in 2D, 3D and visible Map PNGs. A shall
 
 Verified with 123 passing tests and actual browser Map/Heightmap exports. Real-GPU performance remains hardware-dependent and has not been established in the cloud Canvas browser. See [woodland guidance](docs/kb/forests.md) and the [art-direction reference](docs/design/README.md); the reference is concept art, not a screenshot.
 
-## v2.5 — settlements and named places
+## v2.5.1 — simpler sidebar and Space-drag pan
 
-Expand **Settlements** in the right sidebar to place a Hamlet, Village, or Town on gentle dry land. Original deterministic clusters use muted roofs and shallow display relief in both 2D and 3D. Preview suitability before committing; select, name, rotate, resize, move or delete a place. The toolbar stays at ten tools.
+The Settlements placement/editing panel has been removed from the right sidebar. Existing saved settlements retain their rendering, names, layers, erasing, undo and export support; schema6 and imports1–6 remain compatible. No replacement settlement controls have been added.
 
-Settlements have a conditional visible/locked layer and whole-object erasing. Their clearings retain underlying forest density; placement never changes ground heights. Map PNG includes visible buildings and labels; Heightmap stays bed-only. Schema6 saves at most64 records and imports versions1–6. Older apps cannot read schema6. See the [settlements guide](docs/kb/settlements.md) and [tutorial](docs/tutorial.md). No Holler source library or civilization simulation is included.
+Hold **Space + left mouse drag** to pan in2D or3D from any active tool. Releasing Space preserves the selected tool; the current pan gesture continues until mouse release. Text fields and open dialogs keep ordinary Space behavior. Losing window focus or hiding the page clears the held-key state. Middle-drag, Pan(H), and3D orbit controls remain available.

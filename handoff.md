@@ -1,9 +1,9 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 17, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.5 settlements; previous release `95c5ea6` (v2.4). See Git history and GitHub Pages for the release commit/deployment.
-**Displayed release:** `v2.5`
-**Browser asset/module cache revision:** `2.5.0`<br>
+**Implementation baseline:** v2.5.1 sidebar simplification and Space pan; previous release `d36fe0f` (v2.5). See Git history and GitHub Pages for the release commit/deployment.
+**Displayed release:** `v2.5.1`
+**Browser asset/module cache revision:** `2.5.1`<br>
 **Project schema written by the application:** `6`
 
 §20 defines the current settlements/schema6 contracts and supersedes older statements that settlements are deferred. Sections 1–18 retain engineering context and release history; §19 defines the v2.4 woodland renderer and supersedes earlier forest rendering details. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
@@ -849,3 +849,13 @@ Fresh full `npm test`: **135 passed, 0 failed**, including5 settlement module te
 Update tutorial, `docs/kb/settlements.md`, KB index, projects/brush guidance and README with behavior changes. Preserve the mandatory5–10% initial Raise/Lower Strength lesson. Refresh this skill's reference copy with its relative skill link rebased. Deployment remains GitHub Pages `main:/`; verify actual successful run and live footer2.5 before claiming release. All root module/style query revisions are2.5.0. Prior v2.4 release95c5ea6 remains historical. See Git history for this release commit.
 
 Actual v2.5 local-browser verification: placed Village Willowbank and Hamlet Northwatch in Evergreen Island after explicitly preparing a flat site. Inspected light/dark controls and2D/Canvas3D composition. Downloaded schema6 retained both names/types. MapPNG is1536² and includes roofs/lanes/labels. The256² Heightmap matched every rounded saved bed pixel; visible/hidden Settlements heightmaps were byte-identical. No real-GPU frame-rate claim is made.
+
+## 21. v2.5.1 sidebar removal and Space pan — current override
+
+The user rejected the right-sidebar Settlements options. Remove the entire placement/editing panel, controls, CSS and interaction modes; do not silently move them elsewhere. §20 describes historical v2.5 creation behavior only. Preserve schema6 records, import validation, derived roof/woodland composition, labels, MapPNG exports, conditional visibility/lock layer and whole-object Erase support for saved maps. No new schema or eleventh tool.
+
+Space keydown outside inputs/selects/textareas/contenteditable and open dialogs prevents scrolling/activation and enables temporary camera panning. Left pointerdown chooses pan before editing/route logic.2D uses existing pan offsets;3D uses camera panX/panY without changing yaw/pitch, even off terrain and with Orbit active. A started pan stays a pan until pointerup even if Space is released first. Tool selection and authoritative data/history stay unchanged. Mid-stroke Space ends the stroke before enabling pan. Keyup, window blur and hidden-page transitions clear key state; blur/hidden also cancel held gestures. Brush cursor hides during navigation; grab cursor indicates Space.
+
+Tests replace removed creation-mode integration tests with current sidebar-absence, saved-content retention,2D/3D translation, no-terrain-change, tool persistence, keyup/blur/typing and route-pan tests. Full suite134 passes. Tutorial/KB/README/help describe current controls. §20 historical135-test count is superseded.
+
+Real-browser v2.5.1 checks used held Space with native left-mouse drags:2D moved the map80px/40px;3D translated the camera without changing the selected Raise tool. Inspected simplified sidebar in dark/light themes; existing Willowbank/Northwatch records remained visible. Canvas fallback was used; no GPU performance claim.
