@@ -1,12 +1,39 @@
 # Landwright — engineering and product handoff
 
-**Documentation date:** November 17, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.6 New World redesign and export presets; previous release `de1f70e` (v2.5.2). See Git history and GitHub Pages for the release commit/deployment.
+**Documentation date:** November 18, 2026 (America/New_York)<br>
+**Implementation baseline:** v2.6 New World redesign and export presets, released in `d7ae907d69f7066f036b6dc799d284683bb0269d`; previous release `de1f70e` (v2.5.2). Documentation-only commits may follow this application release.
 **Displayed release:** `v2.6`
 **Browser asset/module cache revision:** `2.6.0`<br>
 **Project schema written by the application:** `6`
 
-§20 defines the current settlements/schema6 contracts and supersedes older statements that settlements are deferred. Sections 1–18 retain engineering context and release history; §19 defines the v2.4 woodland renderer and supersedes earlier forest rendering details. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
+Read **§0 first** for the current state. Sections 14–23 retain release history; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
+
+## 0. Current release — start here
+
+| Contract | Current state |
+| --- | --- |
+| Application release | **v2.6**, commit `d7ae907` |
+| Verified deployment | [GitHub Pages run 44341029194](https://github.com/mopajazz/worldpainter-studio/actions/runs/44341029194), **success**, exact release SHA above |
+| Live app | https://mopajazz.github.io/worldpainter-studio/ |
+| Runtime | Static HTML/CSS/ES modules; cache `2.6.0`; no build or runtime packages |
+| Project format | Writes **6**, imports **1–6**; authoritative terrain, paint, forest density, routes, saved settlements and legacy content |
+| Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan |
+| Erasing | **Shift + Paint** click/drag; Paint’s Shift erase target selects the eligible layer. No Erase tool or E tool shortcut |
+| Opacity | **D decreases / E increases by 5%**, Paint and Path only; clamp 0–100; preserve tool/Strength/history |
+| Navigation | **Space + left-drag** or middle-drag pans in 2D/3D; right/Alt-drag orbits in 3D |
+| New World | Six starting shapes, exact-grid live preview, required name, terrain-detail guidance, collapsed seed/relief settings, current-project download, Cancel/X/Escape and native Enter/Create |
+| Terrain detail | Quick sketch/Small **128²**, Standard/Medium **192²**, Detailed/Large **256²** |
+| Map PNG | Independent **1024² / 2048² (default) / 4096²**; 4K square, not UHD landscape |
+| Heightmap | **N² actual bed elevations**; no water, canopy or roof relief |
+| Settlements | Creation/editing panel removed. Preserve saved records, rendering, names, layers, Shift erasing, undo and export |
+| Verification | Last full application run: **142 passed, 0 failed** (`/tmp/world-release-tests.log`); current handoff edit is documentation-only |
+| Knowledge base | [New worlds/resolution](docs/kb/worlds.md), [tutorial](docs/tutorial.md), [KB index](docs/kb/index.md) |
+
+**Release evidence:** production browser showed v2.6, all six shape choices, the updated preview summary, all three export presets, and no application console errors. Local browser produced an actual 4096×4096 PNG; the 256×256 Heightmap matched every rounded saved bed pixel. Native Enter created a named flat 128 world; Undo restored the entire original project as parsed JSON. Dark/light and a 500px window were inspected; this does not establish real-phone touch behavior, full WCAG compliance, or GPU performance.
+
+**Deferred:** 512/1024 editable grids require profiling; rectangular worlds, device formats and retro presentation are not implemented. Higher export resolution scales existing terrain textures and renders vector artwork/text at output size; it does not create extra geographic detail. No inhabitants, civilization/ecosystem simulation, storytelling system, or Holler source-library integration. The supplied Windows folder and general ChatGPT Library remain inaccessible unless actual files become available.
+
+**Preserve:** beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep nine tools and the removed settlement panel removed. Never save derived water/canopy/roof geometry into bed heights.
 
 ## 1. Identity, ownership, and locations
 
@@ -40,7 +67,7 @@ User decisions already implemented:
 - Opacity and a compact cartographic brush set.
 - Creation in a full-workspace 2D or 3D mode, with tools available in both.
 - Collapsible, resizable toolbox and persistent light/dark UI preferences.
-- Explicit eraser and visually distinct tool icons.
+- Shift + Paint erasing and visually distinct tool icons; the dedicated Erase tool was removed in v2.5.2.
 - Brush footprint and material choices must not secretly select another tool.
 - Coastline is a painting/sculpting footprint; **Land** is the explicit land addition/removal tool.
 - Forest Scatter was removed and replaced by Hard Round.
@@ -75,24 +102,26 @@ Grid size is real data resolution, not a zoom preset:
 
 | Size | Side length N | Height/paint cell count |
 | --- | ---: | ---: |
-| Small | 128 | 16,384 |
-| Medium | 192 | 36,864 |
-| Large | 256 | 65,536 |
+| Quick sketch · Small | 128 | 16,384 |
+| Standard · Medium | 192 | 36,864 |
+| Detailed · Large | 256 | 65,536 |
 
 Large preserves the original application size and is the initial New world selection. Old projects lacking `size` default to 256. Generation can run at other resolutions internally for preview/tests, but normal application project loading accepts only 128, 192, and 256.
 
+The modal includes a large live preview, shape description, terrain-detail guidance, a current-project backup action, and a responsive layout. Previews never edit the current map. Map image resolution is selected separately in Export.
+
 Additional modal fields:
 
-- World name: required by the form, maximum 80 characters; initial value `Untitled Island`.
-- Seed under Advanced generation: default 42, UI bounds −999,999,999 through 999,999,999; reroll chooses an integer below 1,000,000.
+- World name: required by the form, maximum 80 characters; initial value `Untitled world`; trim on creation.
+- Seed under Generation settings: default 42, UI bounds −999,999,999 through 999,999,999; reroll chooses an integer below 1,000,000.
 - Relief: UI 40–140, divided by 100 for the generator; initial 100. Labels: Gentle below 70, Dramatic above 115, Natural otherwise.
 - Non-flat/non-ocean generation clamps heights to 10–250. Relief scales land elevation above the baseline sea height 62.
 
-Committing a new world creates one undo snapshot, clears paint, routes, legacy marks and drawings, restores default layer flags, sets sea level 62, enables Water and Hill shading, resets 2D/3D camera positioning, and refreshes size-dependent buffers/labels. Tool, view, grid, and contour choices are not all reset as project data. Canceling/reopening the dialog must not accidentally generate a world. Opening it cancels an unfinished route.
+Committing a new world creates one undo snapshot, clears paint, forest density, routes, settlements, legacy marks and drawings, restores default layer flags, sets sea level 62, enables Water and Hill shading, resets 2D/3D camera positioning, and refreshes size-dependent buffers/labels. Tool, view, grid, and contour choices are not all reset as project data. Canceling/reopening the dialog must not accidentally generate a world. Opening it cancels an unfinished route.
 
 ### Toolbar and shortcuts
 
-There are **10 creation/navigation tools**, grouped as follows:
+There are **nine creation/navigation tools**, grouped as follows:
 
 | Group | Tool | Internal ID | Shortcut | Main effect |
 | --- | --- | --- | --- | --- |
@@ -104,10 +133,9 @@ There are **10 creation/navigation tools**, grouped as follows:
 | Terrain | Land | `land` | C; M alias | Add land; Shift removes land |
 | Surface | Path | `path` | J | Preview/commit a material trail |
 | Surface | Paint | `paint` | P; B alias | Paint the selected material |
-| Surface | Erase | `erase` | E | Erase the selected eligible target |
 | Navigate | Pan | `pan` | H | Pan the map/camera |
 
-D and T no longer select tools. There is no general Drawing or Details panel.
+D/E adjust Paint/Path Opacity by 5%; neither selects a tool. T has no tool binding. There is no general Drawing or Details panel.
 
 Global editing controls:
 
@@ -118,7 +146,9 @@ Global editing controls:
 | Shift + wheel | Increase/decrease brush or route width by 1 according to scroll direction |
 | Wheel | Zoom |
 | Left drag | Apply the selected brush, or add route control points while a route is active |
-| Middle drag | Pan in 2D/3D, including while a route preview exists |
+| Space + left drag / Middle drag | Pan in 2D/3D, including while a route preview exists |
+| D / E | Decrease/increase Paint or Path Opacity by 5%, bounded 0–100% |
+| Shift + Paint click/drag | Erase the selected Shift target; ordinary Paint remains the selected material |
 | Right drag or Alt + drag in 3D | Orbit/tilt |
 | Ctrl/Cmd + Z | Undo; if a route draft exists, cancel the draft first without consuming history |
 | Ctrl/Cmd + Shift + Z | Redo; draft cancellation takes precedence |
@@ -127,7 +157,7 @@ Global editing controls:
 | Double-click | Finish a route while a route tool is active |
 | Escape | Cancel route preview or stop the current gesture |
 
-Global shortcuts are suppressed while typing in inputs/textareas/selects/contenteditable elements or while a dialog is open. Route point placement focuses the canvas so Enter works after placing points. Shift reverses Raise/Lower and removes Land; it erases surface paint while painting. Smooth and Flatten do not reverse under Shift.
+Global shortcuts are suppressed while typing in inputs/textareas/selects/contenteditable elements or while a dialog is open. Route point placement focuses the canvas so Enter works after placing points. Shift reverses Raise/Lower and removes Land; it erases the chosen target while painting (ground defaults to Surface; Forest defaults to Forests). Smooth and Flatten do not reverse under Shift.
 
 ### Brush and terrain-palette contract
 
@@ -138,7 +168,7 @@ Brush controls in the ordinary brush workflow:
 | Control | UI bounds | Initial value |
 | --- | --- | --- |
 | Size / diameter | 4–120 blocks (map cells; UI shows "blocks") | 42 |
-| Opacity | 0–100%; Paint, Path and surface Erase only | 100% |
+| Opacity | 0–100%; Paint, Path and surface/forest Shift erasing | 100% |
 | Sculpt strength | 1–100% | 35% |
 | Flatten target | 1–255 | 120 |
 | Preserve map edges | Boolean | Enabled |
@@ -150,9 +180,9 @@ Footprints:
 - **Coastline:** irregular angular boundary with a sharper interior feather; works with Sand and every other paint material without changing elevation in Paint mode.
 - **Grain:** radial soft weight multiplied by deterministic stippling; useful for textured soil, stone, and vegetation color.
 
-Toolbox order for brush tools: Brush settings (footprint) → Brush controls (Size, plus Opacity where it applies) → **Sculpt** (Strength; Flatten adds target and edge protection) → Paint material (Paint only) → Erase target (Erase only).
+Toolbox order for brush tools: Brush settings (footprint) → Brush controls (Size, plus Opacity where it applies) → **Sculpt** (Strength; Flatten adds target and edge protection) → Paint material (Paint only) → Shift erase target (Paint only).
 
-**Opacity scope (v2.1 fix):** `usesOpacity()` is true only for Paint, Path, and Erase on the surface target. The Opacity row is hidden for every other tool, and `opacity()` returns 1 for them. Before v2.1, sculpt strength was multiplied by Opacity (`strength × 3 × opacity`) and Land's rate used it too. That made Opacity a hidden second strength slider, and Opacity 0 left over from painting silently disabled Raise/Lower/Smooth/Flatten/Land. A regression test covers this. Zero opacity still makes Paint and surface Erase no-ops.
+**Opacity scope (v2.1 fix):** `usesOpacity()` is true only for Paint and Path. Shift erasing uses Opacity for surface/forest targets; whole-object targets ignore it, even at 0%. The Opacity row is hidden for every other tool, and `opacity()` returns 1 for them. Before v2.1, sculpt strength was multiplied by Opacity (`strength × 3 × opacity`) and Land's rate used it too. That made Opacity a hidden second strength slider, and Opacity 0 left over from painting silently disabled Raise/Lower/Smooth/Flatten/Land. A regression test covers this. Zero opacity still makes Paint and surface Erase no-ops.
 
 Sculpt tools also consume the selected footprint. Land always uses its own coastline operation; irrelevant footprint controls are disabled for Land. Pan and non-surface legacy erasing also disable irrelevant controls. Route tools hide ordinary brush/palette controls and expose their focused settings instead; Path retains the shared paint-opacity control.
 
@@ -239,14 +269,16 @@ New empty projects show Surface and Relief. River water appears only when a Rive
 | Forests / `forests` | Controls visible woodland and density editing; independent of Surface |
 | Relief / `elevation` | Controls hill shading/contours and sculpt editing; does not remove the terrain geometry |
 | River water / `rivers` | Controls local river water and river editing; river creation also requires visible/unlocked Relief |
+| Settlements | Controls saved places and their derived roof/woodland composition; no creation/editing panel |
 | Legacy Landmarks | Controls old symbols, their export/rendering, and eligible object erasing |
 | Legacy Drawings | Controls old drawings, their export/rendering, and eligible object erasing |
 
-Eraser targets are conditional:
+Paint’s **Shift erase target** choices are conditional:
 
-- Forests appears with nonzero saved density; opacity/footprint erasing thins or clears trees without changing ground.
+- Forests appears with nonzero saved density or while Forest is selected; opacity/footprint erasing thins or clears trees without changing ground.
 - Surface paint always exists; alpha is reduced and natural terrain shows through. Heights remain unchanged.
 - River water exists only with rivers; whole touched river water records are removed while the carved bed stays. Undo restores the record.
+- Settlements appears with saved settlement records; Shift erasing removes whole touched places and retains bed/forest density.
 - Legacy landmark/drawing targets exist only with old content; erase removes whole touched objects, not partial bitmap pixels.
 
 Hidden/locked targets are protected. Object erasing uses full object removal independent of the paint-opacity slider. When the final object disappears, reconcile conditional target options after the gesture ends, never midway through interpolation. Target, hint, description, opacity enabled state, and footprint enabled state must agree. These transitions have regression tests.
@@ -286,7 +318,6 @@ Toolbar icons are original inline SVG from `icons.mjs`, with a common 24×24 vie
 | Land | Land shape over shoreline/wave |
 | Path | Paired curved route edges |
 | Paint | Paintbrush |
-| Erase | Eraser |
 | Pan | Hand |
 | Settings | Sliders, using the same icon factory |
 
@@ -354,7 +385,9 @@ All map cell arrays use row-major indexing `i = y × N + x`; world coordinates a
 | `paintColors` | Uint8ClampedArray 3N² | Blended RGB |
 | `paintAlpha` | Float32Array N² | Paint coverage 0–1 |
 | `riverWater` | Float32Array N² | Derived local river levels; −1 means no local river |
-| `surfaceHeights` | Float32Array N² or reference to heights | Derived local-water geometry used for display/picking |
+| `surfaceHeights` | Float32Array N² or reference to heights | Shared derived water, visible canopy and saved roof geometry used for display/picking |
+| `settlements` | Array, max 64 | Authoritative saved place records; no creation UI |
+| `woodland`, settlement fields/textures | Derived caches | Rebuilt from bed/density/immutable route and settlement arrays; never serialized |
 | `routes` | Array | Committed Path/River records |
 | `marks`, `drawings` | Arrays | Preserved legacy content |
 | `routeDraft`, `routeHover` | Transient objects | Uncommitted route controls/preview |
@@ -364,9 +397,9 @@ Data flow:
 1. An authorized gesture checks visibility/locks and captures the appropriate undo snapshot.
 2. Brushes edit heights/paint. Route drafts only preview; finishing rasterizes once and appends a record.
 3. `refresh()` marks texture and scene dirty and requests a coalesced animation frame.
-4. `flushTexture()` rebuilds local river water when dirty and derives `surfaceHeights = max(heights, localWater)` while Water is enabled.
+4. `updateSurface()` refreshes water/woodland/settlement geometry for picking; `flushTexture()` rasterizes dirty textures during scheduled rendering/export, not pointer events.
 5. Texture colors use actual heights/paint plus visible water. Contour treatment skips visible local water.
-6. GPU and Canvas renderers, 3D sampling, and picking consume the same effective local-water surface; global enabled ocean water is then clamped to sea level by the rendering/sampling functions.
+6. GPU/Canvas rendering, 3D sampling and picking consume the same effective water/canopy/roof surface; global enabled ocean water is then clamped to sea level by the rendering/sampling functions.
 7. Save/history stores authoritative data, not derived caches or temporary drafts.
 
 Keep effective water geometry consistent across rendering, cursor projection, and picking. A river that is colored correctly but picked at the bed is a bug.
@@ -390,7 +423,7 @@ Cloud-browser live checks used the Canvas fallback because that browser did not 
 
 ## 7. Editable project schema and compatibility
 
-New downloads use v5; versions 1–4 migrate without automatically converting old Forest color to density.
+New downloads write **v6** and accept versions **1–6**. Versions 1–4 initialize empty forest density without converting old Forest color; versions 1–5 initialize an empty settlement list.
 
 Project downloads are JSON named `<sanitized-world-name>.world.json`. The UI's Download action (accessible name: Download project file) downloads data and schedules autosave. This is not a WorldPainter desktop `.world` format.
 
@@ -418,8 +451,13 @@ type RiverRoute = {
   taper?: boolean; // absent means uniform width for old v4 rivers
   points: (XY & { level: number })[];
 };
-type ProjectV5 = {
-  version: 5;
+type Settlement = {
+  id: string; kind: 'hamlet' | 'village' | 'town';
+  x: number; y: number; scale: number; rotation: number; seed: number; name: string;
+};
+type ProjectV6 = {
+  version: 6;
+  settlements: Settlement[]; // max 64; canonical records, plain-text names
   forest: number[];       // N² finite density values, 0..1
   size: 128 | 192 | 256;
   name: string;
@@ -440,6 +478,7 @@ type ProjectV5 = {
     elevation: LayerState;
     rivers: LayerState;
     forests: LayerState;
+    settlements: LayerState;
   };
 };
 ```
@@ -451,8 +490,8 @@ Schema notes:
 - Every default layer is visible and unlocked, including conditional legacy/river layers that may not have a visible UI row yet.
 - Legacy landmarks support `tree`, `mountain`, `town`; up to 3,000 records, positions in the map, size 2–40, opacity 0–1 (default 1).
 - Legacy shapes support `freehand`, `line`, `rectangle`, `ellipse`, `triangle`; up to 500 shapes, 1,000 points per shape, 100,000 total points. Geometry is bounded; colors must be six-digit hex, width 0.25–12, opacity 0–1, and fill Boolean. Freehand needs at least two points. See `validShape` for endpoint fields.
-- `normalizeProject` accepts versions 1, 2, 3, 4, and 5 and returns v5. v5 requires a valid N² density array. Earlier versions initialize zero density, keeping original ground colors/marks/drawings/routes. Missing Forests flags use visible/unlocked defaults. Missing optional legacy/routes arrays become empty. Missing size defaults to 256 for application loads.
-- v1/v2 paint IDs migrate to material RGB and alpha 1 for painted cells, 0 otherwise. v3–v5 require explicit paint RGB/alpha arrays.
+- `normalizeProject` accepts versions 1–6 and returns v6. Versions 5–6 require a valid N² density array. Version 6 requires a valid settlement list with unique IDs and at most 64 records; canonical fields and whole-footprint bounds are validated before mutation (§20). Earlier versions initialize zero density, keeping original ground colors/marks/drawings/routes. Missing Forests flags use visible/unlocked defaults. Missing optional legacy/routes arrays become empty. Missing size defaults to 256 for application loads.
+- v1/v2 paint IDs migrate to material RGB and alpha 1 for painted cells, 0 otherwise. v3–v6 require explicit paint RGB/alpha arrays.
 - Names normalize to a string and truncate to 80 characters. Missing water/shade normalize enabled unless explicitly false. Invalid layer flags are rejected.
 - Internal test helpers may supply explicit smaller N to normalization; that does not expand supported application sizes.
 - Import validates before replacing the active project or snapshotting it. Invalid JSON/data must preserve the current project and redo history.
@@ -467,7 +506,7 @@ Schema notes:
 
 | Key | Contents |
 | --- | --- |
-| `worldpainter-project` | Current v5 project JSON; name retained for existing-user compatibility |
+| `worldpainter-project` | Current v6 project JSON; name retained for existing-user compatibility |
 | `landwright-living` | `{ enabled: boolean, clouds: boolean, waterMotion: boolean, vegetationMotion: boolean }`; browser preferences only |
 | `landwright-ui` | `{ theme: 'dark'|'light', sidebarWidth: number, collapsed: boolean }` |
 
@@ -482,10 +521,10 @@ Undo retains up to 35 complete project snapshots in memory. Starting an edit cle
 | Export | Dimensions | Content |
 | --- | --- | --- |
 | Editable project | JSON | Authoritative arrays including forest density, route records, legacy content, layers, world settings |
-| Map PNG | 1536×1536 | Top-down current visualization, visible paint/water/static forests/legacy overlays |
+| Map PNG | 1024² / 2048² (default) / 4096² | Top-down visualization, visible paint/water/woodland/saved settlements and names/legacy overlays |
 | Heightmap PNG | N×N, 8-bit grayscale | Rounded/clamped actual heights/river bed, no local/ocean water fill |
 
-Map export is not a screenshot of the 3D orbit. It omits grid, cursor, route draft, point handles, selection/tool UI, compass, labels, HUD, and the Living World atmosphere overlay. World size changes export scaling to 1536/N. Respect layer visibility and Heightmap visualization when composing legacy overlays. Filenames use `-map.png` or `-heightmap.png` after the sanitized world name.
+Map export is not a screenshot of the 3D orbit. It omits grid, cursor, route draft, point handles, selection/tool UI, compass, HUD, and the Living World atmosphere overlay. Export scaling is selected image size / N. Saved settlement labels are included when visible. Image resolution is session UI and not project data. Respect layer visibility and Heightmap visualization when composing legacy overlays. Filenames use `-map.png` or `-heightmap.png` after the sanitized world name.
 
 ## 9. Development, verification, and deployment
 
@@ -505,7 +544,7 @@ Open `http://localhost:8000/`. Serve over HTTP rather than opening `index.html` 
 
 ### Test suite
 
-Current v2.4 verification: **123 passed, 0 failed** (see §19 for renderer contracts and checks).
+Current v2.6 application verification: **142 passed, 0 failed** (see §§0, 19 and 23 for evidence and limits). Documentation-only updates validate links, snapshot parity and packaging without rerunning unchanged application code.
 
 At the v2.2 implementation baseline, **106 tests passed, 0 failed** on November 17, 2026. This includes river taper/meander/reflow and Living World lifecycle/data-isolation checks. Test counts are baseline evidence; rerun the suite against the actual checkout before claiming a new result.
 
@@ -586,7 +625,7 @@ gh run watch <run-id> --repo mopajazz/worldpainter-studio --exit-status
 
 Verify the exact release is deployed, then reload the live page and exercise the changed flow. A successful push alone is not deployment verification. If authorization/network/tool availability changes in a new environment, resolve that access normally; do not store tokens in project files.
 
-For rollback, inspect the relevant history, revert the faulty commit(s), rerun checks, push, and verify Pages. Preserve project format compatibility or document any rollback implications for newly saved v5 files.
+For rollback, inspect the relevant history, revert the faulty commit(s), rerun checks, push, and verify Pages. Preserve project format compatibility or document any rollback implications for newly saved v6 files.
 
 ### Useful implementation history
 
@@ -662,7 +701,7 @@ Possible future anchors include named locations, paths, rivers, and settlements,
 - Read this handoff, `README.md`, `docs/terrain-roadmap.md`, and the files touched by the requested change.
 - Verify current Git status, branch, commit, and tests; do not assume this dated baseline is still HEAD.
 - Keep the static deployment and existing hosting origin unless instructed otherwise.
-- Preserve v1–v5 imports and existing user content; validate before mutation.
+- Preserve v1–v6 imports and existing user content; validate before mutation.
 - Keep terrain, local-water rendering, and picking synchronized.
 - Keep Path/River gesture state separate from sculpt brushes and from committed data.
 - Keep icons/groups consistent and paint selections independent.
@@ -884,4 +923,4 @@ Full Node suite142 passes, including preview/detail/cancel isolation, in-dialog 
 
 Update `docs/kb/worlds.md`, tutorial, project KB and README alongside behavior changes. Preserve the mandatory initial5–10% Raise/Lower Strength lesson. Portable skill references this current override before older contracts.
 
-Final v2.6 review found no concrete release blocker. Fresh full run `/tmp/world-release-tests.log`:142passed,0failed. Root module syntax and whitespace checks pass. Live deployment still must be verified against the exact release head before claiming publication.
+Final v2.6 review found no concrete release blocker. Fresh full run `/tmp/world-release-tests.log`:142passed,0failed. Root module syntax and whitespace checks pass. Release deployment was subsequently verified: Pages run 44341029194 succeeded for exact commit d7ae907; production browser confirmed v2.6 and its controls without application errors.
