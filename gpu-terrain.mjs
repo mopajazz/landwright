@@ -1,5 +1,5 @@
-import {sampleTerrain,terrainScale} from './terrain3d.mjs?v=2.2.0';
-import {createLandmarkAtlas} from './landmarks.mjs?v=2.2.0';
+import {sampleTerrain,terrainScale} from './terrain3d.mjs?v=2.3.0';
+import {createLandmarkAtlas,ATLAS_TYPES} from './landmarks.mjs?v=2.3.0';
 const vertex=`
 attribute vec3 a_position;
 attribute vec2 a_uv;
@@ -51,7 +51,7 @@ export function createGPUTerrain(canvas){
    gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.BLEND);gl.depthMask(true);gl.useProgram(program);
    gl.uniform1f(uniforms.center,n/2);gl.uniform2f(uniforms.size,w,h);gl.uniform2f(uniforms.pan,camera.panX||0,camera.panY||0);gl.uniform2f(uniforms.angle,camera.yaw,camera.pitch);gl.uniform1f(uniforms.scale,terrainScale(w,h,camera));gl.uniform1i(uniforms.texture,0);gl.uniform1f(uniforms.sprite,0);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,surface);bind(terrain);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indices);gl.drawElements(gl.TRIANGLES,indexData.length,gl.UNSIGNED_SHORT,0);
    if(marks.length){
-    if(camera.yaw!==lastYaw||camera.pitch!==lastPitch){let c=Math.cos(camera.yaw),s=Math.sin(camera.yaw),cp=Math.cos(camera.pitch),sp=Math.sin(camera.pitch);for(let item of marks)item.depth=((item.m.x-n/2)*s+(item.m.y-n/2)*c)*cp+(item.z-62)*.65*sp;marks.sort((a,b)=>a.depth-b.depth);let offset=0;for(let {m,z} of marks){let kind={tree:0,mountain:1,town:2}[m.type],half=m.size*32/44;for(let [x,y] of [[-1,-1],[1,-1],[1,1],[-1,-1],[1,1],[-1,1]]){spriteData.set([m.x,m.y,z+1,(kind+(x+1)/2)/3,(y+1)/2,x*half,y*half,m.opacity??1],offset);offset+=8;}}gl.bindBuffer(gl.ARRAY_BUFFER,sprites);gl.bufferData(gl.ARRAY_BUFFER,spriteData,gl.DYNAMIC_DRAW);lastYaw=camera.yaw;lastPitch=camera.pitch;}
+    if(camera.yaw!==lastYaw||camera.pitch!==lastPitch){let c=Math.cos(camera.yaw),s=Math.sin(camera.yaw),cp=Math.cos(camera.pitch),sp=Math.sin(camera.pitch);for(let item of marks)item.depth=((item.m.x-n/2)*s+(item.m.y-n/2)*c)*cp+(item.z-62)*.65*sp;marks.sort((a,b)=>a.depth-b.depth);let offset=0;for(let {m,z} of marks){let kind=ATLAS_TYPES.indexOf(m.type),half=m.size*32/44;for(let [x,y] of [[-1,-1],[1,-1],[1,1],[-1,-1],[1,1],[-1,1]]){spriteData.set([m.x,m.y,z+1,(kind+(x+1)/2)/ATLAS_TYPES.length,(y+1)/2,x*half,y*half,m.opacity??1],offset);offset+=8;}}gl.bindBuffer(gl.ARRAY_BUFFER,sprites);gl.bufferData(gl.ARRAY_BUFFER,spriteData,gl.DYNAMIC_DRAW);lastYaw=camera.yaw;lastPitch=camera.pitch;}
     gl.uniform1f(uniforms.sprite,1);gl.bindTexture(gl.TEXTURE_2D,atlas);bind(sprites);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);gl.drawArrays(gl.TRIANGLES,0,marks.length*6);gl.depthMask(true);
    }
   },

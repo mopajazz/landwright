@@ -1,4 +1,4 @@
-import{MATERIALS,blendPaint}from'./brushes.mjs?v=2.2.0';
+import{MATERIALS,blendPaint}from'./brushes.mjs?v=2.3.0';
 export const ROUTE_WORK_LIMIT=8000000,PROJECT_WORK_LIMIT=32000000;
 export function routeWork(r){let samples=1;for(let i=1;i<r.points.length;i++)samples+=Math.max(1,Math.ceil(Math.hypot(r.points[i].x-r.points[i-1].x,r.points[i].y-r.points[i-1].y)*2));return samples*(Math.ceil(r.width*1.5)+3)**2;}
 const finite=(v,a,b)=>typeof v==='number'&&Number.isFinite(v)&&v>=a&&v<=b;
@@ -31,3 +31,6 @@ export function applyRoute(route,heights,paint,colors,alpha,n){let {distance,lev
 export function riverField(routes,n){let field=new Float32Array(n*n).fill(-1);for(let route of routes){if(route.type!=='river')continue;let {distance,levels}=footprint(route,n);for(let i=0;i<field.length;i++)if(distance[i]<=1)field[i]=Math.max(field[i],levels[i]);}return field;}
 export function routeTouches(route,x,y,radius){let fractions=routeFractions(route.points);for(let i=1;i<route.points.length;i++){let a=route.points[i-1],b=route.points[i],dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/(dx*dx+dy*dy||1)));if(Math.hypot(x-a.x-t*dx,y-a.y-t*dy)<=radius+routeRadius(route,fractions[i-1]+(fractions[i]-fractions[i-1])*t))return true;}return false;}
 export function waterSurface(heights,field,enabled){if(!enabled)return heights;let a=heights.slice();for(let i=0;i<a.length;i++)if(field[i]>a[i])a[i]=field[i];return a;}
+
+// Cached by the editor; reuse the same bounded raster footprint as Path paint.
+export function pathField(routes,n){let mask=new Uint8Array(n*n);for(let r of routes){if(r.type!=='path'||!r.opacity)continue;let {distance}=footprint(r,n);for(let i=0;i<mask.length;i++)if(distance[i]<=1)mask[i]=1;}return mask;}

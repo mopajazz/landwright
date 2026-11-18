@@ -2,14 +2,14 @@
 
 ## Keep an editable backup
 
-Use Download project or Ctrl/Cmd+S. The `.world.json` file contains terrain, paint, route geometry/levels, and layers. Import it to continue editing. Browser autosave is specific to this browser and hosting origin, has finite storage, and is not a cloud backup. The save badge distinguishes saving from a completed local save.
+Use Download project or Ctrl/Cmd+S. The `.world.json` file contains terrain, paint, forest density, route geometry/levels, and layers. Import it to continue editing. Browser autosave is specific to this browser and hosting origin, has finite storage, and is not a cloud backup. The save badge distinguishes saving from a completed local save.
 
-New world replaces the active canvas. Download anything important first; session undo is useful but is not a substitute for a file. Supported grid sizes are Small 128², Medium 192², Large 256². Old projects migrate to v4.
+New world replaces the active canvas. Download anything important first; session undo is useful but is not a substitute for a file. Supported grid sizes are Small 128², Medium 192², Large 256². Versions 1–4 import into v5; new saves include forest density. Older app versions cannot read v5. Legacy dark-green Forest paint remains color until you paint new forest density deliberately.
 
 ## Export types
 
-- Map image:1536² top-down PNG of the selected visualization and visible content.
-- Heightmap:N² grayscale PNG of actual terrain, including the carved river bed, without water surfaces.
+- Map image:1536² top-down PNG of the selected visualization and visible content, including static forests.
+- Heightmap:N² grayscale PNG of actual terrain, including the carved river bed, without water surfaces or trees.
 - Project JSON: editable authoritative data, not an image.
 
 Map export is not the orbit-camera screenshot. Neither PNG includes editor UI, route previews, or Living World atmosphere. Downloaded projects also do not store camera/tool/slider choices or Living World preferences.
@@ -27,6 +27,8 @@ Map export is not the orbit-camera screenshot. Neither PNG includes editor UI, r
 **The map edge appears bent in 3D.** This is projected elevation, not an automatic resize. Flatten preserves the perimeter by default; other tools can intentionally alter edges.
 
 **Animation is paused.** Read the Living World status; editing, a route preview, reduced motion, hidden tabs, and diagnostic views pause effects intentionally.
+
+**My forest is missing.** Check Forests visibility, density and suitable terrain. Water, cliffs and saved path corridors suppress trees while retaining density. [Forest guidance](forests.md) explains clearing, old paint, and dormant density.
 
 **3D is slow.** Try a smaller map, disable Living World/clouds, and compare GPU versus Canvas in the renderer indicator. Canvas fallback has lower detail while orbiting. There is no guaranteed frame rate.
 

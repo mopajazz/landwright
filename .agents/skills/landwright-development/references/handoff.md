@@ -1,10 +1,10 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 17, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.2 Living World, commit `03c1199`; previous baseline `e2320cb`. This documentation/skill refresh does not change runtime behavior.
-**Displayed release:** `v2.2`
-**Browser asset/module cache revision:** `2.2.0`<br>
-**Project schema written by the application:** `4`
+**Implementation baseline:** v2.3 Forests; previous runtime `03c1199` and handoff/skill `d37d51c`. See Git history for the v2.3 release commit.
+**Displayed release:** `v2.3`
+**Browser asset/module cache revision:** `2.3.0`<br>
+**Project schema written by the application:** `5`
 
 This document describes the implemented application at the baseline above. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
 
@@ -52,7 +52,7 @@ User decisions already implemented:
 - Maintain the tutorial and knowledge base with each feature. Teach low Strength before Raise/Lower: start around 5–10%, use short strokes, inspect, and increase gradually.
 
 - The toolbox is contextual (v2.1). The always-visible paint palette was only a reaction to the old bug where choosing a material switched the tool; the user confirmed this. The palette now appears only with Paint, and the no-switching rule still holds.
-- Opacity is a paint concept only. It applies to Paint, Path, and surface Erase. Sculpt tools and Land ignore it (see §3).
+- Opacity is a paint concept only. It applies to Paint (including Forest density), Path, surface Erase, and Forests Erase. Sculpt tools and Land ignore it (see §3).
 
 Do not restore Drawing, Details, Forest Scatter, the old preview thumbnail, or preset-driven tool switching merely because legacy rendering modules or historical tests exist.
 
@@ -229,11 +229,14 @@ The work estimate is `(1 + sum(max(1, ceil(segmentLength × 2)))) × (ceil(width
 
 ## 4. Layers, erasing, views, and UI state
 
+Forests is a conditional layer whenever any saved density is nonzero; it can exist with no currently eligible trees. Forest Paint/Erase honors this layer, independently of Surface. See §18.
+
 New empty projects show Surface and Relief. River water appears only when a River record exists. Legacy Landmarks and Drawings appear only when their corresponding arrays are nonempty. Layer count is derived, not hardcoded.
 
 | Data/layer | Visibility and lock effects |
 | --- | --- |
-| Surface | Controls painted color visibility and surface editing, including Path |
+| Surface | Controls painted ground color visibility and surface editing, including Path |
+| Forests / `forests` | Controls visible woodland and density editing; independent of Surface |
 | Relief / `elevation` | Controls hill shading/contours and sculpt editing; does not remove the terrain geometry |
 | River water / `rivers` | Controls local river water and river editing; river creation also requires visible/unlocked Relief |
 | Legacy Landmarks | Controls old symbols, their export/rendering, and eligible object erasing |
@@ -241,6 +244,7 @@ New empty projects show Surface and Relief. River water appears only when a Rive
 
 Eraser targets are conditional:
 
+- Forests appears with nonzero saved density; opacity/footprint erasing thins or clears trees without changing ground.
 - Surface paint always exists; alpha is reduced and natural terrain shows through. Heights remain unchanged.
 - River water exists only with rivers; whole touched river water records are removed while the carved bed stays. Undo restores the record.
 - Legacy landmark/drawing targets exist only with old content; erase removes whole touched objects, not partial bitmap pixels.
@@ -324,6 +328,7 @@ This is a static, buildless HTML/CSS/ES-module application. No React, bundler, a
 | `gpu-terrain.mjs` | WebGL mesh/buffers, shader program, texture and legacy billboard batches |
 | `editor.mjs` | Project normalization/migration, default layers, sizing shortcuts |
 | `ui.mjs` | Persistent theme/sidebar preferences, resize/collapse/flyout handlers |
+| `forests.mjs` | Density stroke compositing, deterministic terrain-aware tree lattice, original symbols, route-identity habitat cache |
 | `living.mjs` | Wet-mask scene sampling, separate bounded atmosphere renderer, pausable 30Hz animation loop |
 | `docs/tutorial.md`, `docs/kb/` | Beginner workflow and topic-based user documentation, linked in Help |
 | `.agents/skills/landwright-development/` | Reusable development skill and portable handoff snapshot |
@@ -343,7 +348,9 @@ All map cell arrays use row-major indexing `i = y × N + x`; world coordinates a
 | Runtime value | Type/size | Purpose |
 | --- | --- | --- |
 | `heights` | Float32Array N² | Authoritative terrain/river bed |
-| `paint` | Uint8Array N² | Material markers 0–6 |
+| `paint` | Uint8Array N² | Ground material markers 0–6; legacy Forest ID4 remains color |
+| `forest` | Float32Array N² | Authoritative density 0–1; separate from paint |
+| `forestTrees` | Derived array, ≤4,096 instances | Deterministic eligible trees, never serialized as legacy marks |
 | `paintColors` | Uint8ClampedArray 3N² | Blended RGB |
 | `paintAlpha` | Float32Array N² | Paint coverage 0–1 |
 | `riverWater` | Float32Array N² | Derived local river levels; −1 means no local river |
@@ -383,6 +390,8 @@ Cloud-browser live checks used the Canvas fallback because that browser did not 
 
 ## 7. Editable project schema and compatibility
 
+New downloads use v5; versions 1–4 migrate without automatically converting old Forest color to density.
+
 Project downloads are JSON named `<sanitized-world-name>.world.json`. The UI's Download action (accessible name: Download project file) downloads data and schedules autosave. This is not a WorldPainter desktop `.world` format.
 
 Current normalized object shape (descriptive TypeScript, not a separate runtime dependency):
@@ -409,8 +418,9 @@ type RiverRoute = {
   taper?: boolean; // absent means uniform width for old v4 rivers
   points: (XY & { level: number })[];
 };
-type ProjectV4 = {
-  version: 4;
+type ProjectV5 = {
+  version: 5;
+  forest: number[];       // N² finite density values, 0..1
   size: 128 | 192 | 256;
   name: string;
   heights: number[];      // N² finite values, 0..255
@@ -429,6 +439,7 @@ type ProjectV4 = {
     shapes: LayerState;
     elevation: LayerState;
     rivers: LayerState;
+    forests: LayerState;
   };
 };
 ```
@@ -440,15 +451,15 @@ Schema notes:
 - Every default layer is visible and unlocked, including conditional legacy/river layers that may not have a visible UI row yet.
 - Legacy landmarks support `tree`, `mountain`, `town`; up to 3,000 records, positions in the map, size 2–40, opacity 0–1 (default 1).
 - Legacy shapes support `freehand`, `line`, `rectangle`, `ellipse`, `triangle`; up to 500 shapes, 1,000 points per shape, 100,000 total points. Geometry is bounded; colors must be six-digit hex, width 0.25–12, opacity 0–1, and fill Boolean. Freehand needs at least two points. See `validShape` for endpoint fields.
-- `normalizeProject` accepts versions 1, 2, 3, and 4 and returns v4. Missing optional legacy/routes arrays become empty. Missing size defaults to 256 for application loads.
-- v1/v2 paint IDs migrate to material RGB and alpha 1 for painted cells, 0 otherwise. v3/v4 require explicit paint RGB/alpha arrays.
+- `normalizeProject` accepts versions 1, 2, 3, 4, and 5 and returns v5. v5 requires a valid N² density array. Earlier versions initialize zero density, keeping original ground colors/marks/drawings/routes. Missing Forests flags use visible/unlocked defaults. Missing optional legacy/routes arrays become empty. Missing size defaults to 256 for application loads.
+- v1/v2 paint IDs migrate to material RGB and alpha 1 for painted cells, 0 otherwise. v3–v5 require explicit paint RGB/alpha arrays.
 - Names normalize to a string and truncate to 80 characters. Missing water/shade normalize enabled unless explicitly false. Invalid layer flags are rejected.
 - Internal test helpers may supply explicit smaller N to normalization; that does not expand supported application sizes.
 - Import validates before replacing the active project or snapshotting it. Invalid JSON/data must preserve the current project and redo history.
-- Image heightmap import is resampled to the current N×N; luminance is `0.2126 R + 0.7152 G + 0.0722 B`. It clears paint, routes, and legacy content, without selecting a new grid size.
+- Image heightmap import is resampled to the current N×N; luminance is `0.2126 R + 0.7152 G + 0.0722 B`. It clears paint, forest density, routes, and legacy content, without selecting a new grid size.
 - File import rejects files larger than 12,000,000 bytes. JSON dispatch currently uses a case-sensitive `.json` filename suffix.
 
-`state()` rounds saved height values to three decimals and paint alpha to four. Route geometry/levels are cloned, not rounded by that function. Loading restores typed arrays and rebuilds derived caches. Do not reapply route paint/carving during load: it is already present in saved paint/heights.
+`state()` rounds saved height values to three decimals, paint alpha and forest density to four. Route geometry/levels are cloned, not rounded by that function. Loading restores typed arrays and rebuilds derived caches. Do not reapply route paint/carving during load: it is already present in saved paint/heights.
 
 ## 8. Persistence, history, and exports
 
@@ -456,8 +467,8 @@ Schema notes:
 
 | Key | Contents |
 | --- | --- |
-| `worldpainter-project` | Current v4 project JSON; name retained for existing-user compatibility |
-| `landwright-living` | `{ enabled: boolean, clouds: boolean, waterMotion: boolean }`; browser preferences only |
+| `worldpainter-project` | Current v5 project JSON; name retained for existing-user compatibility |
+| `landwright-living` | `{ enabled: boolean, clouds: boolean, waterMotion: boolean, vegetationMotion: boolean }`; browser preferences only |
 | `landwright-ui` | `{ theme: 'dark'|'light', sidebarWidth: number, collapsed: boolean }` |
 
 Autosave is debounced by 600ms. Storage failure produces a save-to-file message rather than silently claiming success. Data is origin/browser-specific. Moving to another URL/origin will not migrate local storage; provide a downloaded project first. There is no cloud sync or account recovery.
@@ -470,8 +481,8 @@ Undo retains up to 35 complete project snapshots in memory. Starting an edit cle
 
 | Export | Dimensions | Content |
 | --- | --- | --- |
-| Editable project | JSON | Authoritative arrays, route records, legacy content, layers, world settings |
-| Map PNG | 1536×1536 | Top-down current visualization, visible paint/water/legacy overlays |
+| Editable project | JSON | Authoritative arrays including forest density, route records, legacy content, layers, world settings |
+| Map PNG | 1536×1536 | Top-down current visualization, visible paint/water/static forests/legacy overlays |
 | Heightmap PNG | N×N, 8-bit grayscale | Rounded/clamped actual heights/river bed, no local/ocean water fill |
 
 Map export is not a screenshot of the 3D orbit. It omits grid, cursor, route draft, point handles, selection/tool UI, compass, labels, HUD, and the Living World atmosphere overlay. World size changes export scaling to 1536/N. Respect layer visibility and Heightmap visualization when composing legacy overlays. Filenames use `-map.png` or `-heightmap.png` after the sanitized world name.
@@ -493,6 +504,8 @@ python3 -m http.server 8000
 Open `http://localhost:8000/`. Serve over HTTP rather than opening `index.html` directly as a file. There is no build command. `node_modules/` is ignored and not needed to run the deployed app.
 
 ### Test suite
+
+Current v2.3 verification: **118 passed, 0 failed** (see §18 for forest coverage).
 
 At the v2.2 implementation baseline, **106 tests passed, 0 failed** on November 17, 2026. This includes river taper/meander/reflow and Living World lifecycle/data-isolation checks. Test counts are baseline evidence; rerun the suite against the actual checkout before claiming a new result.
 
@@ -557,7 +570,7 @@ Before release:
 - Inspect `git status` and preserve unrelated user edits.
 - Run appropriate tests and syntax/diff checks.
 - Review renderer/picking and project migration when changing terrain data.
-- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.2.0`. Documentation-only updates do not require a cache or footer version bump. Do not update only the entry script or only CSS.
+- Bump the query cache revision consistently in the `index.html` stylesheet/script URLs and all local ES-module imports. Baseline is `?v=2.3.0`. Documentation-only updates do not require a cache or footer version bump. Do not update only the entry script or only CSS.
 - Update displayed footer version when appropriate; displayed release and cache-patch revision may differ intentionally.
 - Check documentation and shortcut help against implemented handlers.
 
@@ -573,7 +586,7 @@ gh run watch <run-id> --repo mopajazz/worldpainter-studio --exit-status
 
 Verify the exact release is deployed, then reload the live page and exercise the changed flow. A successful push alone is not deployment verification. If authorization/network/tool availability changes in a new environment, resolve that access normally; do not store tokens in project files.
 
-For rollback, inspect the relevant history, revert the faulty commit(s), rerun checks, push, and verify Pages. Preserve project format compatibility or document any rollback implications for newly saved v4 files.
+For rollback, inspect the relevant history, revert the faulty commit(s), rerun checks, push, and verify Pages. Preserve project format compatibility or document any rollback implications for newly saved v5 files.
 
 ### Useful implementation history
 
@@ -640,7 +653,7 @@ The earlier idea to rename Details to Assets/Objects and assign O was superseded
 
 ## 12. Storytelling — deferred product topic
 
-The user explicitly wants a storytelling component **after terrain tools are complete**, and asked to revisit it later. There is no narrative/quest/timeline/character/AI subsystem implemented or specified beyond that intent.
+Terrain-aware forests and visual canopy breeze are shipped in v2.3; no vegetation growth or inhabitants are simulated. The user explicitly wants a storytelling component **after terrain tools are complete**, and asked to revisit it later. There is no narrative/quest/timeline/character/AI subsystem implemented or specified beyond that intent.
 
 Possible future anchors include named locations, paths, rivers, and settlements, but these are ideas only. Before building, revisit desired audience, story structure, location linking, authoring/export, and persistence requirements with the user. Do not add narrative UI, AI service dependencies, or accounts as an assumed next step.
 
@@ -649,7 +662,7 @@ Possible future anchors include named locations, paths, rivers, and settlements,
 - Read this handoff, `README.md`, `docs/terrain-roadmap.md`, and the files touched by the requested change.
 - Verify current Git status, branch, commit, and tests; do not assume this dated baseline is still HEAD.
 - Keep the static deployment and existing hosting origin unless instructed otherwise.
-- Preserve v1–v4 imports and existing user content; validate before mutation.
+- Preserve v1–v5 imports and existing user content; validate before mutation.
 - Keep terrain, local-water rendering, and picking synchronized.
 - Keep Path/River gesture state separate from sculpt brushes and from committed data.
 - Keep icons/groups consistent and paint selections independent.
@@ -691,6 +704,8 @@ Additional coverage includes taper save/load and old v4 compatibility, source/mo
 
 ## 16. v2.2 Living World and user documentation
 
+Historical v2.2 release scope; §18 supersedes its vegetation scope and preference fields for v2.3.
+
 `living.mjs` renders a separate `living-overlay` Canvas, with a capped 30Hz effect loop rather than continuously re-rendering terrain. Water shimmer samples visible wet cells; route streaks follow source-to-mouth point order; four drifting clouds add stylized projected soft shadows. This is visual atmosphere, not water/lighting/civilization simulation. No vegetation, population, day/night, or storytelling is delivered here.
 
 World Settings offers one Living World toggle (default on) and an expandable choice of Water motion and Clouds & soft shadows. Its browser-local `landwright-living` preferences are `{enabled,clouds,waterMotion}` Booleans; no v4 field, history entry, terrain edit, paint change, reflow, or exported effect is introduced. `syncLiving` pauses/stops animation during pointer edits, pan/orbit, route drafts, hidden documents, reduced-motion preference, diagnostic views, and disabled effects. Resuming after ordinary 2D pointer release is explicitly synchronized and regression-tested with queued animation frames. The overlay has no pointer events and does not alter picking. It is stylized screen compositing, not a depth-buffered physically accurate lighting pass.
@@ -710,6 +725,26 @@ To install elsewhere, copy the entire `landwright-development` directory into th
 
 For a fresh session, request: **“Use landwright-development to continue Landwright. Read the current handoff, inspect HEAD and working-tree changes, and implement the requested change while keeping the tutorial and KB current.”** Discover the checkout and remote rather than relying on the cloud path above.
 
-Latest shipped state: v2.2 at `03c1199`, published through successful Pages run `44207290868`. Live-browser smoke checks confirmed the Living World switch/status/options in 2D and Canvas-fallback 3D. These checks do not establish real-GPU performance or a full accessibility audit. No runtime code changes are included in this handoff/skill refresh.
+Previous shipped state: v2.2 at `03c1199`, published through successful Pages run `44207290868`. v2.3 adds forests as described in §18. Live-browser smoke checks confirmed the Living World switch/status/options in 2D and Canvas-fallback 3D. These checks do not establish real-GPU performance or a full accessibility audit. The v2.3 runtime changes are described below.
 
-Suggested next product discussion: add a small amount of visual vegetation/life inside the existing Living World controls, with a measured budget and clear persistence/export semantics. This is a candidate, not an implemented or fully specified feature. Holler Maps originals remain unavailable (§11); storytelling remains deferred (§12).
+Suggested next product discussion: settlements and named locations as a bridge to storytelling. This remains a candidate, not an implemented or fully specified feature. Holler Maps originals remain unavailable (§11); storytelling remains deferred (§12).
+
+
+## 18. v2.3 Forests and canopy breeze
+
+**UI and editing.** Forest remains material ID4 inside Paint, but new Forest strokes edit a separate density field instead of surface RGB. The other five materials retain color painting. No toolbar tool or Forest Scatter footprint was added. Forest density is a target from 0–100%, default 65%; Opacity blends toward that target once per gesture against the starting density. A lower target can thin woodland. All four footprints work; Shift Forest clears toward zero. Erase → Forests uses opacity/footprint without changing ground or heights. Forests has independent visibility/locks; Surface controls do not lock woodland. Conditional layer/eraser controls reconcile after pointer release and Escape/pointer cancellation, after clearing gesture state. Escape retains already applied density, matching ordinary brush semantics.
+
+**Schema and history.** New saves/autosaves write v5 with `forest: number[N²]` in 0–1 and `layers.forests`. Imports 1–4 initialize zero density and preserve their original Forest ground color, route data, drawings and marks. Old v4 applications cannot open v5. Import validation precedes mutation/history updates. Undo/Redo snapshots include density and Forests flags. New worlds and image heightmap import clear density; size/load/undo rebuild dependent caches. No individual tree instances enter `marks` or project JSON.
+
+**Deterministic placement.** `buildForest` uses jittered four-block anchors inset three cells from the edge, deterministic noise for density/type/size, and a maximum 4,096 candidates (actual Large inset lattice is slightly smaller). It rejects roots below sea+2, adjacent height differences>6, local river levels more than 0.01 above ground, and saved Path corridors. Eligibility is rebuilt after content/sea changes; masks use all saved rivers independently of Water/River water visibility. Density survives unsuitable terrain and trees reappear when it becomes suitable. Surface-erasing a Path does not erase its saved record or corridor blocker.
+
+**Caching and rendering.** `createForestHabitatCache().get(routes,N)` reuses rasterized path/river masks until route array identity or grid size changes. Committed route arrays must be replaced immutably, including append, erase, reflow, and load. Forest strokes and layer controls must not invalidate these masks. Original pine/broadleaf symbols share `ATLAS_TYPES` with legacy tree/mountain/town symbols in a 320×64 atlas. A 1024² cached forest overlay serves 2D and Map PNGs. GPU 3D batches eligible tree billboards with legacy marks; Canvas fallback draws projected, depth-sorted sprites, with less precise terrain occlusion. Heightmap view/PNG omits trees; Biomes may show static forests.
+
+**Motion.** Living World adds `vegetationMotion` (default true) to browser preferences and a Canopy breeze checkbox. Up to 256 distributed trees receive moving leaf/branch accents, not full mesh animation or growth. Static forests remain with Living World off or reduced motion. Existing 30 Hz cap/pause rules apply. Scene preparation precedes animation-state reconciliation so canopy-only motion starts after the first 3D forest is built. Motion changes never enter history/project data or exports.
+
+**Documentation and verification.** See `docs/kb/forests.md` and the tutorial's forest lesson. Low-Strength Raise/Lower guidance remains. Tests cover target density and per-stroke opacity, deterministic caps, water/cliff/path eligibility and restoration, v5 validation/older imports, populated density below the 12 MB import ceiling, cache reuse,3D editing, conditional controls/cancellation, locks, save/import/undo, and bounded canopy accents. Rendering/pixel checks still require an actual browser; real-GPU performance is not established by jsdom.
+
+No Holler Maps source files were imported. Original symbols are deliberately small in scope. Ecosystem/civilization simulation, full tree swaying, day/night, inhabitants and storytelling remain unimplemented.
+
+
+v2.3 verification: **118 tests passed, 0 failed**. Syntax and diff checks passed. Local browser smoke checks covered Forest density painting in dark/light themes, stable Paint selection, conditional Forests controls, 2D and Canvas-fallback 3D rendering, independent Canopy breeze, and real 1536² PNG downloads. Comparing visible/hidden Forests exports changed pixels only in the woodland region. Real-GPU rendering/performance is still unverified in this browser.

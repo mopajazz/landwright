@@ -24,4 +24,4 @@ Water off reveals the bed. Hiding River water hides local river water while reta
 
 ## Limits and saving
 
-v4 projects retain river levels, taper metadata, and sampled route geometry. Paths and rivers share a 64-route limit,32,768 sampled points, and a bounded raster-work budget. Very long/wide/complex routes may need shortening. Save/download the editable project before substantial changes.
+Current v5 projects retain river levels (v4 imports remain compatible),, taper metadata, and sampled route geometry. Paths and rivers share a 64-route limit,32,768 sampled points, and a bounded raster-work budget. Very long/wide/complex routes may need shortening. Save/download the editable project before substantial changes.
