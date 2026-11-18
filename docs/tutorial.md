@@ -1,10 +1,10 @@
 # Landwright: your first living landscape
 
-This tutorial covers the current v2.7 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
+This tutorial covers the current v2.7.1 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
 
 ## Before your first stroke: start with low Strength
 
-**Before using Raise or Lower, turn Strength down to around 5–10%. Make a short stroke, inspect the result, and increase gradually if needed.** The default Strength is higher than this beginner recommendation. Holding the pointer still or repeatedly brushing the same area continues changing the height.
+**Before using Raise or Lower, turn Strength down to around 5–10%. Make a short stroke, inspect the result, and increase gradually if needed.** Raise and Lower now start at 8% Strength. Smooth and Flatten start at 35%; the two groups remember separate settings for the session. Holding the pointer still or repeatedly brushing the same area continues changing the height.
 
 Strength is sculpting power. **Opacity is separate:** it affects Paint, Path, surface erasing, and forest painting/erasing; lowering paint Opacity does not make Raise or Lower gentler. Use Ctrl/Cmd+Z if your first stroke is too strong.
 
@@ -27,7 +27,7 @@ Other starts include Island, Archipelago, Continent, Atoll, and Open ocean. Gene
 
 Switch to **3D Terrain** to inspect your slopes. Right-drag or Alt-drag orbits; hold Space and left-drag to pan from any tool, or middle-drag; the wheel zooms. All terrain tools work in 3D as well as 2D.
 
-If you need a level area, **Flatten (F)** approaches its target height. Preserve map edges is on by default so flattening does not move the outer rim in 3D. Only turn it off when you want to reshape the border itself.
+If you need a level area, **Flatten (F)** approaches its target height. Press D/E to lower/raise that target by 1 block, or Shift+D/E by 10. These keys adjust the target, not Strength. Preserve map edges is on by default so flattening does not move the outer rim in 3D. Only turn it off when you want to reshape the border itself.
 
 ## 3. Paint a shoreline or rocky ridge
 

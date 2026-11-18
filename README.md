@@ -11,7 +11,7 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 ## Create → sculpt → paint
 
 - Start with Island, Archipelago, Continent, Atoll, Open ocean, or Flat grass. Each has a generated preview. Seed and relief live under Generation settings.
-- Sculpt elevation with Raise, Lower, Smooth, or Flatten. The toolbox follows the active tool: footprint and size first, then Strength for sculpt tools; the paint material palette appears only with Paint. Three brush footprints cover Soft Round, Hard Round, and Coastline. Material textures supply the grain. Brush and material selections keep the current tool and survive tool changes. Coastline paints any selected material without changing height; use the explicit Land tool (C or M) to add or remove terrain. Strength controls sculpting power. Opacity applies only to Paint, Path, and surface Erase; surface paint opacity is capped within a single stroke and builds across separate strokes.
+- Sculpt elevation with Raise, Lower, Smooth, or Flatten. Raise/Lower start gently at 8% Strength; Smooth/Flatten retain 35%. Full strength remains available. The toolbox follows the active tool: footprint and size first, then Strength for sculpt tools; the paint material palette appears only with Paint. Three brush footprints cover Soft Round, Hard Round, and Coastline. Material textures supply the grain. Brush and material selections keep the current tool and survive tool changes. Coastline paints any selected material without changing height; use the explicit Land tool (C or M) to add or remove terrain. Strength controls sculpting power. Opacity applies only to Paint, Path, and surface Erase; surface paint opacity is capped within a single stroke and builds across separate strokes.
 - Paint eight procedural ground materials—Grass, Loam, Clay, Bedrock, Scree, Mud, Sand, and Snow—grouped by family. Their textures automatically respond to slope, shelter and nearby water. Forest paints a separate tree-density layer. Forest has its own density control and conditional layer/eraser; it keeps ground colors unchanged. Drawing and Details creation tools have been removed to keep the toolbox focused on terrain. Existing drawings and landmarks still load, render, export, and save.
 - Hold Shift while clicking/dragging with Paint to erase. Paint’s Shift erase target defaults to Surface paint for ground materials and Forests for Forest; River water and saved-object targets appear when that content exists. Surface erasing uses brush opacity and reveals the natural terrain color without changing heights. Landmark/drawing erasing removes whole touched objects; undo restores them. Hidden and locked layers are protected.
 - Hide and lock Surface and Relief. Legacy Drawings and Landmarks layers appear only when a project contains that content. Relief visibility controls shading/contours, while elevation remains the world foundation. Hidden or locked layers cannot be edited. Water has its own toggle and sea-level control.
@@ -31,7 +31,8 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 | Right drag or Alt + drag in 3D | Orbit and tilt |
 | R / L / Q / F | Raise / lower / smooth / flatten |
 | B or P / C or M / H | Paint / land / pan |
-| D / E | Decrease / increase Opacity by5% in Paint or Path |
+| D / E | Flatten target −/+1 block; Paint/Path Opacity −/+5% |
+| Shift + D / E | Flatten target −/+10 blocks |
 | J / V | Path / river |
 | Enter or double-click / Escape | Finish route / cancel preview |
 | Shift + Raise/Lower or Land | Reverse elevation direction / remove land |

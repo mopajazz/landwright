@@ -2,7 +2,7 @@
 
 ## Start low before Raise or Lower
 
-**Set Strength around 5–10% before your first Raise/Lower stroke. Make a short stroke, inspect it, then increase gradually.** The current default Strength is 35%, so deliberately lower it for early practice. Size controls area; Strength controls how strongly elevation changes. Holding the brush continues applying it. Undo reverses a completed edit.
+**Set Strength around 5–10% before your first Raise/Lower stroke. Make a short stroke, inspect it, then increase gradually.** Raise and Lower now start at 8% Strength. Smooth and Flatten retain 35%; the two groups remember separate strengths for the session. The full 1–100% range remains available. Size controls area; Strength controls how strongly elevation changes. Holding the brush continues applying it. Undo reverses a completed edit.
 
 Do not lower paint Opacity to tame sculpting: Raise, Lower, Smooth, Flatten, and Land do not use that setting. Opacity applies to Paint, Path, surface erasing, and forest painting/erasing.
 
@@ -26,7 +26,7 @@ Paint opacity accumulates across separate strokes. Repeated pointer samples insi
 
 ## Flatten edges
 
-Flatten approaches Target height. Preserve map edges holds the perimeter fixed and feathers nearby cells. Uncheck it only to intentionally reshape the rim. This protection is specific to Flatten, not every terrain tool.
+Flatten approaches Target height. D lowers / E raises the target by 1 block; Shift+D/E changes it by 10. The target clamps to 1–255. These shortcuts do not change Strength or paint Opacity, and choosing a target does not edit terrain until you brush. Typing and dialogs keep ordinary keyboard behavior. Preserve map edges holds the perimeter fixed and feathers nearby cells. Uncheck it only to intentionally reshape the rim. This protection is specific to Flatten, not every terrain tool.
 
 ## Why did my mountain jump so quickly?
 

@@ -13,7 +13,7 @@ Repository: https://github.com/mopajazz/worldpainter-studio
 
 Live app: https://mopajazz.github.io/worldpainter-studio/
 
-Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.7/cache `2.7.0` integrates eight procedural earthen materials. Read handoff §0 and §25 first, §23 for New World/export and §19 for woodland. Schema **7**, imports **1–7**. Verify HEAD/status before editing.
+Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.7.1/cache `2.7.1` integrates eight procedural earthen materials. Read handoff §0, §25 and §26 first, §23 for New World/export and §19 for woodland. Schema **7**, imports **1–7**. Verify HEAD/status before editing.
 
 ## Find the contract
 
@@ -31,7 +31,7 @@ Discover the checkout and remote; cloud paths and remote aliases vary. This is s
 | Verification/release | `tests/`, `package.json`; §9 |
 | Holler/storytelling | §§11–12; establish current scope first |
 
-Keep nine tools. The user removed Erase: Shift+Paint erases the chosen target; D/E adjusts Paint/Path Opacity by 5%, never selects a tool. Drawing, Details, Forest Scatter, and thumbnail preview were removed; preserve legacy content. Footprint/material selection keeps the active tool. Strength sculpts; Opacity affects Paint, Path, surface/forest Erase. Forest Paint edits density, preserving ground colors. Flatten protects the perimeter by default. Route previews remain transient; commit once, cancel without edits. Keep bed heights, river water, effective geometry, and picking consistent. Validate imports/work budgets before mutation; never replay saved carving on load.
+Keep nine tools. The user removed Erase: Shift+Paint erases the chosen target; D/E adjusts Flatten Target height by 1block (Shift×10), Paint/Path Opacity by5%, never selects a tool or changes Strength. Raise/Lower start at8%; Smooth/Flatten at35%; remember strengths separately for those two groups during the session. Drawing, Details, Forest Scatter, and thumbnail preview were removed; preserve legacy content. Footprint/material selection keeps the active tool. Strength sculpts; Opacity affects Paint, Path, surface/forest Erase. Forest Paint edits density, preserving ground colors. Flatten protects the perimeter by default. Route previews remain transient; commit once, cancel without edits. Keep bed heights, river water, effective geometry, and picking consistent. Validate imports/work budgets before mutation; never replay saved carving on load.
 
 ## Extend Living World
 

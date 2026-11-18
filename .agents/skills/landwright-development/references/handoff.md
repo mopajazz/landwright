@@ -1,9 +1,9 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 18, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.7 earthen materials; see §25 for implementation and verification. Previous release v2.6 was `d7ae907`.
-**Displayed release:** `v2.7`
-**Browser asset/module cache revision:** `2.7.0`<br>
+**Implementation baseline:** v2.7.1 sculpting controls; see §26. Earthen materials are documented in §25. Previous release v2.6 was `d7ae907`.
+**Displayed release:** `v2.7.1`
+**Browser asset/module cache revision:** `2.7.1`<br>
 **Project schema written by the application:** `7`
 
 Read **§0 first** for the current state. Sections 14–25 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
@@ -12,21 +12,21 @@ Read **§0 first** for the current state. Sections 14–25 retain release histor
 
 | Contract | Current state |
 | --- | --- |
-| Application release | **v2.7**, earthen materials |
+| Application release | **v2.7.1**, Flatten target shortcuts and gentler sculpt defaults |
 | Verified deployment | [Pages run44390191940](https://github.com/mopajazz/worldpainter-studio/actions/runs/44390191940) succeeded for `f0ab812c57e7e1e3a3526c19dcd7c500151cc8a1` |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
-| Runtime | Static HTML/CSS/ES modules; cache `2.7.0`; no build or runtime packages |
+| Runtime | Static HTML/CSS/ES modules; cache `2.7.1`; no build or runtime packages |
 | Project format | Writes **7**, imports **1–7**; authoritative terrain, paint, forest density, routes, saved settlements and legacy content |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan |
 | Erasing | **Shift + Paint** click/drag; Paint’s Shift erase target selects the eligible layer. No Erase tool or E tool shortcut |
-| Opacity | **D decreases / E increases by 5%**, Paint and Path only; clamp 0–100; preserve tool/Strength/history |
+| Opacity | **D decreases / E increases by 5%**, Paint and Path; Flatten adjusts target by 1 (Shift ×10); preserve Strength/history |
 | Navigation | **Space + left-drag** or middle-drag pans in 2D/3D; right/Alt-drag orbits in 3D |
 | New World | Six starting shapes, exact-grid live preview, required name, terrain-detail guidance, collapsed seed/relief settings, current-project download, Cancel/X/Escape and native Enter/Create |
 | Terrain detail | Quick sketch/Small **128²**, Standard/Medium **192²**, Detailed/Large **256²** |
 | Map PNG | Independent **1024² / 2048² (default) / 4096²**; 4K square, not UHD landscape |
 | Heightmap | **N² actual bed elevations**; no water, canopy or roof relief |
 | Settlements | Creation/editing panel removed. Preserve saved records, rendering, names, layers, Shift erasing, undo and export |
-| Verification | Current full application run: **155 passed, 0 failed** (`/tmp/earthen-full-final.log`) |
+| Verification | Current full application run: **157 passed, 0 failed** (`/tmp/flatten-full.log`) |
 | Knowledge base | [New worlds/resolution](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/kb/worlds.md), [tutorial](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/tutorial.md), [KB index](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/kb/index.md) |
 
 **Release evidence:** production browser showed v2.6, all six shape choices, the updated preview summary, all three export presets, and no application console errors. Local browser produced an actual 4096×4096 PNG; the 256×256 Heightmap matched every rounded saved bed pixel. Native Enter created a named flat 128 world; Undo restored the entire original project as parsed JSON. Dark/light and a 500px window were inspected; this does not establish real-phone touch behavior, full WCAG compliance, or GPU performance.
@@ -968,3 +968,13 @@ Browser acceptance (local): light2D and darkCanvas3D showed distinct Clay/Scree 
 Detailed256² local map: paint release produced the full-resolution ground texture and stayed interactive; this was a functional observation, not anFPS benchmark.
 
 Release evidence: application commit `f0ab812c57e7e1e3a3526c19dcd7c500151cc8a1`; GitHub Pages run44390191940 completed successfully. Production browser showed v2.7, eight grouped ground materials, separate Forest density and preserved legacy landmarks; no application console errors. Screenshot: `/workspace/shared/landwright-v2.7-materials.jpg` (session artifact, not a repository dependency). Subsequent documentation-only commits do not change the runtime release.
+
+## 26. v2.7.1 — Flatten target height and gentler Raise/Lower
+
+User correction: D/E must adjust Flatten target height, not sculpt Strength. D decreases / E increases target by 1 block; Shift+D/E by 10, clamped 1–255. Paint/Path retain 5% opacity increments. Other tools ignore D/E. Input/select/contenteditable focus, dialogs and Ctrl/Meta/Alt combinations remain protected. Changing the setting alone neither edits terrain nor creates history. Inline Target height guidance, canvas hint and Shortcuts explain the mapping.
+
+Raise/Lower now share an 8% starting Strength; Smooth/Flatten share their existing 35%. The two groups retain independently chosen strengths during this session; full 1–100% remains. No rate model, terrain limits, schema or existing map geometry changed. Holding a brush still continues sculpting; inspect in 3D and start with short strokes at 5–10%.
+
+Future direction: develop consistent, distinctive tool icons and an MX Creative Console profile after interaction bindings settle. No hardware profile is shipped or configured by this change.
+
+Verification for §26:157/157 full-suite tests pass (`/tmp/flatten-full.log`), including target bounds/steps, focus/dialog/modifier guards, unchanged project state and separate strength-group memory. Local browser showed Raise8%, Flatten35%, target120→119→129 in2D and129→128 in3D; Lower returned to8%. Syntax and diff checks pass.

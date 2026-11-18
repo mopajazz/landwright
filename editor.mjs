@@ -1,8 +1,8 @@
-import{validateMaterialCoverage}from'./material-paint.mjs?v=2.7.0';
-import{validSettlement}from'./settlements.mjs?v=2.7.0';
-import{validRoute,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.7.0';
-import {LEGACY_MATERIAL_COLORS} from './brushes.mjs?v=2.7.0';
-import {validShape} from './shapes.mjs?v=2.7.0';
+import{validateMaterialCoverage}from'./material-paint.mjs?v=2.7.1';
+import{validSettlement}from'./settlements.mjs?v=2.7.1';
+import{validRoute,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.7.1';
+import {LEGACY_MATERIAL_COLORS} from './brushes.mjs?v=2.7.1';
+import {validShape} from './shapes.mjs?v=2.7.1';
 export const defaultLayers=()=>({surface:{visible:true,locked:false},landmarks:{visible:true,locked:false},shapes:{visible:true,locked:false},elevation:{visible:true,locked:false},rivers:{visible:true,locked:false},forests:{visible:true,locked:false},settlements:{visible:true,locked:false}});
 export function brushDelta(e){if(typeof e.deltaY==='number')return e.shiftKey?(e.deltaY<0?1:e.deltaY>0?-1:0):0;let key=e.key?.toLowerCase();return key==='w'?(e.shiftKey?10:1):key==='s'?-(e.shiftKey?10:1):0;}
 export const resizeBrush=(size,delta)=>Math.max(4,Math.min(120,size+delta));
