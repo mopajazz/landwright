@@ -19,3 +19,5 @@ For each new feature, update its article with: where to find it, a short procedu
 The user specifically asked that Raise/Lower guidance teach low Strength first. Preserve that warning prominently in the tutorial and brush article.
 
 Current scope: terrain and cartographic routes, forests, settlements, plus visual atmosphere. Holler Maps source assets have not been imported, and storytelling remains deferred. Do not describe future population, simulation, or narrative tools as available.
+
+- [Earthen materials, blending and terrain response](materials.md)

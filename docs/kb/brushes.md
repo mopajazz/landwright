@@ -9,8 +9,8 @@ Do not lower paint Opacity to tame sculpting: Raise, Lower, Smooth, Flatten, and
 ## Choose action, footprint, and material separately
 
 - Raise(R), Lower(L), Smooth(Q), Flatten(F), Land(C/M) change elevation.
-- Paint(P/B) changes ground color with Grass, Sand, Stone, Snow, or Dirt. Forest paints tree density instead; see [Forests](forests.md).
-- Soft Round, Hard Round, Coastline, and Grain determine coverage. A footprint choice does not change the selected tool.
+- Paint(P/B) paints Grass, Loam, Clay, Bedrock, Scree, Mud, Sand, or Snow with terrain-responsive textures. Forest paints tree density instead; see [Forests](forests.md).
+- Soft Round, Hard Round, and Coastline determine coverage. A footprint choice does not change the selected tool.
 - Sand+Coastline works in Paint without raising/lowering terrain. Land is the separate tool for coastline height changes.
 - W/S resizes by 1; Shift+W/S by 10; Shift+wheel also resizes. Ordinary diameter range is 4–120.
 
@@ -35,3 +35,5 @@ Undo, reduce Strength, and use smaller/shorter gestures. Low Strength is the fir
 ## Erase settlements
 
 When places exist, Paint offers Settlements in Shift erase target. A Shift stroke removes whole touched places; Opacity does not fade buildings. Hidden or locked Settlements are protected. Undo restores removal. See [Settlements](settlements.md).
+
+Material texture is independent of footprint. Grain has been retired from the menu. See [Earthen materials](materials.md) for blending, terrain response and old-project compatibility.

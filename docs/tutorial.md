@@ -1,6 +1,6 @@
 # Landwright: your first living landscape
 
-This tutorial covers the current v2.6 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
+This tutorial covers the current v2.7 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
 
 ## Before your first stroke: start with low Strength
 
@@ -34,14 +34,14 @@ If you need a level area, **Flatten (F)** approaches its target height. Preserve
 1. Select **Paint (P or B)**.
 2. Choose **Sand** and the **Coastline** footprint.
 3. Use D/E to decrease/increase Opacity in5% steps. Start with modest Opacity and paint along a dry bank. Repeat separate strokes to build color.
-4. Try Stone on your ridge and Grass in the lowlands.
+4. Try Bedrock on your ridge and Grass in the lowlands.
 
 Tool, material, and footprint are separate choices. Choosing Sand does not select Paint for you, and Coastline does not secretly become a land-raising tool. Use **Land (C or M)** to add land; hold Shift with Land to remove it. Forest is different from the ground materials: it paints tree density without recoloring the ground.
 
 ## 4. Place a path
 
 1. Choose **Path (J)**.
-2. In its settings, choose Dirt, Stone, or Sand, and set Width. W/S adjusts route width while this tool is active.
+2. In its settings, choose Loam, Bedrock, or Sand, and set Width. W/S adjusts route width while this tool is active.
 3. Click two or more points or drag a curve. The ribbon is only a preview.
 4. Press Enter, double-click, or use Finish route to commit.
 5. Escape cancels an unfinished route without changing the map.
@@ -101,3 +101,9 @@ Open Export map, choose 1024, 2048 or 4096 pixels, then Map image for a square t
 - [Engineering handoff](../handoff.md)
 
 If you get lost, open Help & shortcuts in the application. Practice on a disposable map and use short strokes; a few controlled passes are easier to shape than one powerful held brush.
+
+## Materials belong to the landscape
+
+Paint offers eight ground materials in compact family groups: Grass, Loam, Clay, Bedrock, Scree, Mud, Sand and Snow. Try Clay beside a river, Scree below a ridge, and Snow across a sheltered hollow. Their procedural textures respond automatically to the underlying slope, shelter and nearby water. This is a visual response; materials do not move cells or simulate erosion.
+
+Soft Round, Hard Round and Coastline control the edge of your stroke. The material supplies its texture, so Grain is no longer a separate footprint. D/E changes Opacity; successive strokes blend materials. Shift+Paint erases surface coverage and reveals the natural ground. Forest stays below the ground palette as a separate density layer. See [Earthen materials](kb/materials.md).

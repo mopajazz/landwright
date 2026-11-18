@@ -13,13 +13,13 @@ Repository: https://github.com/mopajazz/worldpainter-studio
 
 Live app: https://mopajazz.github.io/worldpainter-studio/
 
-Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.6/cache `2.6.0` improves New World and adds independent export sizes (release `d7ae907`; successful Pages run `44341029194`). Read handoff §0 and §23 first, then §19 for woodland. Schema **6**, imports **1–6** remain. Verify HEAD/status before editing.
+Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.7/cache `2.7.0` integrates eight procedural earthen materials. Read handoff §0 and §25 first, §23 for New World/export and §19 for woodland. Schema **7**, imports **1–7**. Verify HEAD/status before editing.
 
 ## Find the contract
 
 | Work | Read first |
 | --- | --- |
-| Proposed material art direction | `studies/earthen/`; handoff §24; standalone study, not integrated |
+| Earthen materials | `earthen.mjs`, `material-paint.mjs`; handoff §25; approved study in `studies/earthen/` |
 | New World/export resolution | `app.mjs`, `index.html`, `theme.css`; §23 |
 | Brush/tool/menu | `app.mjs`, `terrain.mjs`, `brushes.mjs`; handoff §§2–5 |
 | Paths/rivers/reflow | `routes.mjs`, `editor.mjs`; §§3, 7, 15 |
@@ -57,3 +57,5 @@ Woodland coverage, canopy height and RGBA are derived, never saved. Keep picking
 The user removed the Settlements creation/editing panel. Do not restore it or add a replacement tool. Preserve saved settlement rendering/import/export/layers and erasing. Space + left-drag temporarily pans 2D/3D; retain tool selection and protect typing/dialogs. Cache fields by immutable records identity. Roofs and clearings are derived, never bed edits or forest-density deletion. Names are plain text. Schema6 keeps at most64 canonical records; older schemas migrate with an empty list. Check cancel/import/undo and actual2D/3D/export behavior. No simulation or Holler-source integration is implied.
 
 Keep terrain grids 128/192/256 separate from MapPNG sizes 1024/2048/4096. Live previews must never mutate active terrain/history. Keep Cancel/Escape safe, creation atomic, backup editable, and Heightmap bed-only at N. Do not claim larger editable worlds, rectangular/retro formats or extra terrain detail from 4K image scaling.
+
+Eight ground materials exclude Forest4; coverage order is[1,2,3,5,6,7,8,9]. Preserve legacy paint RGB/alpha and original v1/v2 palette migration. Schema7 coverage is canonical Base64, empty for zero weights; validate before mutation. Three visible footprints; Grain retired. Ground texture is derived, uses raw bed/all-river context and never changes elevation. Share the ground raster across2D/3D/MapPNG; keep diagnostics and Heightmap clean. Active edits use N² then restore4N on release. Profile release rebuilds and Canvas hover; do not promise a fixedFPS.

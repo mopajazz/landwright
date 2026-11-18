@@ -1,22 +1,22 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 18, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.6 New World redesign and export presets, released in `d7ae907d69f7066f036b6dc799d284683bb0269d`; previous release `de1f70e` (v2.5.2). Documentation-only commits may follow this application release.
-**Displayed release:** `v2.6`
-**Browser asset/module cache revision:** `2.6.0`<br>
-**Project schema written by the application:** `6`
+**Implementation baseline:** v2.7 earthen materials; see §25 for implementation and verification. Previous release v2.6 was `d7ae907`.
+**Displayed release:** `v2.7`
+**Browser asset/module cache revision:** `2.7.0`<br>
+**Project schema written by the application:** `7`
 
-Read **§0 first** for the current state. Sections 14–24 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
+Read **§0 first** for the current state. Sections 14–25 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
 
 ## 0. Current release — start here
 
 | Contract | Current state |
 | --- | --- |
-| Application release | **v2.6**, commit `d7ae907` |
-| Verified deployment | [GitHub Pages run 44341029194](https://github.com/mopajazz/worldpainter-studio/actions/runs/44341029194), **success**, exact release SHA above |
+| Application release | **v2.7**, earthen materials |
+| Verified deployment | v2.7 deployment pending; previous v2.6 run44341029194 succeeded |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
-| Runtime | Static HTML/CSS/ES modules; cache `2.6.0`; no build or runtime packages |
-| Project format | Writes **6**, imports **1–6**; authoritative terrain, paint, forest density, routes, saved settlements and legacy content |
+| Runtime | Static HTML/CSS/ES modules; cache `2.7.0`; no build or runtime packages |
+| Project format | Writes **7**, imports **1–7**; authoritative terrain, paint, forest density, routes, saved settlements and legacy content |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan |
 | Erasing | **Shift + Paint** click/drag; Paint’s Shift erase target selects the eligible layer. No Erase tool or E tool shortcut |
 | Opacity | **D decreases / E increases by 5%**, Paint and Path only; clamp 0–100; preserve tool/Strength/history |
@@ -26,7 +26,7 @@ Read **§0 first** for the current state. Sections 14–24 retain release histor
 | Map PNG | Independent **1024² / 2048² (default) / 4096²**; 4K square, not UHD landscape |
 | Heightmap | **N² actual bed elevations**; no water, canopy or roof relief |
 | Settlements | Creation/editing panel removed. Preserve saved records, rendering, names, layers, Shift erasing, undo and export |
-| Verification | Last full application run: **142 passed, 0 failed** (`/tmp/world-release-tests.log`); current handoff edit is documentation-only |
+| Verification | Current full application run: **155 passed, 0 failed** (`/tmp/earthen-full-final.log`) |
 | Knowledge base | [New worlds/resolution](docs/kb/worlds.md), [tutorial](docs/tutorial.md), [KB index](docs/kb/index.md) |
 
 **Release evidence:** production browser showed v2.6, all six shape choices, the updated preview summary, all three export presets, and no application console errors. Local browser produced an actual 4096×4096 PNG; the 256×256 Heightmap matched every rounded saved bed pixel. Native Enter created a named flat 128 world; Undo restored the entire original project as parsed JSON. Dark/light and a 500px window were inspected; this does not establish real-phone touch behavior, full WCAG compliance, or GPU performance.
@@ -936,3 +936,33 @@ Source reference: the compendium image supplied earlier in chat informed restrai
 Swatch study browser evidence: eight material cards and sixteen comparison canvases rendered with no application errors. Parchment/midnight theme switch checked. Actual exported PNG verified as1800×2370; final comparison PNG is `/workspace/shared/landwright-earthen-swatch-sheet.png`. No app-suite rerun is claimed because editor source/tests were untouched.
 
 The study was also inspected at500px viewport width with no horizontal overflow; desktop window restored after inspection.
+
+## 25. v2.7 — approved earthen material integration
+
+This section supersedes §24's standalone-study status and earlier palette/schema/footprint counts. The approved study remains available, unchanged, in `studies/earthen/`.
+
+### Product contract
+
+Eight surface materials grouped by family: Grass(1), Loam(6), Clay(7), Bedrock(3), Scree(8), Mud(9), Sand(2), Snow(5). Forest(4) remains a separate density action below the palette. Stone/Dirt are now named Bedrock/Loam for new selections. Nine tools remain. Soft Round, Hard Round and Coastline control footprint; Grain is removed from UI but its legacy helper remains internally. Selecting a material/footprint preserves the tool. D/E, Shift erase, Space pan, layer protection and forest density semantics are unchanged.
+
+Texture responds automatically to raw slope, curvature/shelter, light and proximity to sea/all saved river water. It is a visual treatment, not sediment transport, erosion or material redistribution. Terrain diagnostic views bypass pigment texture. Visible submerged cells keep water appearance; hidden river water still supplies wetness context.
+
+### Implementation and persistence
+
+- `earthen.mjs`: deterministic procedural renderer and material definitions. A128² periodic atlas caches five Float32 noise fields (~320KiB), with world-anchored sampling and bilinear coverage. Base RGB compositing remains the authority for old paint; texture contributes weighted color offsets without multiplying hill shading twice.
+- `material-paint.mjs`: eight absolute coverage bytes/cell, ordered `[1,2,3,5,6,7,8,9]`. Forest is excluded. Snapshot-based painting blends old weights by1−amount then adds selected material; erasing attenuates all channels. Quantized sums must not exceed round(alpha×255), allowing1byte import tolerance.
+- Schema7 adds `surfaceMaterials`: canonical Base64 of N×N×8 bytes, or empty string for all-zero coverage. A256² map costs524288 raw bytes /699052 Base64 characters when nonempty. Never serialize derived texture images. Validate canonical encoding, size and coverage sums before history/world mutation.
+- `editor.mjs` imports versions1–7. Versions1–6 migrate to zero material coverage; RGB/alpha remains exact. Frozen original six colors preserve v1/v2 migration. Old versions still reject new material IDs. Older app releases cannot read schema7.
+- `app.mjs` includes coverage in save/load/autosave/history/stroke snapshots, clears it on generation/image import, and supplies it to new path commits. Saved paths are not replayed on load. Legacy fully painted colors remain unchanged until repainted; natural unpainted ground uses procedural materials.
+- `groundMap` is the shared derived raster for2D, combined3D and MapPNG. The original N² `off` raster remains legacy/base compositing. Active strokes use N²; release/cancel promotes to(4N)² in Terrain, capped1024². Diagnostic views useN². Heightmap exports remain authoritative bed-only.
+- Texture/raster rebuilding stays on queued frames, not pointer events. Orbit reuses cached raster; Canvas fallback maps ground texture in addition to woodland. Raw river habitat cache remains independent of layer visibility.
+
+### Verification and limitations
+
+Full Node suite:155passed,0failed (`/tmp/earthen-full-final.log`). Added coverage for canonical compact storage, distinct deterministic textures, terrain/water response, legacy-color preservation, bilinear/resolution consistency, material blend/erase caps, undo/redo, malformed import atomicity, new path coverage, grouped UI and all eight materials in3D DOM interaction. DOM tests stub canvas and do not establish GPU performance or pixel quality.
+
+Pure renderer warm measurements at256² terrain→1024² raster were approximately350–360ms, excluding canvas/upload. A release rebuild can pause briefly; no guaranteed FPS. Keep render budgets bounded and profile actual hover/edit/orbit before raising editable-grid limits. No new topology, asset integration, settlements UI, simulation or storytelling is included. Tutorial and KB retain the5–10% beginner Strength guidance.
+
+Browser acceptance (local): light2D and darkCanvas3D showed distinct Clay/Scree paint; Shift erase, D→95% opacity, Undo and3D painting/orbit exercised. Actual schema7 project download449795bytes at128²,131072decodedcoveragebytes. Actual MapPNG4096² exported;128²Heightmap matched every saved bed pixel. No application console errors observed; extension metadata errors were unrelated. WebGL unavailable in this browser, so GPU visual/performance acceptance remains unverified.
+
+Detailed256² local map: paint release produced the full-resolution ground texture and stayed interactive; this was a functional observation, not anFPS benchmark.
