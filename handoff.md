@@ -1,9 +1,9 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 17, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.1.2 River upgrade merged with `bca1a80`; previous UI baseline `4fd8be5`. See Git history for the final merge commit.
-**Displayed release:** `v2.1.2`
-**Browser asset/module cache revision:** `2.1.2`<br>
+**Implementation baseline:** v2.2 Living World; previous baseline `e2320cb`. See Git history for the final release commit.
+**Displayed release:** `v2.2`
+**Browser asset/module cache revision:** `2.2.0`<br>
 **Project schema written by the application:** `4`
 
 This document describes the implemented application at the baseline above. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
@@ -669,3 +669,15 @@ Effective radius is `max(0.75, width/2 × (0.25 + 0.75t))` for tapered rivers, w
 World Settings offers **Reflow rivers** whenever a saved river exists. It is disabled if Relief or River water is hidden/locked. One action cancels pending gestures, samples all profiles against the same current heights snapshot using `level=max(0,min(previousLevel,nearestGroundHeight-0.5))`, recuts beds below the recalculated levels, rebuilds local water/effective geometry, and refreshes. It has one complete undo/redo group and leaves Path data and ocean settings unchanged. Because this formula samples an already carved bed, **repeated Reflow can deepen channels**; this is disclosed beside the button and covered by tests. Undo restores prior bed and levels. No automatic hydrology or finished-point editing is implemented.
 
 Additional coverage includes taper save/load and old v4 compatibility, source/mouth width, thin-source continuity, deterministic bounded endpoint-pinned meander, maximum-width budgets, reflow profiles/recutting, and UI locks/undo/redo. Final merged release verification: **101 tests passed, 0 failed** on November 17, 2026.
+
+## 15. v2.2 Living World and user documentation
+
+`living.mjs` renders a separate `living-overlay` Canvas, with a capped 30Hz effect loop rather than continuously re-rendering terrain. Water shimmer samples visible wet cells; route streaks follow source-to-mouth point order; four drifting clouds add stylized projected soft shadows. This is visual atmosphere, not water/lighting/civilization simulation. No vegetation, population, day/night, or storytelling is delivered here.
+
+World Settings offers one Living World toggle (default on) and an expandable choice of Water motion and Clouds & soft shadows. Its browser-local `landwright-living` preferences are `{enabled,clouds,waterMotion}` Booleans; no v4 field, history entry, terrain edit, paint change, reflow, or exported effect is introduced. `syncLiving` pauses/stops animation during pointer edits, pan/orbit, route drafts, hidden documents, reduced-motion preference, diagnostic views, and disabled effects. Resuming after ordinary 2D pointer release is explicitly synchronized and regression-tested with queued animation frames. The overlay has no pointer events and does not alter picking. It is stylized screen compositing, not a depth-buffered physically accurate lighting pass.
+
+`docs/tutorial.md` and `docs/kb/index.md` start the user-facing tutorial/KB, linked in Help. Additional articles cover brushes, routes/reflow, Living World, and projects/troubleshooting. The user explicitly requested the prominent low-Strength lesson: **begin Raise/Lower around 5–10% Strength with short strokes, inspect, then increase gradually**. Keep it in future tutorial revisions. Opacity is reserved for Paint/Path/surface erasing and does not tame sculpting.
+
+Maintain these user docs alongside new features: location, procedure, what changes, save/undo/export behavior, limitations, and common mistakes. Keep planned features clearly separate from shipped behavior.
+
+v2.2 verification: **106 tests passed, 0 failed**. Tutorial/KB local links and syntax/diff checks pass. Living World rendering is deliberately separate from project data, undo and PNG composition; queued-frame tests cover pause/resume after 2D edits.

@@ -1,17 +1,20 @@
-import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.1.2';
-import{generate,stroke}from'./terrain.mjs?v=2.1.2';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.1.2';
-import{drawLandmark,createLandmarkAtlas}from'./landmarks.mjs?v=2.1.2';
-import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.1.2';
-import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.1.2';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.1.2';
-import{initUI}from'./ui.mjs?v=2.1.2';
-import{toolIcon}from'./icons.mjs?v=2.1.2';
-import{touchesShape}from'./eraser.mjs?v=2.1.2';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.1.2';
+import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.2.0';
+import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.2.0';
+import{generate,stroke}from'./terrain.mjs?v=2.2.0';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.2.0';
+import{drawLandmark,createLandmarkAtlas}from'./landmarks.mjs?v=2.2.0';
+import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.2.0';
+import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.2.0';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.2.0';
+import{initUI}from'./ui.mjs?v=2.2.0';
+import{toolIcon}from'./icons.mjs?v=2.2.0';
+import{touchesShape}from'./eraser.mjs?v=2.2.0';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.2.0';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface',routes=[],routeDraft=null,routeHover=null,riverWater=new Float32Array(N*N).fill(-1),surfaceHeights=heights,riverWaterDirty=true;
 document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Shape land · Shift removes land (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',erase:'Erase from a layer (E)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 $('rail-settings').innerHTML=toolIcon('settings');
+let livingLoop=null,livingScene=null,livingPrefs={enabled:true,clouds:true,waterMotion:true};const livingCanvas=$('living-overlay'),livingContext=livingCanvas.getContext('2d'),motionQuery=document.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
+try{let saved=JSON.parse(localStorage.getItem('landwright-living'));for(let k of Object.keys(livingPrefs))if(typeof saved?.[k]==='boolean')livingPrefs[k]=saved[k];}catch{}
 const materials=MATERIALS;
 const glCanvas=$('terrain-gl'),combined=document.createElement('canvas'),composite=combined.getContext('2d');combined.width=combined.height=1024;
 const landmarkAtlas=createLandmarkAtlas();
@@ -34,9 +37,9 @@ function color(i){
  let grain=grainNoise[i];return c.map(v=>Math.max(0,Math.min(255,v*s+grain)));
 }
 function texture(){let img=pixels;for(let i=0;i<N*N;i++){let c=color(i);if(contours&&layers.elevation.visible&&!(water&&riverWater[i]>heights[i])&&view!=='biome'&&heights[i]>sea&&i>=N&&Math.floor(heights[i]/10)!==Math.floor(heights[i-N]/10))c=c.map(v=>v*.78);let j=i*4;img.data[j]=c[0];img.data[j+1]=c[1];img.data[j+2]=c[2];img.data[j+3]=255;}oc.putImageData(img,0,0);}
-function flushTexture(){if(textureDirty){if(riverWaterDirty){riverWater=riverField(layers.rivers.visible?routes:[],N);riverWaterDirty=false;}surfaceHeights=waterSurface(heights,riverWater,water);texture();textureDirty=false;}}
+function flushTexture(){if(textureDirty){if(riverWaterDirty){riverWater=riverField(layers.rivers.visible?routes:[],N);riverWaterDirty=false;}surfaceHeights=waterSurface(heights,riverWater,water);texture();livingScene=buildLivingScene({n:N,heights,riverWater,sea,water,view,routes,riversVisible:layers.rivers.visible});textureDirty=false;}}
 function transform(){let w=map.clientWidth,h=map.clientHeight;let scale=Math.max(.05,Math.min((w-70)/N,(h-135)/N))*zoom;return{scale,x:(w-N*scale)/2+pan.x,y:(h-N*scale)/2+pan.y-6}}
-function draw(){if(workspaceMode==='3d'){sceneDirty=true;scheduleFrame();return;}let w=map.clientWidth,h=map.clientHeight;ctx.clearRect(0,0,w,h);let t=transform();ctx.save();ctx.shadowColor='#0005';ctx.shadowBlur=36;ctx.drawImage(off,t.x,t.y,N*t.scale,N*t.scale);ctx.restore();if(layers.shapes.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);ctx.beginPath();ctx.rect(0,0,N,N);ctx.clip();for(let shape of drawings)drawShape(ctx,shape);ctx.restore();}if(layers.landmarks.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);for(let m of marks)drawLandmark(ctx,m);ctx.restore();}ctx.strokeStyle='#84988045';ctx.strokeRect(t.x,t.y,N*t.scale,N*t.scale);if(grid){ctx.strokeStyle='#dae5c62a';ctx.lineWidth=.5;for(let i=0;i<=N;i+=16){ctx.beginPath();ctx.moveTo(t.x+i*t.scale,t.y);ctx.lineTo(t.x+i*t.scale,t.y+N*t.scale);ctx.stroke();ctx.beginPath();ctx.moveTo(t.x,t.y+i*t.scale);ctx.lineTo(t.x+N*t.scale,t.y+i*t.scale);ctx.stroke()}}drawRoutePreview(ctx,p=>({x:t.x+p.x*t.scale,y:t.y+p.y*t.scale}));$('zoomtext').textContent=Math.round(zoom*100)+'%'}
+function draw(){syncLiving();if(workspaceMode==='3d'){sceneDirty=true;scheduleFrame();return;}let w=map.clientWidth,h=map.clientHeight;ctx.clearRect(0,0,w,h);let t=transform();ctx.save();ctx.shadowColor='#0005';ctx.shadowBlur=36;ctx.drawImage(off,t.x,t.y,N*t.scale,N*t.scale);ctx.restore();if(layers.shapes.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);ctx.beginPath();ctx.rect(0,0,N,N);ctx.clip();for(let shape of drawings)drawShape(ctx,shape);ctx.restore();}if(layers.landmarks.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);for(let m of marks)drawLandmark(ctx,m);ctx.restore();}ctx.strokeStyle='#84988045';ctx.strokeRect(t.x,t.y,N*t.scale,N*t.scale);if(grid){ctx.strokeStyle='#dae5c62a';ctx.lineWidth=.5;for(let i=0;i<=N;i+=16){ctx.beginPath();ctx.moveTo(t.x+i*t.scale,t.y);ctx.lineTo(t.x+i*t.scale,t.y+N*t.scale);ctx.stroke();ctx.beginPath();ctx.moveTo(t.x,t.y+i*t.scale);ctx.lineTo(t.x+N*t.scale,t.y+i*t.scale);ctx.stroke()}}drawRoutePreview(ctx,p=>({x:t.x+p.x*t.scale,y:t.y+p.y*t.scale}));$('zoomtext').textContent=Math.round(zoom*100)+'%'}
 function composeSurface(includeDrawings=true){
  composite.setTransform(1,0,0,1,0,0);composite.clearRect(0,0,1024,1024);composite.drawImage(off,0,0,1024,1024);composite.scale(1024/N,1024/N);
  if(includeDrawings&&layers.shapes.visible&&view!=='height'){for(let s of drawings)drawShape(composite,s);}
@@ -49,7 +52,7 @@ function draw3DBrush(){
  mc.closePath();mc.fillStyle='#cfe9a512';mc.strokeStyle='#e1f3bdcc';mc.lineWidth=1;mc.fill();mc.stroke();
 }
 function renderFrame(time){
- flushTexture();
+ syncLiving();flushTexture();
  if(workspaceMode!=='3d'){draw();return;}
  let started=performance.now(),w=mini.clientWidth,h=mini.clientHeight;if(!w||!h)return;
  if(!gpu&&!gpuFailed){try{gpu=createGPUTerrain(glCanvas);if(!gpu){gpuFailed=true;gpuFailureReason='WebGL context unavailable';}}catch(error){gpuFailed=true;gpuFailureReason=error.message;}glCanvas.hidden=!gpu;}
@@ -63,7 +66,7 @@ function renderFrame(time){
 }
 function preview(){scheduleFrame();}
 function refresh(){textureDirty=true;sceneDirty=true;scheduleFrame();}
-function resize(){let d=Math.min(2,devicePixelRatio||1);for(let c of[map,mini,glCanvas]){let width=Math.round((c===glCanvas?mini.clientWidth:c.clientWidth)*d),height=Math.round((c===glCanvas?mini.clientHeight:c.clientHeight)*d);if(c.width!==width||c.height!==height){c.width=width;c.height=height;}if(c!==glCanvas)c.getContext('2d').setTransform(d,0,0,d,0,0);}scheduleFrame();}new ResizeObserver(resize).observe(document.querySelector('.workspace'));
+function resize(){let d=Math.min(2,devicePixelRatio||1);for(let c of[map,mini,glCanvas,livingCanvas]){let width=Math.round((c===glCanvas?mini.clientWidth:c===livingCanvas?document.querySelector('.workspace').clientWidth:c.clientWidth)*d),height=Math.round((c===glCanvas?mini.clientHeight:c===livingCanvas?document.querySelector('.workspace').clientHeight:c.clientHeight)*d);if(c.width!==width||c.height!==height){c.width=width;c.height=height;}if(c!==glCanvas)c.getContext('2d').setTransform(d,0,0,d,0,0);}scheduleFrame();}new ResizeObserver(resize).observe(document.querySelector('.workspace'));
 function state(){return{version:4,routes:structuredClone(routes),size:N,name:$('worldname').value,heights:Array.from(heights,v=>Math.round(v*1000)/1000),paint:Array.from(paint),paintColors:Array.from(paintColors),paintAlpha:Array.from(paintAlpha,v=>Math.round(v*10000)/10000),sea,water,shade,marks:marks.map(m=>({...m})),shapes:structuredClone(drawings),layers:structuredClone(layers)}}
 function persist(){modified=true;$('save-status').textContent='Saving changes…';$('save-badge').textContent='Saving…';clearTimeout(saveTimer);saveTimer=setTimeout(()=>{try{localStorage.setItem('worldpainter-project',JSON.stringify(state()));modified=false;$('save-status').textContent='All changes saved locally';$('save-badge').textContent='Saved in browser'}catch{$('save-status').textContent='Download project to keep changes';$('save-badge').textContent='Not saved · download';notify('Local storage full — save your project to a file.')}},600)}
 function snapshot(record=state()){undo.push(record);if(undo.length>35)undo.shift();redo=[];historyUI()}
@@ -126,7 +129,7 @@ map.onpointermove=e=>{
   last=p;
  }
 };
-function end(){if(isRouteTool()&&routeDraft){down=false;last=null;return;}const legacyErase=down&&tool==='erase'&&eraseTarget!=='surface';if(down&&tool!=='pan')persist();down=false;last=null;paintStroke=null;if(legacyErase)renderLayers();}
+function end(){if(isRouteTool()&&routeDraft){down=false;last=null;return;}const legacyErase=down&&tool==='erase'&&eraseTarget!=='surface';if(down&&tool!=='pan')persist();down=false;last=null;paintStroke=null;if(legacyErase)renderLayers();syncLiving();}
 function cancelStroke(){cancelRoute(false);if(down&&!last?.pan)persist();down=false;last=null;paintStroke=null;draw();}
 map.onpointerup=end;map.onpointercancel=()=>{if(down)persist();cancelStroke();};map.onpointerleave=()=>{brushPosition=null;$('brush').style.display='none';};
 function changeZoom(z){zoom=Math.max(.4,Math.min(4,z));draw()}map.addEventListener('wheel',e=>{e.preventDefault();if(e.shiftKey){adjustBrush(brushDelta(e));return;}changeZoom(zoom*(e.deltaY>0?.9:1.1))},{passive:false});$('plus').onclick=()=>changeZoom(zoom*1.2);$('minus').onclick=()=>changeZoom(zoom/1.2);$('fit').onclick=()=>{zoom=1;pan={x:0,y:0};draw()};
@@ -200,5 +203,10 @@ $('orbit-reset').onclick=()=>{camera={yaw:-.65,pitch:.65,zoom:1,panX:0,panY:0,si
 $('orbit-toggle').onclick=()=>{if(down)end();orbitMode=!orbitMode;$('orbit-toggle').setAttribute('aria-pressed',orbitMode);$('orbit-toggle').textContent=orbitMode?'Edit tools':'Orbit';brushPosition=null;preview();};
 glCanvas.addEventListener('webglcontextlost',e=>{e.preventDefault();gpu=null;gpuFailed=true;glCanvas.hidden=true;sceneDirty=true;preview();});
 glCanvas.addEventListener('webglcontextrestored',()=>{gpu=null;gpuFailed=false;sceneDirty=true;preview();});
+function syncLiving(){const editing=down||!!orbitPointer||!!routeDraft,reduced=!!motionQuery?.matches,hidden=!!document.hidden,diagnostic=view!=='terrain',enabled=livingPrefs.enabled&&!diagnostic&&(livingPrefs.clouds||(livingPrefs.waterMotion&&water));livingLoop?.setState({enabled,editing,hidden,reduced});$('living-toggle').setAttribute('aria-pressed',String(livingPrefs.enabled));$('living-toggle').classList.toggle('on',livingPrefs.enabled);$('living-options').hidden=!livingPrefs.enabled;$('living-clouds').checked=livingPrefs.clouds;$('living-water').checked=livingPrefs.waterMotion;$('living-status').textContent=!livingPrefs.enabled?'Off':reduced?'Paused: reduced motion':hidden?'Paused: tab hidden':editing?'Paused while editing':diagnostic?'Paused in this view':!enabled?'Choose an effect':!livingLoop?'Animation unavailable':'Water & atmosphere active';}
+function livingProject(x,y){if(workspaceMode==='2d'){let t=transform();return{x:t.x+x*t.scale,y:t.y+y*t.scale};}return projectTerrain(x,y,sampleTerrain(x,y,surfaceHeights,sea,water),mini.clientWidth,mini.clientHeight,camera);}
+const animationWindow=document.defaultView;if(typeof animationWindow?.requestAnimationFrame==='function')livingLoop=createLivingLoop({request:animationWindow.requestAnimationFrame.bind(animationWindow),cancel:animationWindow.cancelAnimationFrame.bind(animationWindow),draw:time=>drawLiving(livingContext,workspaceMode==='3d'?mini.clientWidth:map.clientWidth,workspaceMode==='3d'?mini.clientHeight:map.clientHeight,livingScene?{...livingScene,mode:workspaceMode}:null,(x,y)=>livingProject(x,y),time,livingPrefs),clear:()=>livingContext.clearRect(0,0,livingCanvas.width,livingCanvas.height)});
+function saveLiving(){try{localStorage.setItem('landwright-living',JSON.stringify(livingPrefs));}catch{}syncLiving();}
+$('living-toggle').onclick=()=>{livingPrefs.enabled=!livingPrefs.enabled;saveLiving();};$('living-clouds').onchange=()=>{livingPrefs.clouds=$('living-clouds').checked;saveLiving();};$('living-water').onchange=()=>{livingPrefs.waterMotion=$('living-water').checked;saveLiving();};document.addEventListener('visibilitychange',syncLiving);motionQuery?.addEventListener?.('change',syncLiving);
 initUI();renderLayers();renderPresets();
 try{let saved=localStorage.getItem('worldpainter-project');if(saved)load(JSON.parse(saved))}catch{}selectTool(tool);historyUI();refresh();resize();

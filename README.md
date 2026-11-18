@@ -76,3 +76,9 @@ New River settings include **Taper** (on by default) and deterministic **Meander
 **World Settings → Reflow rivers** recalculates saved levels against the current terrain snapshot and recuts the channels beneath them, in one undoable action. It respects Relief/River water visibility and locks. **Repeated reflow can deepen the current bed**; undo restores the previous terrain and river levels. This follows the current-bed sampling formula and is not an automatic hydrology simulation.
 
 v4 stays compatible: optional river `taper` metadata is saved; absent metadata means uniform width for old rivers. Meander is baked into sampled coordinates. No tools or schema version were added. Existing raster-work budgets still use maximum width and actual meandering centerline length.
+
+## Living World and user documentation
+
+World Settings → **Living World** adds a visual-only, separately rendered overlay: water shimmer, downstream river streaks, drifting clouds, and soft cloud shadows in 2D/3D. It is on by default, with separate Water motion / Clouds options. Effects pause during editing, route previews, hidden tabs, reduced motion, and diagnostic views. The overlay targets 30 draws/sec, leaves project v4 data/history unchanged, and is excluded from PNG exports. Preferences use `landwright-living`. This pass does not include simulation, vegetation, settlements, day/night, or storytelling.
+
+Start with the [tutorial](docs/tutorial.md) or [knowledge base](docs/kb/index.md), also linked from in-app Help. **Before Raise or Lower, start around 5–10% Strength, use short strokes, inspect, and increase gradually.** Paint Opacity does not reduce sculpting power.

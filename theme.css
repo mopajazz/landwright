@@ -126,3 +126,6 @@ nav .toggle.active:after{background:var(--accent);border-color:var(--accent)}
 
 #reflow-rivers{width:100%;margin-top:12px;border:1px solid var(--border);background:var(--surface);color:var(--fg);text-align:center}
 #reflow-note{line-height:1.6;margin-bottom:0}
+#living-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+#living-options{border-top:1px solid var(--line);padding:10px 0;margin-top:8px}#living-options summary{cursor:pointer;color:var(--muted);font-size:11px}#living-options label{font-size:11px;line-height:1.5}#living-options p,#living-status{font-size:10px;line-height:1.6}
+#helpdialog a{color:var(--accent);text-underline-offset:3px}#helpdialog a:focus-visible{outline:3px solid var(--focus);outline-offset:3px}

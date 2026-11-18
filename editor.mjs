@@ -1,6 +1,6 @@
-import{validRoute,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.1.2';
-import {MATERIALS} from './brushes.mjs?v=2.1.2';
-import {validShape} from './shapes.mjs?v=2.1.2';
+import{validRoute,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.2.0';
+import {MATERIALS} from './brushes.mjs?v=2.2.0';
+import {validShape} from './shapes.mjs?v=2.2.0';
 export const defaultLayers=()=>({surface:{visible:true,locked:false},landmarks:{visible:true,locked:false},shapes:{visible:true,locked:false},elevation:{visible:true,locked:false},rivers:{visible:true,locked:false}});
 export function brushDelta(e){if(typeof e.deltaY==='number')return e.shiftKey?(e.deltaY<0?1:e.deltaY>0?-1:0):0;let key=e.key?.toLowerCase();return key==='w'?(e.shiftKey?10:1):key==='s'?-(e.shiftKey?10:1):0;}
 export const resizeBrush=(size,delta)=>Math.max(4,Math.min(120,size+delta));
