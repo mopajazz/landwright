@@ -81,12 +81,20 @@ The river upgrade retained v4 compatibility (v2.3 now writes v5 for forests): op
 
 ## Living World and user documentation
 
-World Settings → **Living World** adds a visual-only, separately rendered overlay: water shimmer, downstream river streaks, drifting clouds, and soft cloud shadows in 2D/3D. It is on by default, with separate Water motion / Clouds options. Effects pause during editing, route previews, hidden tabs, reduced motion, and diagnostic views. The overlay targets 30 draws/sec, leaves project data/history unchanged, and is excluded from PNG exports. Preferences use `landwright-living`. Atmosphere does not include simulation, inhabitants, settlements, day/night, or storytelling. Static forests are saved separately in v5; optional Canopy breeze animates bounded leaf/branch accents.
+World Settings → **Living World** adds a visual-only, separately rendered overlay: water shimmer, downstream river streaks, drifting clouds, and soft cloud shadows in 2D/3D. It is on by default, with separate Water motion / Clouds options. Effects pause during editing, route previews, hidden tabs, reduced motion, and diagnostic views. The overlay targets 30 draws/sec, leaves project data/history unchanged, and is excluded from PNG exports. Preferences use `landwright-living`. Atmosphere does not include simulation, inhabitants, settlements, day/night, or storytelling. Static forests are saved separately in v5; optional Canopy breeze animates bounded foliage glints.
 
 Start with the [tutorial](docs/tutorial.md) or [knowledge base](docs/kb/index.md), also linked from in-app Help. **Before Raise or Lower, start around 5–10% Strength, use short strokes, inspect, and increase gradually.** Paint Opacity does not reduce sculpting power.
 
 ## v2.3 — forests and clearings
 
-Paint → Forest now paints a saved density field, with a 65% default target and normal footprint/opacity controls. Shift clears trees; Erase → Forests and the conditional Forests layer keep woodland separate from ground paint. Original pine/broadleaf symbols share stable placements across 2D, GPU/Canvas 3D, and Map PNGs. Trees avoid low coasts, cliffs, local river water and saved path corridors. Unsuitable terrain hides trees while keeping density for later restoration; path records still block after surface erasure.
+Paint → Forest now paints a saved density field, with a 65% default target and normal footprint/opacity controls. Shift clears trees; Erase → Forests and the conditional Forests layer keep woodland separate from ground paint. The original v2.3 stamps were superseded by the v2.4 integrated canopy described below. Trees avoid low coasts, cliffs, local river water and saved path corridors. Unsuitable terrain hides trees while keeping density for later restoration; path records still block after surface erasure.
 
 Project v5 adds density and Forests layer settings; imports v1–v4 preserve all existing content and initialize empty density. Canopy breeze is optional Living World motion, excluded from saves/history/exports; static forests are included in saves and visible Map PNGs. No tools were added. See [Forests and clearings](docs/kb/forests.md). Holler originals remain unavailable and unintegrated.
+
+## v2.4 — terrain-integrated woodland
+
+Forest painting now produces connected, textured canopy with irregular edges, natural gaps, muted greens and soft contact shading. Generated pine/oak stamps have been removed. Existing density painting, erasing, layers, v5 saves and undo remain compatible; legacy landmark symbols are preserved.
+
+The same cached woodland texture appears in 2D, 3D and visible Map PNGs. A shallow derived canopy surface gives 3D woodland volume and consistent picking without changing the saved ground or Heightmap PNG. Canvas fallback texture-maps wooded cells and restores detail after orbit. Pattern caches, bounding-box rasterization and frame-coalesced texture updates keep repeated brush events from rebuilding the full texture synchronously.
+
+Verified with 123 passing tests and actual browser Map/Heightmap exports. Real-GPU performance remains hardware-dependent and has not been established in the cloud Canvas browser. See [woodland guidance](docs/kb/forests.md) and the [art-direction reference](docs/design/README.md); the reference is concept art, not a screenshot.

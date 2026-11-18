@@ -10,7 +10,7 @@ Preferences are local to this browser under `landwright-living`. They are not te
 
 - Ocean and visible river water receive gentle shimmer strokes.
 - River streaks travel in sampled source-to-mouth order. They are visual indicators, not moving water volumes.
-- Canopy breeze moves small leaf/branch accents over up to 256 forest trees per frame. Static woodland is separate saved map data; see [Forests](forests.md).
+- Canopy breeze adds subtle foliage glints at up to 256 woodland locations per frame. Static woodland is separate saved map data; see [Forests](forests.md).
 - A small number of clouds drift over the landscape with low-opacity shadows.
 - The separate overlay works in 2D and 3D; the base map and terrain geometry remain authoritative.
 

@@ -1,12 +1,12 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 17, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.3 Forests; previous runtime `03c1199` and handoff/skill `d37d51c`. See Git history for the v2.3 release commit.
-**Displayed release:** `v2.3`
-**Browser asset/module cache revision:** `2.3.0`<br>
+**Implementation baseline:** v2.4 terrain-integrated woodland; previous release `e56269b` (v2.3). See Git history and GitHub Pages for the release commit/deployment.
+**Displayed release:** `v2.4`
+**Browser asset/module cache revision:** `2.4.0`<br>
 **Project schema written by the application:** `5`
 
-This document describes the implemented application at the baseline above. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
+Sections 1–18 retain engineering context and release history; §19 defines the v2.4 woodland renderer and supersedes earlier forest rendering details. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
 
 ## 1. Identity, ownership, and locations
 
@@ -328,7 +328,7 @@ This is a static, buildless HTML/CSS/ES-module application. No React, bundler, a
 | `gpu-terrain.mjs` | WebGL mesh/buffers, shader program, texture and legacy billboard batches |
 | `editor.mjs` | Project normalization/migration, default layers, sizing shortcuts |
 | `ui.mjs` | Persistent theme/sidebar preferences, resize/collapse/flyout handlers |
-| `forests.mjs` | Density stroke compositing, deterministic terrain-aware tree lattice, original symbols, route-identity habitat cache |
+| `forests.mjs` | Density strokes, continuous procedural canopy, derived visual relief, cached texture patterns and route habitat masks |
 | `living.mjs` | Wet-mask scene sampling, separate bounded atmosphere renderer, pausable 30Hz animation loop |
 | `docs/tutorial.md`, `docs/kb/` | Beginner workflow and topic-based user documentation, linked in Help |
 | `.agents/skills/landwright-development/` | Reusable development skill and portable handoff snapshot |
@@ -505,7 +505,7 @@ Open `http://localhost:8000/`. Serve over HTTP rather than opening `index.html` 
 
 ### Test suite
 
-Current v2.3 verification: **118 passed, 0 failed** (see §18 for forest coverage).
+Current v2.4 verification: **123 passed, 0 failed** (see §19 for renderer contracts and checks).
 
 At the v2.2 implementation baseline, **106 tests passed, 0 failed** on November 17, 2026. This includes river taper/meander/reflow and Living World lifecycle/data-isolation checks. Test counts are baseline evidence; rerun the suite against the actual checkout before claiming a new result.
 
@@ -732,6 +732,8 @@ Suggested next product discussion: settlements and named locations as a bridge t
 
 ## 18. v2.3 Forests and canopy breeze
 
+Historical published renderer. The user rejected its cartoon stamp appearance; §19 replaces its visuals in v2.4 while preserving density/editing contracts.
+
 **UI and editing.** Forest remains material ID4 inside Paint, but new Forest strokes edit a separate density field instead of surface RGB. The other five materials retain color painting. No toolbar tool or Forest Scatter footprint was added. Forest density is a target from 0–100%, default 65%; Opacity blends toward that target once per gesture against the starting density. A lower target can thin woodland. All four footprints work; Shift Forest clears toward zero. Erase → Forests uses opacity/footprint without changing ground or heights. Forests has independent visibility/locks; Surface controls do not lock woodland. Conditional layer/eraser controls reconcile after pointer release and Escape/pointer cancellation, after clearing gesture state. Escape retains already applied density, matching ordinary brush semantics.
 
 **Schema and history.** New saves/autosaves write v5 with `forest: number[N²]` in 0–1 and `layers.forests`. Imports 1–4 initialize zero density and preserve their original Forest ground color, route data, drawings and marks. Old v4 applications cannot open v5. Import validation precedes mutation/history updates. Undo/Redo snapshots include density and Forests flags. New worlds and image heightmap import clear density; size/load/undo rebuild dependent caches. No individual tree instances enter `marks` or project JSON.
@@ -748,3 +750,74 @@ No Holler Maps source files were imported. Original symbols are deliberately sma
 
 
 v2.3 verification: **118 tests passed, 0 failed**. Syntax and diff checks passed. Local browser smoke checks covered Forest density painting in dark/light themes, stable Paint selection, conditional Forests controls, 2D and Canvas-fallback 3D rendering, independent Canopy breeze, and real 1536² PNG downloads. Comparing visible/hidden Forests exports changed pixels only in the woodland region. Real-GPU rendering/performance is still unverified in this browser.
+
+
+## 19. v2.4 integrated woodland — Codex continuation
+
+### Start here: release and user intent
+
+- v2.4 replaces the rejected cartoon pine/round-canopy stamps with terrain-integrated woodland. The release uses cache revision `2.4.0` and schema 5; imports 1–5 remain supported. Inspect actual Git/Pages status before quoting a release commit or deployment result.
+- The user approved connected textured canopy masses, irregular edges, muted greens, clearings and soft shadows following relief, then explicitly requested release. Preserve the existing painting, opacity, Forests layer/erasing, undo/redo and ten-tool interface.
+- Approved concept: [woodland art direction](docs/design/README.md) and [reference image](docs/design/woodland-direction.png). It is generated concept art, **not** a screenshot or an asset pasted over the map. Actual rendering is procedural and is not a pixel-for-pixel reproduction.
+- Previous release was `e56269b` (v2.3). No schema migration beyond the existing v5 density contract is needed. Do not restore generated tree stamps or import guessed Holler assets.
+
+### Implementation map
+
+| File | Current changes |
+| --- | --- |
+| `forests.mjs` | Retains density-stroke compositing and route-identity habitat caching; replaces `buildForest` / `drawForestSymbol` with `buildWoodland`, `renderWoodland`, `woodlandSurface` |
+| `app.mjs` | Separates derived geometry updates from RGBA texture rasterization; shares canopy relief with display/picking/brush projections; composites woodland into 2D/3D/Map PNG; removes generated forest billboards |
+| `landmarks.mjs` | Atlas returns to legacy tree/mountain/town only; legacy artwork and content preserved |
+| `terrain3d.mjs` | Optional cached texture mapping for woodland-covered Canvas fallback triangles; untextured coarse mesh during orbit; full detail on release |
+| `living.mjs` | Canopy breeze uses low-opacity moving foliage glints instead of drawn twig strokes; ≤256 accents, existing pause rules |
+| `index.html`, local module imports | Footer v2.4 and coordinated `?v=2.4.0`; runtime remains static/buildless |
+| `tests/forests.test.mjs` | Continuous deterministic coverage, density monotonicity, habitat clipping, texture alpha, derived-height isolation, existing data/migration/cache contracts |
+| `tests/interactions.test.mjs` | Added protection against reordering saved legacy marks during 3D rendering |
+| `tests/living-interactions.test.mjs` | Queued-RAF regression: multiple 3D pointer events must not trigger RGBA rebuilds before the scheduled frame |
+| `tests/terrain3d.test.mjs` | Canvas woodland texture uses only covered cells and finite affine transforms |
+
+### Rendering/data contracts
+
+1. **Authoritative data is unchanged:** `forest` is N² density in v5; `heights` remains the actual terrain/river bed. No canopy heights, noise fields, RGBA textures or accent instances enter project saves/history.
+2. **Eligibility derives from the bed:** reject low coasts below sea+2, adjacent height differences>6, local water above bed, and committed Path corridors. All saved rivers count even when Water/River water is hidden. Density is retained where woodland is unsuitable.
+3. **Continuous canopy:** deterministic multiscale patch noise creates coverage and clearings; irregular overlapping crown lobes give texture/lighting. No outlined generated forest symbols remain. The outer two cells have no canopy, with an inward feather, preserving the projected perimeter.
+4. **Derived visual height:** `woodlandSurface` adds shallow canopy relief (under 3 blocks, capped at255) to the effective water/terrain surface only while Forests is visible and the view is not Heightmap. This same surface feeds GPU/Canvas rendering, picking, brush/route projections and legacy anchoring. Hiding Forests removes both color and canopy relief. Reflow and Heightmap PNG use actual bed heights.
+5. **Shared composition:** the same woodland RGBA layer is drawn once into 2D, the cached 3D surface texture and visible Map PNG. Heightmap view/PNG omits it. Legacy marks are rendered from a copied array: sorting fallback sprites must not mutate `marks`.
+6. **Performance:** `updateSurface()` can refresh derived geometry for picking; `flushTexture()` rasterizes RGBA during scheduled rendering/export. `pointer()` calls only `updateSurface()`, preventing per-pointer-event rasterization. `refresh()` dirties both surface and texture.
+7. **Resolution/cache:** woodland raster is N×2 during a stroke and N×4 after release/cancel. Two texture-pattern entries keyed by N/resolution avoid alternating-resolution cache thrash. Raster loops visit the woodland bounding box; camera motion/breeze reuse cached textures. Route habitat masks retain their separate immutable-array cache contract.
+8. **Canvas fallback:** texture-map only covered cells using affine clipped triangles. During orbit, retain the lighter existing mesh; return to cached textured woodland on release. This remains an approximate painter-sorted fallback, not a GPU-equivalent depth buffer.
+9. **Motion:** foliage glints are subtle, bounded, visual-only and excluded from PNGs. Static woodland stays visible with motion disabled/reduced motion. Existing preferences and pause rules are unchanged.
+
+### Verification and visual findings
+
+The earlier v2.4 full suite passed **121 tests** before the latest marks/frame-coalescing/fallback additions. The fresh complete run in `/tmp/woodland-handoff-tests.log` passed **123 tests, 0 failed**, including the marks-order, queued-RAF rasterization and Canvas texture mapping regressions. Syntax checks for every root `.mjs` and `git diff --check` passed during this handoff update.
+
+Real local-browser checks used Evergreen Island at `http://127.0.0.1:8765/`, with saved v5 forest density from v2.3. The first renderer looked too uniformly beaded; crown radii/positions now vary more and lighting is softer. The last actual screenshot shows textured woodland draped across the northwestern slopes in Canvas-fallback 3D, with no generated tree silhouettes. The fallback initially lost texture in flat triangles; affine texture mapping was added and visually checked. Final browser exports verified a 1536² Map PNG containing integrated woodland and a 256² Heightmap whose every pixel matched the saved bed. Project download retained schema 5/density. GPU rendering/performance has not been established. Visible/hidden Forests Map PNGs differ, while Heightmaps are byte-identical; every exported Heightmap pixel matches the saved bed. Live deployment must be checked against the release commit.
+
+Warm local Node measurements for an 80×80 woodland patch on a 256 map: cached 512² texture ~4ms, cached 1024² ~11ms; first pattern creation ~75ms/~261ms. These are local component timings, not guaranteed app frame rates. Measure held 3D strokes as well as orbit; do not infer GPU performance from Canvas.
+
+Code review identified per-event RGBA rasterization through `pointer()`; the split `updateSurface()` fix and queued-RAF regression address it. A separate regression caught legacy mark sorting mutating saved order; `sceneMarks()` now returns a copy. Recheck the final implementation after these fixes and fallback texturing.
+
+### Continuation and known limits
+
+- Keep the tutorial, forest KB, README, handoff and skill snapshot current with future changes. The low-Strength 5–10% Raise/Lower lesson remains required.
+- Canvas fallback is textured but approximate, with reduced detail while orbiting. Final screenshots were checked in 2D/Canvas 3D; this does not establish real-GPU performance or full WCAG conformance.
+- Full-tree swaying, growth/ecosystem simulation, individual route-point editing, inhabitants and storytelling remain unimplemented. Saved Path records continue blocking canopy after surface erasure; density remains dormant on unsuitable terrain.
+- Verify the actual Pages deployment/live release before claiming publication. A push alone is not evidence. Future terrain changes must keep derived canopy out of bed/river calculations, saves and Heightmap exports.
+
+Useful commands:
+
+```bash
+cd /workspace/work/worldpainter-github
+git status --short
+git diff --stat
+npm test
+node --check app.mjs
+node --check forests.mjs
+node --check terrain3d.mjs
+git diff --check
+```
+
+The local preview server was restarted as `python3 -m http.server 8765 --bind 0.0.0.0`, with output at `/tmp/woodland-http.log`. It may need restarting in another environment. Browser local storage is tied to the 8765 origin; a different port will not load the same map. Browser tab IDs are ephemeral.
+
+Do not use `/workspace/shared/landwright-forests.jpg` as a v2.4 acceptance image: it shows the rejected v2.3 stamps. Capture fresh screenshots through the supported browser tool. The generated concept is not a substitute for testing the implemented renderer.

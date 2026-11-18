@@ -1,6 +1,6 @@
 # Landwright: your first living landscape
 
-This tutorial covers the current v2.3 interface. It takes you from a flat field to a sculpted map with a path, river, forests, and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
+This tutorial covers the current v2.4 interface. It takes you from a flat field to a sculpted map with a path, river, forests, and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
 
 ## Before your first stroke: start with low Strength
 
@@ -65,7 +65,7 @@ Use Water off/on to inspect the bed. The River water layer hides local river wat
 ## 6. Plant a forest and make a clearing
 
 1. Choose **Paint → Forest**, keeping the same Paint tool and footprint controls.
-2. Start with **Forest density 40–65%** and modest Opacity. Brush a woodland onto gentle, dry land.
+2. Start with **Forest density 40–65%** and modest Opacity. Brush a woodland onto gentle, dry land. It appears as textured canopy clusters with natural gaps, rather than outlined tree stamps.
 3. Hold Shift to clear trees, or use **Erase → Forests**. Ground color stays intact.
 4. The conditional Forests layer lets you hide or lock the woodland. Undo restores a clearing.
 
@@ -73,7 +73,7 @@ Trees avoid water, steep slopes, and saved path corridors. Density remains saved
 
 ## 7. Let the landscape breathe
 
-World Settings contains **Living World**, enabled by default. It adds subtle water shimmer, downstream river streaks, drifting clouds, and gentle cloud shadows. Expand Atmosphere settings to choose Water motion, Clouds & soft shadows, or Canopy breeze separately. Canopy breeze adds subtle moving leaf/branch accents; trees remain visible when animation is off.
+World Settings contains **Living World**, enabled by default. It adds subtle water shimmer, downstream river streaks, drifting clouds, and gentle cloud shadows. Expand Atmosphere settings to choose Water motion, Clouds & soft shadows, or Canopy breeze separately. Canopy breeze adds subtle moving foliage glints; trees remain visible when animation is off.
 
 - These are visual effects, not terrain edits or a civilization simulation.
 - Effects pause while you sculpt, pan/orbit, or have a route preview open, leaving the editor clear.

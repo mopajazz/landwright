@@ -13,7 +13,7 @@ Repository: https://github.com/mopajazz/worldpainter-studio
 
 Live app: https://mopajazz.github.io/worldpainter-studio/
 
-Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.3, cache `2.3.0`, project schema **5**, imports **1–5**; verify HEAD before changing anything.
+Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.4/cache `2.4.0` replaces generated stamps with integrated woodland (previous release `e56269b`). Read handoff §19 first. Schema **5**, imports **1–5** remain. Verify HEAD/status before editing.
 
 ## Find the contract
 
@@ -22,7 +22,7 @@ Discover the checkout and remote; cloud paths and remote aliases vary. This is s
 | Brush/tool/menu | `app.mjs`, `terrain.mjs`, `brushes.mjs`; handoff §§2–5 |
 | Paths/rivers/reflow | `routes.mjs`, `editor.mjs`; §§3, 7, 15 |
 | 3D/performance | `terrain3d.mjs`, `gpu-terrain.mjs`; §6 |
-| Forest density/placement | `forests.mjs`, app composition/lifecycle; §18 |
+| Forest density/placement | `forests.mjs`, app composition/lifecycle; §§18–19 |
 | Living World | `living.mjs`, app lifecycle; §16 |
 | Saves/undo/export | `editor.mjs`, app state/composition; §§7–8 |
 | Verification/release | `tests/`, `package.json`; §9 |
@@ -42,7 +42,7 @@ Run `npm ci` when needed, `npm test`, relevant `node --check` commands, and `git
 
 Update `docs/tutorial.md`, `docs/kb/`, README and handoff alongside features; refresh this handoff snapshot. Preserve: **start Raise/Lower at 5–10% Strength, short strokes, inspect, increase gradually**.
 
-Forest habitat masks cache by route-array identity: replace committed arrays immutably. Water/cliffs/path corridors hide trees while retaining density. Imports1–4 preserve old Forest color and start with empty density.
+Woodland coverage, canopy height and RGBA are derived, never saved. Keep picking/render geometry shared; rasterize on scheduled frames, not pointer events. Forest habitat masks cache by route-array identity: replace committed arrays immutably. Water/cliffs/path corridors hide trees while retaining density. Imports1–4 preserve old Forest color and start with empty density.
 
 ## Common mistakes
 
