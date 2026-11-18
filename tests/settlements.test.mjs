@@ -7,3 +7,26 @@ test('whole settlement footprints reject water, slopes, bounds and overlaps with
 test('settlement fields clear derived canopy and add bounded building relief without modifying saved arrays',()=>{assert.equal(typeof m.settlementFields,'function');let n=96,s=record(),fields=m.settlementFields([s],n),ground=new Float32Array(n*n).fill(80),before=ground.slice();assert.equal(fields.mask[40*n+40],1);assert.equal(fields.mask[0],0);let surface=m.settlementSurface(ground,fields);assert.ok(surface.some(v=>v>80));assert.ok(surface.every(v=>v>=80&&v<=84));assert.deepEqual(ground,before);});
 test('schema6 settlements roundtrip, older projects migrate empty and malformed records reject',()=>{let old={version:2,size:128,heights:Array(128*128).fill(80),paint:Array(128*128).fill(0),sea:62},s=normalizeProject(old);assert.equal(s.version,7);assert.deepEqual(s.settlements,[]);s.settlements=[record()];assert.deepEqual(normalizeProject(s).settlements,s.settlements);for(let bad of[{x:NaN},{scale:99},{rotation:Infinity},{kind:'castle'},{name:'x'.repeat(81)},{id:'<script>'}])assert.throws(()=>normalizeProject({...s,settlements:[{...record(),...bad}]}));assert.throws(()=>normalizeProject({...s,settlements:[record(),record()]}));assert.throws(()=>normalizeProject({...s,settlements:Array.from({length:65},(_,i)=>({...record(),id:'id-'+i}))}));});
 test('valid edge settlements keep exported names inside map bounds',()=>{let r={...record('town'),x:64,y:114,name:'A very long settlement name near the lower map edge'},anchor;assert.equal(m.validSettlement(r,128),true);let c=new Proxy({fillText:(name,x,y,width)=>{anchor={name,x,y,width};}},{get:(o,k)=>k in o?o[k]:()=>{}});m.drawSettlementName(c,r,undefined,false,128);assert.ok(anchor.y<=125&&anchor.y>=3);assert.ok(anchor.x>=17&&anchor.x<=111);assert.ok(anchor.width<=32);});
+
+test('brush plans fit the selected shore and survive project normalization',async()=>{
+ const {planSettlement}=await import('../settlement-brush.mjs');
+ const n=128,heights=new Float32Array(n*n).fill(80),riverWater=new Float32Array(n*n);
+ for(let y=0;y<n;y++)for(let x=61;x<=73;x++)riverWater[y*n+x]=83;
+ const point={x:63,y:64},before=heights.slice();
+ const dry=planSettlement('village',point,32,{n,heights,sea:62}).place;
+ const {place}=planSettlement('village',point,32,{n,heights,sea:62,riverWater});
+ assert.ok(place);
+ assert.notDeepEqual(place.plan,dry.plan);
+ assert.ok(place.plan.roofs.every(([x])=>x<61));
+ assert.ok(place.plan.lanes.flat().every(([x])=>x<61));
+ assert.deepEqual(heights,before);
+ const saved=normalizeProject({version:2,size:n,heights:[...heights],paint:Array(n*n).fill(0),sea:62});
+ for(const kind of Object.keys(m.SETTLEMENT_KINDS)){
+  const {place}=planSettlement(kind,point,32,{n,heights,sea:62});
+  assert.ok(place,kind);
+  const record={...place,id:kind};
+  assert.deepEqual(normalizeProject({...saved,settlements:[record]}).settlements,[record]);
+  const invalid={...record,plan:{...record.plan,lanes:[null]}};
+  assert.throws(()=>normalizeProject({...saved,settlements:[invalid]}));
+ }
+});

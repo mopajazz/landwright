@@ -8,7 +8,7 @@ User documentation is being compiled alongside the application. These articles d
 | [Brushes and strength](brushes.md) | Low-strength first strokes, material/footprint independence, opacity, edge protection |
 | [Paths and rivers](routes.md) | Placement, taper, meander, reflow, layers and erasing |
 | [Forests and clearings](forests.md) | Density painting, terrain eligibility, layers, breeze and save/export behavior |
-| [Saved settlements](settlements.md) | Existing-project compatibility after removal of settlement controls |
+| [Settlements brush](settlements.md) | Place terrain-aware hamlets, villages, towns, abbeys, and castles |
 | [Living World](living-world.md) | Water motion, atmosphere, pause behavior, preferences and performance |
 | [Projects and troubleshooting](projects.md) | Saving, exports, shortcuts, common problems, recovery |
 

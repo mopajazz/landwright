@@ -1,21 +1,22 @@
-import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.7.1';
-import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.7.1';
-import{settlementRadius,settlementFields,settlementSurface,drawSettlement,drawSettlementName}from'./settlements.mjs?v=2.7.1';
-import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.7.1';
-import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.7.1';
-import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.7.1';
-import{generate,stroke}from'./terrain.mjs?v=2.7.1';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.7.1';
-import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.7.1';
-import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.7.1';
-import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.7.1';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.7.1';
-import{initUI}from'./ui.mjs?v=2.7.1';
-import{toolIcon}from'./icons.mjs?v=2.7.1';
-import{touchesShape}from'./eraser.mjs?v=2.7.1';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.7.1';
+import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.8.0';
+import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.8.0';
+import{planSettlement}from'./settlement-brush.mjs?v=2.8.0';
+import{SETTLEMENT_KINDS,settlementRadius,settlementFields,settlementSurface,drawSettlement,drawSettlementName}from'./settlements.mjs?v=2.8.0';
+import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.8.0';
+import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.8.0';
+import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.8.0';
+import{generate,stroke}from'./terrain.mjs?v=2.8.0';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.8.0';
+import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.8.0';
+import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.8.0';
+import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.8.0';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.8.0';
+import{initUI}from'./ui.mjs?v=2.8.0';
+import{toolIcon}from'./icons.mjs?v=2.8.0';
+import{touchesShape}from'./eraser.mjs?v=2.8.0';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.8.0';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface',routes=[],routeDraft=null,routeHover=null,riverWater=new Float32Array(N*N).fill(-1),surfaceHeights=heights,riverWaterDirty=true;
-document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Shape land · Shift removes land (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
+document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Shape land · Shift removes land (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',settlement:'Place a settlement (T)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 $('rail-settings').innerHTML=toolIcon('settings');
 let surfaceMaterials=new Uint8Array(N*N*8),forest=new Float32Array(N*N),forestTrees=[],woodland=null,surfaceDirty=true;const forestHabitat=createForestHabitatCache();
 let settlements=[],spacePan=false,settlementCache=null,settlementCacheRecords=null,settlementCacheN=0,detailMask=null;
@@ -55,7 +56,7 @@ function flushTexture(){if(textureDirty){updateSurface();let foliage=renderWoodl
 function visibleForest(){return layers.forests.visible&&view!=='height';}
 function sceneMarks(){return view==='height'||!layers.landmarks.visible?[]:marks.slice();}
 function transform(){let w=map.clientWidth,h=map.clientHeight;let scale=Math.max(.05,Math.min((w-70)/N,(h-135)/N))*zoom;return{scale,x:(w-N*scale)/2+pan.x,y:(h-N*scale)/2+pan.y-6}}
-function draw(){syncLiving();if(workspaceMode==='3d'){sceneDirty=true;scheduleFrame();return;}let w=map.clientWidth,h=map.clientHeight;ctx.clearRect(0,0,w,h);let t=transform();ctx.save();ctx.shadowColor='#0005';ctx.shadowBlur=36;ctx.drawImage(groundMap,t.x,t.y,N*t.scale,N*t.scale);ctx.restore();if(visibleForest())ctx.drawImage(forestMap,t.x,t.y,N*t.scale,N*t.scale);if(settlementsVisible()){ctx.drawImage(settlementMap,t.x,t.y,N*t.scale,N*t.scale);ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);drawSettlementLabels(ctx);ctx.restore();}if(layers.shapes.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);ctx.beginPath();ctx.rect(0,0,N,N);ctx.clip();for(let shape of drawings)drawShape(ctx,shape);ctx.restore();}if(layers.landmarks.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);for(let m of marks)drawLandmark(ctx,m);ctx.restore();}ctx.strokeStyle='#84988045';ctx.strokeRect(t.x,t.y,N*t.scale,N*t.scale);if(grid){ctx.strokeStyle='#dae5c62a';ctx.lineWidth=.5;for(let i=0;i<=N;i+=16){ctx.beginPath();ctx.moveTo(t.x+i*t.scale,t.y);ctx.lineTo(t.x+i*t.scale,t.y+N*t.scale);ctx.stroke();ctx.beginPath();ctx.moveTo(t.x,t.y+i*t.scale);ctx.lineTo(t.x+N*t.scale,t.y+i*t.scale);ctx.stroke()}}drawRoutePreview(ctx,p=>({x:t.x+p.x*t.scale,y:t.y+p.y*t.scale}));$('zoomtext').textContent=Math.round(zoom*100)+'%'}
+function draw(){syncLiving();if(workspaceMode==='3d'){sceneDirty=true;scheduleFrame();return;}let w=map.clientWidth,h=map.clientHeight;ctx.clearRect(0,0,w,h);let t=transform();ctx.save();ctx.shadowColor='#0005';ctx.shadowBlur=36;ctx.drawImage(groundMap,t.x,t.y,N*t.scale,N*t.scale);ctx.restore();if(visibleForest())ctx.drawImage(forestMap,t.x,t.y,N*t.scale,N*t.scale);if(settlementsVisible()){ctx.drawImage(settlementMap,t.x,t.y,N*t.scale,N*t.scale);ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);drawSettlementLabels(ctx);ctx.restore();}if(layers.shapes.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);ctx.beginPath();ctx.rect(0,0,N,N);ctx.clip();for(let shape of drawings)drawShape(ctx,shape);ctx.restore();}if(layers.landmarks.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);for(let m of marks)drawLandmark(ctx,m);ctx.restore();}ctx.strokeStyle='#84988045';ctx.strokeRect(t.x,t.y,N*t.scale,N*t.scale);if(grid){ctx.strokeStyle='#dae5c62a';ctx.lineWidth=.5;for(let i=0;i<=N;i+=16){ctx.beginPath();ctx.moveTo(t.x+i*t.scale,t.y);ctx.lineTo(t.x+i*t.scale,t.y+N*t.scale);ctx.stroke();ctx.beginPath();ctx.moveTo(t.x,t.y+i*t.scale);ctx.lineTo(t.x+N*t.scale,t.y+i*t.scale);ctx.stroke()}}drawRoutePreview(ctx,p=>({x:t.x+p.x*t.scale,y:t.y+p.y*t.scale}));drawSettlementBrush(ctx,(x,y)=>({x:t.x+x*t.scale,y:t.y+y*t.scale}),t.scale);$('zoomtext').textContent=Math.round(zoom*100)+'%'}
 function composeSurface(includeDrawings=true){
  composite.setTransform(1,0,0,1,0,0);composite.clearRect(0,0,1024,1024);composite.drawImage(groundMap,0,0,1024,1024);if(visibleForest())composite.drawImage(forestMap,0,0,1024,1024);if(settlementsVisible())composite.drawImage(settlementMap,0,0,1024,1024);composite.scale(1024/N,1024/N);
  if(includeDrawings&&layers.shapes.visible&&view!=='height'){for(let s of drawings)drawShape(composite,s);}
@@ -76,12 +77,12 @@ function renderFrame(time){
  mc.clearRect(0,0,w,h);
  if(gpu)gpu.draw(w,h,camera);
  else{renderTerrain(mc,w,h,surfaceHeights,i=>[fallbackPixels[i*4],fallbackPixels[i*4+1],fallbackPixels[i*4+2]],sea,water,camera,orbitPointer?6:3,orbitPointer||view!=='terrain'&&!visibleForest()&&!settlementsVisible()?null:{image:combined,mask:detailMask});if(layers.shapes.visible&&view!=='height'){const project=(x,y)=>projectTerrain(x,y,sampleTerrain(x,y,surfaceHeights,sea,water)+.2,w,h,camera);for(let shape of drawings)drawProjectedShape(mc,shape,project);}for(let m of sceneMarks().sort((a,b)=>{let depth=m=>((m.x-N/2)*Math.sin(camera.yaw)+(m.y-N/2)*Math.cos(camera.yaw))*Math.cos(camera.pitch)+(sampleTerrain(m.x,m.y,surfaceHeights,sea,water)-62)*.65*Math.sin(camera.pitch);return depth(a)-depth(b);})){let p=projectTerrain(m.x,m.y,sampleTerrain(m.x,m.y,surfaceHeights,sea,water),w,h,camera),scale=Math.max(.1,Math.min((w-50)/365,(h-100)/290))*camera.zoom;let size=m.size*64/44*scale,kind=ATLAS_TYPES.indexOf(m.type);mc.globalAlpha=m.opacity??1;mc.drawImage(landmarkAtlas,kind*64,0,64,64,p.x-size/2,p.y-size/2,size,size);mc.globalAlpha=1;}}
- drawSettlementLabels(mc,true);draw3DBrush();drawRoutePreview(mc,p=>projectTerrain(p.x,p.y,sampleTerrain(p.x,p.y,surfaceHeights,sea,water)+.5,w,h,camera));
+ drawSettlementLabels(mc,true);drawSettlementBrush(mc,(x,y)=>projectTerrain(x,y,sampleTerrain(x,y,surfaceHeights,sea,water)+.6,w,h,camera));draw3DBrush();drawRoutePreview(mc,p=>projectTerrain(p.x,p.y,sampleTerrain(p.x,p.y,surfaceHeights,sea,water)+.5,w,h,camera));
  let duration=performance.now()-started,delta=time-lastFrameTime;if(lastFrameTime&&delta>0&&delta<200&&(orbitPointer||down)){let fps=1000/delta;averageFps=averageFps?averageFps*.8+fps*.2:fps;}lastFrameTime=time;
  $('render-stats').textContent=(gpu?'GPU':'Canvas')+(averageFps?' · '+Math.round(averageFps)+' fps':'');$('render-stats').dataset.renderMs=duration.toFixed(2);$('render-stats').dataset.fps=averageFps.toFixed(1);$('render-stats').dataset.renderer=gpu?'webgl':'canvas';$('render-stats').dataset.fallbackReason=gpu?'':gpuFailureReason;$('render-stats').title=gpu?'WebGL rendering':'Canvas fallback: '+gpuFailureReason;
 }
 function preview(){scheduleFrame();}
-function refresh(){surfaceDirty=true;textureDirty=true;sceneDirty=true;scheduleFrame();}
+function refresh(){settlementPreviewKey=null;surfaceDirty=true;textureDirty=true;sceneDirty=true;scheduleFrame();}
 function resize(){let d=Math.min(2,devicePixelRatio||1);for(let c of[map,mini,glCanvas,livingCanvas]){let width=Math.round((c===glCanvas?mini.clientWidth:c===livingCanvas?document.querySelector('.workspace').clientWidth:c.clientWidth)*d),height=Math.round((c===glCanvas?mini.clientHeight:c===livingCanvas?document.querySelector('.workspace').clientHeight:c.clientHeight)*d);if(c.width!==width||c.height!==height){c.width=width;c.height=height;}if(c!==glCanvas)c.getContext('2d').setTransform(d,0,0,d,0,0);}scheduleFrame();}new ResizeObserver(resize).observe(document.querySelector('.workspace'));
 function state(){return{version:7,surfaceMaterials:encodeMaterialCoverage(surfaceMaterials),settlements:structuredClone(settlements),forest:Array.from(forest,v=>Math.round(v*10000)/10000),routes:structuredClone(routes),size:N,name:$('worldname').value,heights:Array.from(heights,v=>Math.round(v*1000)/1000),paint:Array.from(paint),paintColors:Array.from(paintColors),paintAlpha:Array.from(paintAlpha,v=>Math.round(v*10000)/10000),sea,water,shade,marks:marks.map(m=>({...m})),shapes:structuredClone(drawings),layers:structuredClone(layers)}}
 function persist(){modified=true;$('save-status').textContent='Saving changes…';$('save-badge').textContent='Saving…';clearTimeout(saveTimer);saveTimer=setTimeout(()=>{try{localStorage.setItem('worldpainter-project',JSON.stringify(state()));modified=false;$('save-status').textContent='All changes saved locally';$('save-badge').textContent='Saved in browser'}catch{$('save-status').textContent='Download project to keep changes';$('save-badge').textContent='Not saved · download';notify('Local storage full — save your project to a file.')}},600)}
@@ -92,7 +93,7 @@ function pointer(e){let canvas=workspaceMode==='3d'?mini:map,b=canvas.getBoundin
  if(workspaceMode==='3d'){updateSurface();let hit=pickTerrain(sx,sy,mini.clientWidth,mini.clientHeight,camera,surfaceHeights,sea,water);return hit?{...hit,sx,sy,hit:true}:{x:NaN,y:NaN,sx,sy,hit:false};}
  let t=transform();return{x:(sx-t.x)/t.scale,y:(sy-t.y)/t.scale,sx,sy,hit:true};}
 function gestureTool(e){return tool==='paint'&&e?.shiftKey?'erase':tool;}
-function activeLayer(e){return layers[gestureTool(e)==='erase'?eraseTarget:tool==='paint'&&material===4?'forests':tool==='path'||tool==='paint'?'surface':tool==='river'?'rivers':'elevation'];}
+function activeLayer(e){return layers[gestureTool(e)==='erase'?eraseTarget:tool==='paint'&&material===4?'forests':tool==='path'||tool==='paint'?'surface':tool==='river'?'rivers':tool==='settlement'?'settlements':'elevation'];}
 function usesOpacity(t=tool){return t==='paint'||t==='path';}
 function opacity(e){return gestureTool(e)==='erase'&&!['surface','forests'].includes(eraseTarget)?1:usesOpacity()?+$('opacity').value/100:1;}
 function apply(p,e){
@@ -133,6 +134,7 @@ map.onpointerdown=e=>{
  (workspaceMode==='3d'?mini:map).setPointerCapture(e.pointerId);down=true;last=pointer(e);if(workspaceMode==='3d'&&!last.hit&&tool!=='pan'&&e.button!==1&&!spacePan){down=false;return;}
  if(tool==='pan'||e.button===1||spacePan&&e.button===0){last.pan=true;document.body.classList.add('panning');return;}
  let layer=activeLayer(e);if(layer.locked||!layer.visible||(tool==='river'&&(layers.elevation.locked||!layers.elevation.visible))){notify(tool==='river'?'Show and unlock Relief and River water to carve a river.':layer.locked?'Unlock this layer to edit it.':'Show this layer to edit it.');down=false;return;}
+ if(tool==='settlement'){brushPosition=last;settlementGesture=true;draw();return;}
  if(isRouteTool()){if(last.x<0||last.y<0||last.x>N-1||last.y>N-1){down=false;last=null;return;}(workspaceMode==='3d'?mini:map).focus({preventScroll:true});if(!routeDraft)routeDraft={type:tool,points:[]};appendRoutePoint(last);routeHover=null;updateRouteControls();draw();return;}
  if(opacity(e)){snapshot();if(tool==='paint')paintStroke={materials:surfaceMaterials.slice(),forest:forest.slice(),colors:paintColors.slice(),alpha:paintAlpha.slice(),coverage:new Float32Array(N*N)};apply(last,e);refresh();}
 };
@@ -140,6 +142,7 @@ map.onpointermove=e=>{
  let p=pointer(e),t=transform();brushPosition=p;
  $('brush').style.cssText=`display:${workspaceMode==='3d'||tool==='pan'||isRouteTool()||spacePan||last?.pan?'none':'block'};left:${p.sx}px;top:${p.sy}px;width:${+$('size').value*t.scale}px;height:${+$('size').value*t.scale}px`;
  let x=Math.floor(p.x),y=Math.floor(p.y);if(x>=0&&y>=0&&x<N&&y<N){let i=y*N+x;$('coords').textContent=`X: ${x}   Z: ${y}`;$('heightstatus').textContent=`Height: ${Math.round(heights[i])}`;$('terrainstatus').textContent=heights[i]<sea&&water?'Ocean':forest[i]>.01?'Forest':paint[i]?materials[paint[i]-1][0]:'Grassland';}
+ if(tool==='settlement'&&!last?.pan){draw();return;}
  if(workspaceMode==='3d'){preview();if(!p.hit){last=p;return;}}
  if(isRouteTool()&&routeDraft&&!last?.pan){if(p.hit&&p.x>=0&&p.y>=0&&p.x<N&&p.y<N){routeHover={x:p.x,y:p.y};if(down&&(!routeDraft.points.length||Math.hypot(p.x-routeDraft.points.at(-1).x,p.y-routeDraft.points.at(-1).y)>=2))appendRoutePoint(p);updateRouteControls();draw();}return;}
  if(down){
@@ -148,26 +151,36 @@ map.onpointermove=e=>{
   last=p;
  }
 };
-function end(){document.body.classList.remove('panning');if(isRouteTool()&&routeDraft){down=false;last=null;return;}const finishWoodland=down&&!last?.pan&&tool!=='pan',legacyErase=down&&!last?.pan&&tool==='paint';if(down&&!last?.pan&&tool!=='pan')persist();down=false;last=null;paintStroke=null;if(legacyErase||tool==='paint'&&material===4)renderLayers();if(finishWoodland)refresh();syncLiving();}
-function cancelStroke(){document.body.classList.remove('panning');const finishWoodland=down&&!last?.pan,forestEdit=down&&tool==='paint';cancelRoute(false);if(down&&!last?.pan)persist();down=false;last=null;paintStroke=null;if(forestEdit)renderLayers();if(finishWoodland)refresh();draw();}
-map.onpointerup=end;map.onpointercancel=()=>{if(down)persist();cancelStroke();};map.onpointerleave=()=>{brushPosition=null;$('brush').style.display='none';};
+function end(e){if(settlementGesture){
+ settlementGesture=false;down=false;last=null;
+ if(e)commitSettlement(pointer(e));else draw();
+ return;
+ }document.body.classList.remove('panning');if(isRouteTool()&&routeDraft){down=false;last=null;return;}const finishWoodland=down&&!last?.pan&&tool!=='pan',legacyErase=down&&!last?.pan&&tool==='paint';if(down&&!last?.pan&&tool!=='pan')persist();down=false;last=null;paintStroke=null;if(legacyErase||tool==='paint'&&material===4)renderLayers();if(finishWoodland)refresh();syncLiving();}
+function cancelStroke(){if(settlementGesture){settlementGesture=false;down=false;last=null;}brushPosition=tool==='settlement'?null:brushPosition;document.body.classList.remove('panning');const finishWoodland=down&&!last?.pan,forestEdit=down&&tool==='paint';cancelRoute(false);if(down&&!last?.pan)persist();down=false;last=null;paintStroke=null;if(forestEdit)renderLayers();if(finishWoodland)refresh();draw();}
+map.onpointerup=end;map.onpointercancel=()=>{if(down)persist();cancelStroke();};map.onpointerleave=()=>{brushPosition=null;$('brush').style.display='none';if(tool==='settlement')draw();};
 function changeZoom(z){zoom=Math.max(.4,Math.min(4,z));draw()}map.addEventListener('wheel',e=>{e.preventDefault();if(e.shiftKey){adjustBrush(brushDelta(e));return;}changeZoom(zoom*(e.deltaY>0?.9:1.1))},{passive:false});$('plus').onclick=()=>changeZoom(zoom*1.2);$('minus').onclick=()=>changeZoom(zoom/1.2);$('fit').onclick=()=>{zoom=1;pan={x:0,y:0};draw()};
-let raiseLowerStrength=8,blendStrength=35;
+let raiseLowerStrength=8,blendStrength=35,terrainBrushSize=42,settlementBrushSize=28;
 function selectTool(t){
 
  if(t!==tool)cancelRoute(false);
+ if(t==='settlement'&&tool!=='settlement'){
+  terrainBrushSize=+$('size').value;$('size').max=60;$('size').value=settlementBrushSize;$('sizeout').value=settlementBrushSize+' blocks';
+ }else if(t!=='settlement'&&tool==='settlement'){
+  settlementBrushSize=+$('size').value;$('size').max=120;$('size').value=terrainBrushSize;$('sizeout').value=terrainBrushSize+' blocks';
+ }
  $('erase-description').textContent={settlements:'Remove whole settlements touched by the brush. Undo restores them.',forests:'Thin or clear trees without changing the ground. Opacity controls removal.',surface:'Reveal the natural terrain color. Elevation stays intact.',landmarks:'Remove whole legacy landmarks touched by the brush. Undo to restore.',shapes:'Remove whole legacy drawings touched by the brush. Undo to restore.',rivers:'Remove river water along a touched route. The carved channel remains; undo restores the water.'}[eraseTarget];
  if(down)end();if(['raise','lower'].includes(tool))raiseLowerStrength=+$('strength').value;else if(['smooth','flatten'].includes(tool))blendStrength=+$('strength').value;if(['raise','lower','smooth','flatten'].includes(t)){$('strength').value=['raise','lower'].includes(t)?raiseLowerStrength:blendStrength;$('strengthout').value=$('strength').value+'%';}orbitPointer=null;orbitMode=false;$('orbit-toggle').setAttribute('aria-pressed','false');$('orbit-toggle').textContent='Orbit';tool=t;if(isRouteTool()||t==='pan')$('brush').style.display='none';updateBrushUI();
  $('erase-settings').hidden=t!=='paint';$('opacity-label').hidden=!usesOpacity(t);$('brush-controls').hidden=t==='river';$('size-label').hidden=isRouteTool();$('size-shortcuts').hidden=isRouteTool();$('size').disabled=t==='pan'||isRouteTool();$('opacity').disabled=t==='pan'||t==='river';$('strength-label').hidden=!['raise','lower','smooth','flatten'].includes(t);$('target-label').hidden=t!=='flatten';$('edge-protection-label').hidden=t!=='flatten';
  $('route-settings').hidden=!isRouteTool();$('route-title').textContent=t==='river'?'RIVER':'PATH';$('path-material-label').hidden=t!=='path';$('river-depth-label').hidden=t!=='river';$('river-taper-label').hidden=t!=='river';$('river-meander-label').hidden=t!=='river';updateRouteControls();
  $('sculpt-settings').hidden=!['raise','lower','smooth','flatten'].includes(t);$('brush-settings').hidden=isRouteTool();document.querySelectorAll('[data-brush]').forEach(b=>b.disabled=!['raise','lower','smooth','flatten','paint'].includes(t));
+ $('settlement-section').hidden=t!=='settlement';if(t==='settlement')updateSettlementStatus();
  $('forest-settings').hidden=!(t==='paint'&&material===4);$('palette-section').hidden=t!=='paint';$('paint-status').textContent=t==='paint'?`${materials[material-1][0]} · ${brushPreset==='coast'?'Coastline':brushPreset==='hard'?'Hard Round':'Soft Round'} · Shift erases ${$('erase-target').selectedOptions[0]?.textContent||'paint'}`:`${materials[material-1][0]} selected · Use Paint (P) to apply.`;
  document.querySelectorAll('[data-tool]').forEach(b=>{b.classList.toggle('selected',b.dataset.tool===t);b.setAttribute('aria-pressed',b.dataset.tool===t);});
- $('toolhint').textContent={raise:'Raise terrain',lower:'Lower terrain',smooth:'Smooth terrain',flatten:'Flatten to target height',paint:'Paint '+materials[material-1][0],pan:'Pan the map',land:'Shape coastline · Shift to remove land',path:'Place path · Enter to finish · Escape to cancel',river:'Place river downstream · Enter to finish'}[t];$('toolkeys').textContent=isRouteTool()?'W/S route width · Shift + wheel resize · Scroll to zoom':t==='flatten'?'D/E target height · Shift ×10 · W/S brush size':t==='pan'?'Drag to pan · Space + drag from any tool · Scroll to zoom':'W/S brush size · Shift + wheel resize · Scroll to zoom';map.style.cursor=t==='pan'?'grab':'crosshair';
+ $('toolhint').textContent={raise:'Raise terrain',lower:'Lower terrain',smooth:'Smooth terrain',flatten:'Flatten to target height',settlement:'Preview and place a settlement',paint:'Paint '+materials[material-1][0],pan:'Pan the map',land:'Shape coastline · Shift to remove land',path:'Place path · Enter to finish · Escape to cancel',river:'Place river downstream · Enter to finish'}[t];$('toolkeys').textContent=isRouteTool()?'W/S route width · Shift + wheel resize · Scroll to zoom':t==='flatten'?'D/E target height · Shift ×10 · W/S brush size':t==='pan'?'Drag to pan · Space + drag from any tool · Scroll to zoom':'W/S brush size · Shift + wheel resize · Scroll to zoom';map.style.cursor=t==='pan'?'grab':'crosshair';
 }
-$('tools').onclick=e=>{let b=e.target.closest('[data-tool]');if(b)selectTool(b.dataset.tool)};function selectMaterialFrom(e){let b=e.target.closest('[data-material]');if(!b)return;material=+b.dataset.material;eraseTarget=material===4?'forests':'surface';renderLayers();document.querySelectorAll('[data-material]').forEach(el=>{el.classList.toggle('selected',el===b);el.setAttribute('aria-pressed',String(el===b));});selectTool(tool);}
+$('tools').onclick=e=>{let b=e.target.closest('[data-tool]');if(b){selectTool(b.dataset.tool);if(tool==='settlement'||brushPosition)draw();}};function selectMaterialFrom(e){let b=e.target.closest('[data-material]');if(!b)return;material=+b.dataset.material;eraseTarget=material===4?'forests':'surface';renderLayers();document.querySelectorAll('[data-material]').forEach(el=>{el.classList.toggle('selected',el===b);el.setAttribute('aria-pressed',String(el===b));});selectTool(tool);}
 $('palette').onclick=selectMaterialFrom;$('forest-paint').onclick=selectMaterialFrom;
-for(let id of['size','strength','target'])$(id).oninput=()=>{$(id+'out').value=$(id).value+(id==='size'?' blocks':id==='strength'?'%':'')};document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b));refresh()});
+for(let id of['size','strength','target'])$(id).oninput=()=>{$(id+'out').value=$(id).value+(id==='size'?' blocks':id==='strength'?'%':'');if(id==='size'&&tool==='settlement')draw();};document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b));refresh()});
 $('grid').onclick=()=>{grid=!grid;$('grid').classList.toggle('active',grid);$('grid').setAttribute('aria-pressed',grid);draw()};$('contours').onclick=()=>{contours=!contours;$('contours').classList.toggle('active',contours);$('contours').setAttribute('aria-pressed',contours);refresh()};$('sea').onpointerdown=()=>snapshot();$('sea').onkeydown=e=>{if(e.key.startsWith('Arrow')||['Home','End','PageUp','PageDown'].includes(e.key))snapshot()};$('sea').oninput=()=>{sea=+$('sea').value;$('seaout').value=sea;refresh();persist()};for(let id of['water','shade'])$(id).onclick=()=>{snapshot();if(id==='water')water=!water;else shade=!shade;let v=id==='water'?water:shade;$(id).classList.toggle('on',v);$(id).setAttribute('aria-pressed',v);refresh();persist()};$('undo').onclick=()=>restoreHistory(undo,redo);$('redo').onclick=()=>restoreHistory(redo,undo);
 function download(blob,name){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}function slug(){return $('worldname').value.replace(/[^a-z0-9 -]/gi,'').trim()||'world'}
 $('save').onclick=()=>{download(new Blob([JSON.stringify(state())],{type:'application/json'}),slug()+'.world.json');persist();notify('Project saved — keep building.')};$('export-height').onclick=()=>{$('exportdialog').close();let c=document.createElement('canvas');c.width=c.height=N;let cx=c.getContext('2d'),im=cx.createImageData(N,N);for(let i=0;i<N*N;i++){let v=Math.round(heights[i]);im.data.set([v,v,v,255],i*4)}cx.putImageData(im,0,0);c.toBlob(b=>{download(b,slug()+'-heightmap.png');notify(`${N} × ${N} heightmap exported.`)})};
@@ -175,15 +188,15 @@ $('new').onclick=()=>{cancelRoute();$('newdialog').returnValue='';renderNewWorld
 function setWorldSize(n){cancelRoute(false);riverWaterDirty=true;if(![128,192,256].includes(n))throw Error('Invalid project');N=n;camera.size=N;off.width=off.height=tiny.width=tiny.height=N;pixels=oc.createImageData(N,N);grainNoise=Float32Array.from({length:N*N},(_,i)=>(Math.sin(i*78.233)*43758.5453)%1*4);paint=new Uint8Array(N*N);paintColors=new Uint8ClampedArray(N*N*3);paintAlpha=new Float32Array(N*N);forest=new Float32Array(N*N);surfaceMaterials=new Uint8Array(N*N*8);document.querySelectorAll('[data-dimensions]').forEach(el=>el.textContent=`${N} × ${N}`);$('heightmap-dimensions').textContent=`PNG · ${N} × ${N}`;document.querySelector('.map-scale').innerHTML=`<span></span>${N/2} blocks`;$('world-size').value=String(N);surfaceDirty=true;textureDirty=true;brushPosition=null;}
 function load(input){let s=normalizeProject(input);settlements=s.settlements;cancelRoute(false);routes=s.routes;riverWaterDirty=true;setWorldSize(s.size);heights=Float32Array.from(s.heights);paint=Uint8Array.from(s.paint);paintColors=Uint8ClampedArray.from(s.paintColors);paintAlpha=Float32Array.from(s.paintAlpha);forest=Float32Array.from(s.forest);surfaceMaterials=decodeMaterialCoverage(s.surfaceMaterials,N);drawings=s.shapes;sea=s.sea;water=s.water;shade=s.shade;marks=s.marks;layers=s.layers;$('worldname').value=s.name;$('infotitle').textContent=s.name;$('sea').value=sea;$('seaout').value=sea;for(let id of['water','shade']){let v=id==='water'?water:shade;$(id).classList.toggle('on',v);$(id).setAttribute('aria-pressed',v);}renderLayers();}
 $('open').onclick=()=>$('file').click();$('file').onchange=async()=>{let f=$('file').files[0];if(!f)return;try{if(f.size>12e6)throw Error('File too large (12 MB maximum)');if(f.name.endsWith('.json')){let s=normalizeProject(JSON.parse(await f.text()));snapshot();load(s)}else{let image=await createImageBitmap(f);snapshot();oc.clearRect(0,0,N,N);oc.drawImage(image,0,0,N,N);let d=oc.getImageData(0,0,N,N).data;for(let i=0;i<N*N;i++)heights[i]=d[i*4]*.2126+d[i*4+1]*.7152+d[i*4+2]*.0722;paint.fill(0);paintColors.fill(0);paintAlpha.fill(0);forest.fill(0);surfaceMaterials.fill(0);marks=[];drawings=[];routes=[];settlements=[];riverWaterDirty=true;renderLayers();image.close()}refresh();persist();notify('Imported successfully.')}catch(e){notify(e.message==='Invalid project'?'This project file is invalid.':e.message||'Could not import file.')}finally{$('file').value=''}};
-document.onkeydown=e=>{if(e.target.closest('input,textarea,select,[contenteditable]:not([contenteditable=false])')||document.querySelector('dialog[open]'))return;if((e.code==='Space'||e.key===' ')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();if(down&&!last?.pan)end();spacePan=true;document.body.classList.add('space-pan');$('brush').style.display='none';draw();return;}if(e.ctrlKey||e.metaKey){if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?restoreHistory(redo,undo):restoreHistory(undo,redo)}if(e.key.toLowerCase()==='s'){e.preventDefault();$('save').click()}return}if(['d','e'].includes(e.key.toLowerCase())){if(e.altKey)return;if(tool==='flatten'){e.preventDefault();const step=e.shiftKey?10:1;$('target').value=Math.max(+$('target').min,Math.min(+$('target').max,+$('target').value+(e.key.toLowerCase()==='d'?-step:step)));$('target').oninput();draw();}else if(usesOpacity()){e.preventDefault();$('opacity').value=Math.max(0,Math.min(100,+$('opacity').value+(e.key.toLowerCase()==='d'?-5:5)));$('opacityout').value=$('opacity').value+'%';draw();}return;}if(e.key==='Escape'){cancelStroke();return;}if(e.key==='Enter'&&routeDraft){e.preventDefault();finishRoute();return;}let delta=brushDelta(e);if(delta){e.preventDefault();adjustBrush(delta);return;}let t={r:'raise',l:'lower',q:'smooth',f:'flatten',p:'paint',b:'paint',h:'pan',m:'land',c:'land',j:'path',v:'river'}[e.key.toLowerCase()];if(t)selectTool(t)};
+document.onkeydown=e=>{if(e.target.closest('input,textarea,select,[contenteditable]:not([contenteditable=false])')||document.querySelector('dialog[open]'))return;if((e.code==='Space'||e.key===' ')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();if(down&&!last?.pan)end();spacePan=true;document.body.classList.add('space-pan');$('brush').style.display='none';draw();return;}if(e.ctrlKey||e.metaKey){if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?restoreHistory(redo,undo):restoreHistory(undo,redo)}if(e.key.toLowerCase()==='s'){e.preventDefault();$('save').click()}return}if(['d','e'].includes(e.key.toLowerCase())){if(e.altKey)return;if(tool==='flatten'){e.preventDefault();const step=e.shiftKey?10:1;$('target').value=Math.max(+$('target').min,Math.min(+$('target').max,+$('target').value+(e.key.toLowerCase()==='d'?-step:step)));$('target').oninput();draw();}else if(usesOpacity()){e.preventDefault();$('opacity').value=Math.max(0,Math.min(100,+$('opacity').value+(e.key.toLowerCase()==='d'?-5:5)));$('opacityout').value=$('opacity').value+'%';draw();}return;}if(e.key==='Escape'){cancelStroke();return;}if(e.key==='Enter'&&routeDraft){e.preventDefault();finishRoute();return;}let delta=brushDelta(e);if(delta){e.preventDefault();adjustBrush(delta);return;}let t={r:'raise',l:'lower',q:'smooth',f:'flatten',p:'paint',b:'paint',h:'pan',m:'land',c:'land',j:'path',v:'river',t:'settlement'}[e.key.toLowerCase()];if(t){selectTool(t);draw();}};
 
 function releasePanKey(){spacePan=false;document.body.classList.remove('space-pan');draw();}
 document.addEventListener('keyup',e=>{if(e.code==='Space'||e.key===' '){releasePanKey();}});
 document.defaultView.addEventListener('blur',()=>{releasePanKey();orbitPointer=null;cancelStroke();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){releasePanKey();orbitPointer=null;cancelStroke();}});
 
-function adjustBrush(delta){if(isRouteTool()){$('route-width').value=Math.max(2,Math.min(32,+$('route-width').value+delta));$('route-widthout').value=$('route-width').value+' blocks';draw();return;}$('size').value=resizeBrush(+$('size').value,delta);$('sizeout').value=$('size').value+' blocks';if(brushPosition){let t=transform();$('brush').style.width=$('brush').style.height=(+$('size').value*t.scale)+'px';}if(workspaceMode==='3d')preview();}
-function renderLayers(){riverWaterDirty=true;let hasRivers=routes.some(r=>r.type==='river');$('reflow-rivers').hidden=$('reflow-note').hidden=!hasRivers;$('reflow-rivers').disabled=!hasRivers||layers.elevation.locked||!layers.elevation.visible||layers.rivers.locked||!layers.rivers.visible;let names={...(settlements.length||layers.settlements.locked||!layers.settlements.visible?{settlements:['Settlements','Hamlets, villages & towns']}:{}),...(forest.some(v=>v>0)?{forests:['Forests','Trees & clearings']}:{}),...(routes.some(r=>r.type==='river')?{rivers:['River water','Local water above carved channels']}:{}),...(drawings.length?{shapes:['Drawings','From an earlier project']}:{}),...(marks.length?{landmarks:['Landmarks','From an earlier project']}:{}),surface:['Surface','Terrain & biome paint'],elevation:['Relief','Sculpting, shading & contours']};$('layer-count').textContent=Object.keys(names).length;
+function adjustBrush(delta){if(isRouteTool()){$('route-width').value=Math.max(2,Math.min(32,+$('route-width').value+delta));$('route-widthout').value=$('route-width').value+' blocks';draw();return;}$('size').value=Math.min(+$('size').max,resizeBrush(+$('size').value,delta));$('sizeout').value=$('size').value+' blocks';if(brushPosition){let t=transform();$('brush').style.width=$('brush').style.height=(+$('size').value*t.scale)+'px';}if(tool==='settlement')draw();else if(workspaceMode==='3d')preview();}
+function renderLayers(){riverWaterDirty=true;let hasRivers=routes.some(r=>r.type==='river');$('reflow-rivers').hidden=$('reflow-note').hidden=!hasRivers;$('reflow-rivers').disabled=!hasRivers||layers.elevation.locked||!layers.elevation.visible||layers.rivers.locked||!layers.rivers.visible;let names={...(settlements.length||layers.settlements.locked||!layers.settlements.visible?{settlements:['Settlements','Built places']}:{}),...(forest.some(v=>v>0)?{forests:['Forests','Trees & clearings']}:{}),...(routes.some(r=>r.type==='river')?{rivers:['River water','Local water above carved channels']}:{}),...(drawings.length?{shapes:['Drawings','From an earlier project']}:{}),...(marks.length?{landmarks:['Landmarks','From an earlier project']}:{}),surface:['Surface','Terrain & biome paint'],elevation:['Relief','Sculpting, shading & contours']};$('layer-count').textContent=Object.keys(names).length;
  const targets={surface:'Surface paint',...(settlements.length?{settlements:'Settlements'}:{}),...(forest.some(v=>v>0)||material===4?{forests:'Forests'}:{}),...(routes.some(r=>r.type==='river')?{rivers:'River water'}:{}),...(marks.length?{landmarks:'Legacy landmarks'}:{}),...(drawings.length?{shapes:'Legacy drawings'}:{})};if(!targets[eraseTarget])eraseTarget='surface';$('erase-target').innerHTML=Object.entries(targets).map(([id,label])=>`<option value="${id}">${label}</option>`).join('');$('erase-target').value=eraseTarget;
  $('layers').innerHTML=Object.entries(names).map(([key,[name,desc]])=>`<div class="layer-row ${layers[key].visible?'':'is-hidden'}"><button data-layer="${key}" data-action="visible" aria-label="${layers[key].visible?'Hide':'Show'} ${name}" aria-pressed="${layers[key].visible}" title="Toggle visibility"><svg class="layer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"/>${layers[key].visible?'<circle cx="12" cy="12" r="3"/>':'<path d="M4 4l16 16"/>'}</svg></button><div class="layer-name">${name}<small>${desc}</small></div><button data-layer="${key}" data-action="locked" aria-label="${layers[key].locked?'Unlock':'Lock'} ${name}" aria-pressed="${layers[key].locked}" title="${layers[key].locked?'Unlock':'Lock'} layer"><svg class="layer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/>${layers[key].locked?'<path d="M8 11V8a4 4 0 0 1 8 0v3"/>':'<path d="M8 11V8a4 4 0 0 1 7.5-2"/>'}</svg></button></div>`).join('');selectTool(tool);}
 $('reflow-rivers').onclick=()=>{if(!routes.some(r=>r.type==='river')||layers.elevation.locked||!layers.elevation.visible||layers.rivers.locked||!layers.rivers.visible)return;cancelStroke();let updated=reflowRivers(routes,heights,N);snapshot();routes=updated;for(let route of routes)if(route.type==='river')applyRoute(route,heights,paint,paintColors,paintAlpha,N);riverWaterDirty=true;renderLayers();refresh();persist();notify('Rivers reflowed and channels recut. Undo restores the previous state.');};
@@ -246,6 +259,66 @@ const animationWindow=document.defaultView;if(typeof animationWindow?.requestAni
 function saveLiving(){try{localStorage.setItem('landwright-living',JSON.stringify(livingPrefs));}catch{}syncLiving();}
 $('living-vegetation').onchange=()=>{livingPrefs.vegetationMotion=$('living-vegetation').checked;saveLiving();};
 $('living-toggle').onclick=()=>{livingPrefs.enabled=!livingPrefs.enabled;saveLiving();};$('living-clouds').onchange=()=>{livingPrefs.clouds=$('living-clouds').checked;saveLiving();};$('living-water').onchange=()=>{livingPrefs.waterMotion=$('living-water').checked;saveLiving();};document.addEventListener('visibilitychange',syncLiving);motionQuery?.addEventListener?.('change',syncLiving);
+let settlementKind='village',settlementGesture=false,settlementPreviewKey=null,settlementPreview=null,placementWater=null;
+function getSettlementPreview(p){
+ if(!p?.hit||p.x<0||p.y<0||p.x>=N||p.y>=N)return {reason:'Move over the map to preview.'};
+ if(view==='height')return {reason:'Switch out of Heightmap to place settlements.'};
+ const layer=layers.settlements;
+ if(!layer.visible||layer.locked)return {reason:'Show and unlock the Settlements layer.'};
+ const size=+$('size').value,key=[settlementKind,Math.round(p.x),Math.round(p.y),size].join(':');
+ if(settlementPreviewKey!==key){
+  if(placementWater?.routes!==routes||placementWater?.n!==N)placementWater={routes,n:N,field:riverField(routes,N)};
+  settlementPreview=planSettlement(settlementKind,p,size,{n:N,heights,sea,riverWater:placementWater.field,settlements});
+  settlementPreviewKey=key;
+ }
+ return settlementPreview;
+}
+function updateSettlementStatus(result){
+ const output=$('settlement-status');
+ const message=result?.place?'Click to place, or drag to adjust.':result?.reason||'Move over the map to preview.';
+ if(output.textContent!==message)output.textContent=message;
+}
+function drawSettlementBrush(context,project,strokeScale=1){
+ if(tool!=='settlement')return;
+ if(spacePan||last?.pan||orbitPointer||orbitMode){updateSettlementStatus();return;}
+ const result=getSettlementPreview(brushPosition);
+ updateSettlementStatus(result);
+ if(result.place)drawSettlement(context,result.place,{project,strokeScale,alpha:.82});
+}
+function commitSettlement(p){
+ const result=getSettlementPreview(p);
+ if(!result.place){notify(result.reason);draw();return;}
+ let number=1;
+ while(settlements.some(place=>place.id==='place-'+number))number++;
+ snapshot();
+ settlements=[...settlements,{...result.place,id:'place-'+number}];
+ brushPosition=null;
+ renderLayers();refresh();persist();
+ notify(result.place.name+' placed.');
+}
+function createSettlementSwatches(){
+ const n=48,heights=new Float32Array(n*n).fill(80),palette=$('settlement-swatches');
+ for(const [kind,spec] of Object.entries(SETTLEMENT_KINDS)){
+  const button=document.createElement('button'),thumb=document.createElement('canvas'),label=document.createElement('span');
+  button.type='button';button.dataset.settlement=kind;thumb.width=128;thumb.height=88;
+  thumb.setAttribute('aria-hidden','true');label.textContent=spec.label;button.append(thumb,label);palette.append(button);
+  const context=thumb.getContext('2d');
+  context.fillStyle='#626b48';context.fillRect(0,0,128,88);
+  const result=planSettlement(kind,{x:24,y:24},spec.radius*2.4,{n,heights,sea:62});
+  const scale=39/(spec.radius*1.2);
+  if(result.place)drawSettlement(context,result.place,{strokeScale:scale,project:(x,y)=>({x:64+(x-24)*scale,y:44+(y-24)*scale})});
+ }
+ function select(kind){
+  settlementKind=kind;
+  palette.querySelectorAll('button').forEach(button=>{
+   const selected=button.dataset.settlement===kind;
+   button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));
+  });
+ }
+ select(settlementKind);
+ palette.onclick=e=>{const button=e.target.closest('[data-settlement]');if(button){select(button.dataset.settlement);draw();}};
+}
+createSettlementSwatches();
 function settlementsVisible(){return layers.settlements.visible&&view!=='height';}
 function drawSettlementLabels(c,screen=false){if(!settlementsVisible())return;for(let s of settlements)drawSettlementName(c,s,screen?(x,y)=>projectTerrain(x,y,sampleTerrain(x,y,surfaceHeights,sea,water)+1,mini.clientWidth,mini.clientHeight,camera):undefined,screen,N);}
 initUI();renderLayers();renderPresets();

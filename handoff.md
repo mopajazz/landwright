@@ -1,23 +1,23 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 18, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.7.1 sculpting controls; see §26. Earthen materials are documented in §25. Previous release v2.6 was `d7ae907`.
-**Displayed release:** `v2.7.1`
-**Browser asset/module cache revision:** `2.7.1`<br>
+**Implementation baseline:** v2.8.0 Settlements brush; see §27. Earthen materials are documented in §25. Previous release v2.6 was `d7ae907`.
+**Displayed release:** `v2.8.0`
+**Browser asset/module cache revision:** `2.8.0`<br>
 **Project schema written by the application:** `7`
 
-Read **§0 first** for the current state. Sections 14–25 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
+Read **§0 first** for the current state. Sections 14–25 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Section 27 describes the current placement tool. Source and tests remain authoritative.
 
 ## 0. Current release — start here
 
 | Contract | Current state |
 | --- | --- |
-| Application release | **v2.7.1**, Flatten target shortcuts and gentler sculpt defaults |
+| Application release | **v2.8.0**, terrain-aware Settlements brush |
 | Verified deployment | [Pages run44390191940](https://github.com/mopajazz/worldpainter-studio/actions/runs/44390191940) succeeded for `f0ab812c57e7e1e3a3526c19dcd7c500151cc8a1` |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
-| Runtime | Static HTML/CSS/ES modules; cache `2.7.1`; no build or runtime packages |
+| Runtime | Static HTML/CSS/ES modules; cache `2.8.0`; no build or runtime packages |
 | Project format | Writes **7**, imports **1–7**; authoritative terrain, paint, forest density, routes, saved settlements and legacy content |
-| Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan |
+| Toolbar | **Ten** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Settlements, Pan |
 | Erasing | **Shift + Paint** click/drag; Paint’s Shift erase target selects the eligible layer. No Erase tool or E tool shortcut |
 | Opacity | **D decreases / E increases by 5%**, Paint and Path; Flatten adjusts target by 1 (Shift ×10); preserve Strength/history |
 | Navigation | **Space + left-drag** or middle-drag pans in 2D/3D; right/Alt-drag orbits in 3D |
@@ -25,7 +25,7 @@ Read **§0 first** for the current state. Sections 14–25 retain release histor
 | Terrain detail | Quick sketch/Small **128²**, Standard/Medium **192²**, Detailed/Large **256²** |
 | Map PNG | Independent **1024² / 2048² (default) / 4096²**; 4K square, not UHD landscape |
 | Heightmap | **N² actual bed elevations**; no water, canopy or roof relief |
-| Settlements | Creation/editing panel removed. Preserve saved records, rendering, names, layers, Shift erasing, undo and export |
+| Settlements | Toolbox swatches and terrain-aware preview; preserve saved records, layers, Shift erasing, undo and export |
 | Verification | Current full application run: **157 passed, 0 failed** (`/tmp/flatten-full.log`) |
 | Knowledge base | [New worlds/resolution](docs/kb/worlds.md), [tutorial](docs/tutorial.md), [KB index](docs/kb/index.md) |
 
@@ -33,7 +33,7 @@ Read **§0 first** for the current state. Sections 14–25 retain release histor
 
 **Deferred:** 512/1024 editable grids require profiling; rectangular worlds, device formats and retro presentation are not implemented. Higher export resolution scales existing terrain textures and renders vector artwork/text at output size; it does not create extra geographic detail. No inhabitants, civilization/ecosystem simulation, storytelling system, or Holler source-library integration. The supplied Windows folder and general ChatGPT Library remain inaccessible unless actual files become available.
 
-**Preserve:** beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep nine tools and the removed settlement panel removed. Never save derived water/canopy/roof geometry into bed heights.
+**Preserve:** beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep the new swatches in the Toolbox. Never save derived water/canopy/roof geometry into bed heights.
 
 ## 1. Identity, ownership, and locations
 
@@ -121,7 +121,7 @@ Committing a new world creates one undo snapshot, clears paint, forest density, 
 
 ### Toolbar and shortcuts
 
-There are **nine creation/navigation tools**, grouped as follows:
+There are **ten creation/navigation tools**, grouped as follows:
 
 | Group | Tool | Internal ID | Shortcut | Main effect |
 | --- | --- | --- | --- | --- |
@@ -133,9 +133,10 @@ There are **nine creation/navigation tools**, grouped as follows:
 | Terrain | Land | `land` | C; M alias | Add land; Shift removes land |
 | Surface | Path | `path` | J | Preview/commit a material trail |
 | Surface | Paint | `paint` | P; B alias | Paint the selected material |
+| Surface | Settlements | `settlement` | T | Preview and place a terrain-fitted settlement |
 | Navigate | Pan | `pan` | H | Pan the map/camera |
 
-D/E adjust Paint/Path Opacity by 5%; neither selects a tool. T has no tool binding. There is no general Drawing or Details panel.
+D/E adjust Paint/Path Opacity by 5%; neither selects a tool. T selects Settlements. There is no general Drawing or Details panel.
 
 Global editing controls:
 
@@ -978,3 +979,8 @@ Raise/Lower now share an 8% starting Strength; Smooth/Flatten share their existi
 Future direction: develop consistent, distinctive tool icons and an MX Creative Console profile after interaction bindings settle. No hardware profile is shipped or configured by this change.
 
 Verification for §26:157/157 full-suite tests pass (`/tmp/flatten-full.log`), including target bounds/steps, focus/dialog/modifier guards, unchanged project state and separate strength-group memory. Local browser showed Raise8%, Flatten35%, target120→119→129 in2D and129→128 in3D; Lower returned to8%. Syntax and diff checks pass.
+
+
+## 27. v2.8 Settlements brush
+
+T selects Settlements. The five toolbox swatches select type independently of footprint size. Hover or drag to preview, release to place. Existing layer, eraser, undo and export paths are shared with legacy records. The optional schema7 plan stores bounded roof rectangles, lane vertices, an enclosure outline and a town square where applicable. Legacy records still derive their layouts from the original seeded generator. Planning checks raw river water regardless of layer visibility and does not write bed heights or forest density.
