@@ -4,6 +4,7 @@ User documentation is being compiled alongside the application. These articles d
 
 | Topic | What you will find |
 | --- | --- |
+| [New worlds and resolution](worlds.md) | Live previews, terrain detail, backups, 1K/2K/4K exports |
 | [Brushes and strength](brushes.md) | Low-strength first strokes, material/footprint independence, opacity, edge protection |
 | [Paths and rivers](routes.md) | Placement, taper, meander, reflow, layers and erasing |
 | [Forests and clearings](forests.md) | Density painting, terrain eligibility, layers, breeze and save/export behavior |

@@ -1,9 +1,9 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 17, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.5.2 opacity keys and Shift erasing; previous release `1b2200a` (v2.5.1). See Git history and GitHub Pages for the release commit/deployment.
-**Displayed release:** `v2.5.2`
-**Browser asset/module cache revision:** `2.5.2`<br>
+**Implementation baseline:** v2.6 New World redesign and export presets; previous release `de1f70e` (v2.5.2). See Git history and GitHub Pages for the release commit/deployment.
+**Displayed release:** `v2.6`
+**Browser asset/module cache revision:** `2.6.0`<br>
 **Project schema written by the application:** `6`
 
 §20 defines the current settlements/schema6 contracts and supersedes older statements that settlements are deferred. Sections 1–18 retain engineering context and release history; §19 defines the v2.4 woodland renderer and supersedes earlier forest rendering details. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
@@ -871,3 +871,17 @@ Shift reverses Raise/Lower and removes Land as before; it erases only with Paint
 Verification: full Node suite **139 passed,0failed**, including new D/E clamping/no-project-change, typing/dialog protection, nine-tool UI, Path committed-opacity and zero-opacity whole-object Shift-erasing tests. Existing2D/3D surface, forest, river and legacy erasing tests now send genuine Shift-modified Paint events. Preserve tutorial low-Strength5–10% guidance and refresh the skill snapshot with changes.
 
 Actual local-browser v2.5.2 check: D/D/E produced100→90→95% with Paint retained; painted a Hard Round Sand patch and Shift-clicked it away, then undid both test strokes. Inspected2D/Canvas3D and light/dark controls. No real-GPU performance claim.
+
+## 23. v2.6 New World and independent export resolution — current override
+
+User authorized export-resolution presets and improving New World. Current scope keeps square128/192/256 editable grids; no unprofiled larger grids, rectangular worlds, device presets or retro renderer. Nine tools and schema6/import1–6 remain. Footer v2.6; cache2.6.0.
+
+New World is a responsive, labelled native modal with name, six thumbnail shape buttons, Terrain detail selector and descriptive live preview, collapsed Generation settings, backup action and sticky footer. Quick sketch/Small128 has16,384samples; Standard/Medium192 has36,864; Detailed/Large256 has65,536. The selected canvas preview is generated at that exact N with selected seed/relief; thumbnail previews use80. It uses a lightweight terrain palette/slope shader, not atmosphere or saved forests. Reuse deterministic `generate`; never mutate active arrays or history from previews. Flat grass is80 everywhere; ocean bed30 everywhere. Their relief is disabled and explained. Re-enable when selecting another shape. Keep arbitrary names as text, trim on creation, and preserve native required/seed validation. Backup invokes editable project download without closing modal; Cancel/X/Escape don’t create. Only Create submits the form, so Enter in name field creates. Opening resets scroll to top. Generation remains one undo step; test Undo restores all previous arrays, size, records and layers.
+
+Export has a separate Map image resolution selector:1024,2048(default),4096. Validate allowed values with2048 fallback. The label follows selection and the actual offscreen PNG canvas/draw dimensions use that value; vector names and legacy content scale accordingly. Existing ground/woodland/settlement rasters are scaled, not new geographic detail. Heightmap remains actualN² bed data regardless of selector; project and undo data unchanged.4K square is4096², not UHD3840×2160. Choice is session UI, not schema persistence. Previous1536-only statements are historical.
+
+Full Node suite142 passes, including preview/detail/cancel isolation, in-dialog backup and each image output size plus unchanged heightmap/project data. Browser verified native Enter creates named128 Flat grass (all heights80), Undo returns the entire original downloaded project byte-equivalent as parsed JSON, actual4096² MapPNG, and256² Heightmap with every rounded pixel matching saved bed. Inspected dark/light dialogs and500px narrow-window layout with no horizontal dialog overflow and accessible scrolled controls/footer. No real-device touch or GPU-performance claim.
+
+Update `docs/kb/worlds.md`, tutorial, project KB and README alongside behavior changes. Preserve the mandatory initial5–10% Raise/Lower Strength lesson. Portable skill references this current override before older contracts.
+
+Final v2.6 review found no concrete release blocker. Fresh full run `/tmp/world-release-tests.log`:142passed,0failed. Root module syntax and whitespace checks pass. Live deployment still must be verified against the exact release head before claiming publication.

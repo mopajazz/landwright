@@ -10,13 +10,13 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 
 ## Create → sculpt → paint
 
-- Start with Island, Archipelago, Continent, Atoll, Open ocean, or Flat grass. Each has a generated preview. Seed and relief live under Advanced generation.
+- Start with Island, Archipelago, Continent, Atoll, Open ocean, or Flat grass. Each has a generated preview. Seed and relief live under Generation settings.
 - Sculpt elevation with Raise, Lower, Smooth, or Flatten. The toolbox follows the active tool: footprint and size first, then Strength for sculpt tools; the paint material palette appears only with Paint. Four independent brush footprints cover Soft Round, Hard Round, Coastline, and Grain. Brush and material selections keep the current tool and survive tool changes. Coastline paints any selected material without changing height; use the explicit Land tool (C or M) to add or remove terrain. Strength controls sculpting power. Opacity applies only to Paint, Path, and surface Erase; surface paint opacity is capped within a single stroke and builds across separate strokes.
 - Paint five ground materials or tree density with Forest. Forest has its own density control and conditional layer/eraser; it keeps ground colors unchanged. Drawing and Details creation tools have been removed to keep the toolbox focused on terrain. Existing drawings and landmarks still load, render, export, and save.
 - Hold Shift while clicking/dragging with Paint to erase. Paint’s Shift erase target defaults to Surface paint for ground materials and Forests for Forest; River water and saved-object targets appear when that content exists. Surface erasing uses brush opacity and reveals the natural terrain color without changing heights. Landmark/drawing erasing removes whole touched objects; undo restores them. Hidden and locked layers are protected.
 - Hide and lock Surface and Relief. Legacy Drawings and Landmarks layers appear only when a project contains that content. Relief visibility controls shading/contours, while elevation remains the world foundation. Hidden or locked layers cannot be edited. Water has its own toggle and sea-level control.
 - Toggle the main workspace between 2D Map and 3D Terrain. All editing tools work directly on the 3D terrain. Left-drag edits with the active tool; right-drag or Alt-drag orbits and tilts; middle-drag or the Pan tool moves the camera. Scroll zooms, Shift+scroll resizes the brush, and Reset view recenters. The Orbit toggle supports touch; selecting a tool returns to editing while staying in 3D. Switch to terrain, heightmap, or biome visualization.
-- Export a 1536×1536 PNG of the current map view, including visible drawings and landmarks, or an 8-bit PNG heightmap at the selected world size. Map exports omit editor overlays such as grid and cursor.
+- Export a 1024×1024, 2048×2048, or 4096×4096 PNG of the current map view, including visible drawings and landmarks, or an 8-bit PNG heightmap at the selected world size. Map exports omit editor overlays such as grid and cursor.
 - Undo/redo retains 35 states, including stamps, layer settings, names, translucent paint, drawings, and world generation. Editable project files and local autosaves use schema v6 and accept v1–v5 projects. Older Forest paint remains color, without automatically adding trees.
 
 ## Shortcuts
@@ -102,10 +102,14 @@ Verified with 123 passing tests and actual browser Map/Heightmap exports. Real-G
 
 ## v2.5.1 — simpler sidebar and Space-drag pan
 
-The Settlements placement/editing panel has been removed from the right sidebar. Existing saved settlements retain their rendering, names, layers, erasing, undo and export support; schema6 and imports1–6 remain compatible. No replacement settlement controls have been added.
+The Settlements placement/editing panel has been removed from the right sidebar. Existing saved settlements retain their rendering, names, layers, erasing, undo and export support; schema 6 and imports1–6 remain compatible. No replacement settlement controls have been added.
 
-Hold **Space + left mouse drag** to pan in2D or3D from any active tool. Releasing Space preserves the selected tool; the current pan gesture continues until mouse release. Text fields and open dialogs keep ordinary Space behavior. Losing window focus or hiding the page clears the held-key state. Middle-drag, Pan(H), and3D orbit controls remain available.
+Hold **Space + left mouse drag** to pan in 2D or 3D from any active tool. Releasing Space preserves the selected tool; the current pan gesture continues until mouse release. Text fields and open dialogs keep ordinary Space behavior. Losing window focus or hiding the page clears the held-key state. Middle-drag, Pan(H), and3D orbit controls remain available.
 
 ## v2.5.2 — opacity keys and Shift erasing
 
 D/E decreases/increases Paint or Path Opacity in5% steps. The dedicated Erase tool and E tool shortcut are removed; there are now nine toolbar tools. Hold Shift and click/drag with Paint to erase, using the natural material target or choosing another saved layer in Shift erase target. Normal Paint remains unchanged. Layer visibility/locks, whole-object erasing, undo and2D/3D support remain. Schema6 is unchanged. Space-drag pan and Shift reverse sculpting remain available.
+
+## v2.6 — a clearer beginning and larger exports
+
+New World now offers a live preview of the selected terrain and detail, descriptive shape choices, clearer Quick sketch/Standard/Detailed labels, a responsive layout, and a current-project backup action. Terrain grids remain128/192/256 square; generation remains undoable. Map image exports offer 1024, 2048 (default), and 4096 square PNGs independently of terrain detail. Heightmap and project formats are unchanged. See [New worlds and resolution](docs/kb/worlds.md).

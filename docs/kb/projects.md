@@ -8,7 +8,7 @@ New world replaces the active canvas. Download anything important first; session
 
 ## Export types
 
-- Map image:1536² top-down PNG of the selected visualization and visible content, including static forests and visible settlements with names.
+- Map image:1024², 2048², or 4096² top-down PNG of the selected visualization and visible content, including static forests and visible settlements with names.
 - Heightmap:N² grayscale PNG of actual terrain, including the carved river bed, without water surfaces, trees, or buildings.
 - Project JSON: editable authoritative data, not an image.
 
@@ -37,3 +37,5 @@ Map export is not the orbit-camera screenshot. Neither PNG includes editor UI, r
 ## Main shortcuts
 
 R Raise · L Lower · Q Smooth · F Flatten · C/M Land · P/B Paint · J Path · V River · H Pan. D/E decreases/increases Opacity by5% in Paint or Path. Shift-click/drag in Paint erases the chosen target. W/S changes brush or route width; Shift changes it by 10. Right/Alt-drag orbits in 3D; Space + left-drag or middle-drag pans. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z redoes. Escape cancels a route draft.
+
+[New worlds and resolution](worlds.md) explains the difference between editable terrain grids and export pixels. Map PNG defaults to2048×2048;4K square is4096×4096. Heightmap always remains at the editable grid size.

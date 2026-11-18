@@ -13,12 +13,13 @@ Repository: https://github.com/mopajazz/worldpainter-studio
 
 Live app: https://mopajazz.github.io/worldpainter-studio/
 
-Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.5.2/cache `2.5.2` removes Erase and adds D/E opacity keys (previous release `1b2200a`). Read handoff §22 first, then §19 for woodland. Schema **6**, imports **1–6** remain. Verify HEAD/status before editing.
+Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.6/cache `2.6.0` improves New World and adds independent export sizes (previous release `de1f70e`). Read handoff §23 first, then §19 for woodland. Schema **6**, imports **1–6** remain. Verify HEAD/status before editing.
 
 ## Find the contract
 
 | Work | Read first |
 | --- | --- |
+| New World/export resolution | `app.mjs`, `index.html`, `theme.css`; §23 |
 | Brush/tool/menu | `app.mjs`, `terrain.mjs`, `brushes.mjs`; handoff §§2–5 |
 | Paths/rivers/reflow | `routes.mjs`, `editor.mjs`; §§3, 7, 15 |
 | 3D/performance | `terrain3d.mjs`, `gpu-terrain.mjs`; §6 |
@@ -53,3 +54,5 @@ Woodland coverage, canopy height and RGBA are derived, never saved. Keep picking
 - Assuming inhabitants, day/night, or storytelling shipped. Revisit storytelling after terrain; do not add it implicitly.
 
 The user removed the Settlements creation/editing panel. Do not restore it or add a replacement tool. Preserve saved settlement rendering/import/export/layers and erasing. Space + left-drag temporarily pans2D/3D; retain tool selection and protect typing/dialogs. Cache fields by immutable records identity. Roofs and clearings are derived, never bed edits or forest-density deletion. Names are plain text. Schema6 keeps at most64 canonical records; older schemas migrate with an empty list. Check cancel/import/undo and actual2D/3D/export behavior. No simulation or Holler-source integration is implied.
+
+Keep terrain grids128/192/256 separate from MapPNG sizes1024/2048/4096. Live previews must never mutate active terrain/history. Keep Cancel/Escape safe, creation atomic, backup editable, and Heightmap bed-only at N. Do not claim larger editable worlds, rectangular/retro formats or extra terrain detail from4K image scaling.

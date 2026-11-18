@@ -1,6 +1,6 @@
 # Landwright: your first living landscape
 
-This tutorial covers the current v2.5.2 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
+This tutorial covers the current v2.6 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
 
 ## Before your first stroke: start with low Strength
 
@@ -12,10 +12,10 @@ Strength is sculpting power. **Opacity is separate:** it affects Paint, Path, su
 
 1. Open New world.
 2. Choose **Flat grass** for this exercise. It starts completely level at height 80.
-3. Choose **Small (128×128)** for a quick experiment, or Large for more detail.
-4. Give it a name and select Create world.
+3. Choose **Quick sketch · Small (128×128)** under Terrain detail. Standard uses 192×192; Detailed uses 256×256. The live preview follows your choices. Image export size is separate.
+4. Give it a name. Use Download current project first if you need a backup, then select Create world.
 
-Other starts include Island, Archipelago, Continent, Atoll, and Open ocean. Advanced generation contains Seed and Relief. Creating a world replaces the active canvas, so download an important existing project first; undo is available within the current session.
+Other starts include Island, Archipelago, Continent, Atoll, and Open ocean. Generation settings contains Seed and Relief. Creating a world replaces the active canvas, so download an important existing project first; undo is available within the current session.
 
 ## 2. Raise a ridge and lower a valley
 
@@ -87,10 +87,11 @@ The effects do not enter project history or exports. See [Living World](kb/livin
 
 Use **Download project** in the header, or Ctrl/Cmd+S. Keep the `.world.json` file: it contains editable terrain, paint, forest density, river records, settlement records, and layer settings. Browser autosave is useful but tied to this browser and hosting origin.
 
-Export Map image for a 1536×1536 top-down PNG. Export Heightmap for the actual bed elevations at your selected map size. Neither export includes the cursor, route preview, editor UI, or Living World effects. Map export is not a screenshot of your 3D camera.
+Open Export map, choose 1024, 2048 or 4096 pixels, then Map image for a square top-down PNG. This changes image resolution without changing terrain detail. Export Heightmap for the actual bed elevations at your selected map size. Neither export includes the cursor, route preview, editor UI, or Living World effects. Map export is not a screenshot of your 3D camera.
 
 ## Next steps
 
+- [Starting worlds and export resolution](kb/worlds.md)
 - [Brush strength and painting](kb/brushes.md)
 - [Rivers, paths, and reflow](kb/routes.md)
 - [Forests and clearings](kb/forests.md)
