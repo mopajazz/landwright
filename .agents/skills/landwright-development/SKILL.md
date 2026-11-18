@@ -19,6 +19,7 @@ Discover the checkout and remote; cloud paths and remote aliases vary. This is s
 
 | Work | Read first |
 | --- | --- |
+| Proposed material art direction | `studies/earthen/`; handoff §24; standalone study, not integrated |
 | New World/export resolution | `app.mjs`, `index.html`, `theme.css`; §23 |
 | Brush/tool/menu | `app.mjs`, `terrain.mjs`, `brushes.mjs`; handoff §§2–5 |
 | Paths/rivers/reflow | `routes.mjs`, `editor.mjs`; §§3, 7, 15 |

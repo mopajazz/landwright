@@ -113,3 +113,7 @@ D/E decreases/increases Paint or Path Opacity in5% steps. The dedicated Erase to
 ## v2.6 — a clearer beginning and larger exports
 
 New World now offers a live preview of the selected terrain and detail, descriptive shape choices, clearer Quick sketch/Standard/Detailed labels, a responsive layout, and a current-project backup action. Terrain grids remain128/192/256 square; generation remains undoable. Map image exports offer 1024, 2048 (default), and 4096 square PNGs independently of terrain detail. Heightmap and project formats are unchanged. See [New worlds and resolution](docs/kb/worlds.md).
+
+## Earthen material study — awaiting art-direction feedback
+
+[Open the standalone swatch sheet](https://mopajazz.github.io/worldpainter-studio/studies/earthen/). Eight proposed procedural materials — Grass, Loam, Clay, Bedrock, Scree, Mud, Sand and Snow — appear on identical flat/relief terrain against parchment and midnight frames. Includes a mixed landscape, interface theme switch and downloadable comparison PNG. This is a visual prototype, not the editor palette or a physical erosion simulation. No app data, tools, forests or schema changes.

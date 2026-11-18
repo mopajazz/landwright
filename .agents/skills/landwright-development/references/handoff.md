@@ -6,7 +6,7 @@
 **Browser asset/module cache revision:** `2.6.0`<br>
 **Project schema written by the application:** `6`
 
-Read **§0 first** for the current state. Sections 14–23 retain release history; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
+Read **§0 first** for the current state. Sections 14–24 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
 
 ## 0. Current release — start here
 
@@ -924,3 +924,15 @@ Full Node suite142 passes, including preview/detail/cancel isolation, in-dialog 
 Update `docs/kb/worlds.md`, tutorial, project KB and README alongside behavior changes. Preserve the mandatory initial5–10% Raise/Lower Strength lesson. Portable skill references this current override before older contracts.
 
 Final v2.6 review found no concrete release blocker. Fresh full run `/tmp/world-release-tests.log`:142passed,0failed. Root module syntax and whitespace checks pass. Release deployment was subsequently verified: Pages run 44341029194 succeeded for exact commit d7ae907; production browser confirmed v2.6 and its controls without application errors.
+
+## 24. Earthen material study — visual proposal only
+
+The user requested an eight-material swatch sheet before editor implementation. Standalone page: `studies/earthen/index.html`, `study.css`, `study.mjs`; public route `/studies/earthen/`. The v2.6 editor and cache/schema remain unchanged. The study imports no app modules, reads/writes no project or preference storage, and renders original deterministic Canvas textures. Proposed palette: Grass, Loam, Clay, Bedrock, Scree, Mud, Sand, Snow, grouped into five families. Loam subsumes everyday Dirt; Forest stays the existing separate density layer. Other proposed materials remain deferred.
+
+Each material displays identical flat/ridge/hollow samples in parchment and midnight frames; the global UI theme toggle never changes terrain pixels. A mixed-material landscape demonstrates slope, hollow, shelter and wetness cues. Download builds an1800×2370 PNG with all eight materials and both frame themes. This is an art-direction prototype, not shipped editor behavior, a schema design, or material transport/erosion physics. Grain has not been removed from the actual app. Do not integrate or rename saved material IDs until the user reviews the visuals and migration/rendering costs are designed.
+
+Source reference: the compendium image supplied earlier in chat informed restrained marks/colour choices. No local Holler compendium file was found and no Windows/ChatGPT Library asset access is claimed. The study uses no copied artwork. Test through the real browser for all eight materials, both themes, PNG download, narrow layout and console errors. App tests need not be rerun for this isolated prototype; no application runtime files changed.
+
+Swatch study browser evidence: eight material cards and sixteen comparison canvases rendered with no application errors. Parchment/midnight theme switch checked. Actual exported PNG verified as1800×2370; final comparison PNG is `/workspace/shared/landwright-earthen-swatch-sheet.png`. No app-suite rerun is claimed because editor source/tests were untouched.
+
+The study was also inspected at500px viewport width with no horizontal overflow; desktop window restored after inspection.
