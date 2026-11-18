@@ -13,7 +13,7 @@ Read **§0 first** for the current state. Sections 14–25 retain release histor
 | Contract | Current state |
 | --- | --- |
 | Application release | **v2.7**, earthen materials |
-| Verified deployment | v2.7 deployment pending; previous v2.6 run44341029194 succeeded |
+| Verified deployment | [Pages run44390191940](https://github.com/mopajazz/worldpainter-studio/actions/runs/44390191940) succeeded for `f0ab812c57e7e1e3a3526c19dcd7c500151cc8a1` |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
 | Runtime | Static HTML/CSS/ES modules; cache `2.7.0`; no build or runtime packages |
 | Project format | Writes **7**, imports **1–7**; authoritative terrain, paint, forest density, routes, saved settlements and legacy content |
@@ -966,3 +966,5 @@ Pure renderer warm measurements at256² terrain→1024² raster were approximate
 Browser acceptance (local): light2D and darkCanvas3D showed distinct Clay/Scree paint; Shift erase, D→95% opacity, Undo and3D painting/orbit exercised. Actual schema7 project download449795bytes at128²,131072decodedcoveragebytes. Actual MapPNG4096² exported;128²Heightmap matched every saved bed pixel. No application console errors observed; extension metadata errors were unrelated. WebGL unavailable in this browser, so GPU visual/performance acceptance remains unverified.
 
 Detailed256² local map: paint release produced the full-resolution ground texture and stayed interactive; this was a functional observation, not anFPS benchmark.
+
+Release evidence: application commit `f0ab812c57e7e1e3a3526c19dcd7c500151cc8a1`; GitHub Pages run44390191940 completed successfully. Production browser showed v2.7, eight grouped ground materials, separate Forest density and preserved legacy landmarks; no application console errors. Screenshot: `/workspace/shared/landwright-v2.7-materials.jpg` (session artifact, not a repository dependency). Subsequent documentation-only commits do not change the runtime release.
