@@ -10,6 +10,7 @@ const paths={
  land:'<path d="M3 12 7 4l5 2 5-2 4 6-5 4-7-1-4 3Z" fill="currentColor" fill-opacity=".2"/><path d="M2 20c3-3 5 3 8 0s5 3 8 0 3-1 4-1"/>',
  paint:'<path d="m8 13 9-10 4 4-10 9Z" fill="currentColor" fill-opacity=".2"/><path d="m15 5 4 4M9 15c-5-1-3 5-7 6 6 2 11-1 9-5"/>',
  erase:'<path d="m3 14 9-10a2 2 0 0 1 3 0l6 5a2 2 0 0 1 0 3l-8 9H9l-6-5a2 2 0 0 1 0-2Z" fill="currentColor" fill-opacity=".2"/><path d="m8 9 10 9M13 21h9"/>',
+ settlement:'<path d="M2 12l5-4 5 4v8H2zM12 10l5-5 5 5v10H12M6 20v-4m11 4v-5"/>',
  pan:'<path d="M8 12V5a2 2 0 0 1 4 0v6-8a2 2 0 0 1 4 0v8-6a2 2 0 0 1 4 0v10c0 5-3 7-7 7h-1c-3 0-4-1-6-4l-3-4a2 2 0 0 1 3-3l2 2Z" fill="currentColor" fill-opacity=".2"/>',
  settings:'<path d="M3 6h18M3 12h18M3 18h18"/><circle cx="8" cy="6" r="2" fill="var(--panel)"/><circle cx="16" cy="12" r="2" fill="var(--panel)"/><circle cx="9" cy="18" r="2" fill="var(--panel)"/>'
 };

@@ -118,3 +118,8 @@ New World now offers a live preview of the selected terrain and detail, descript
 ## Earthen material study — awaiting art-direction feedback
 
 [Open the standalone swatch sheet](https://mopajazz.github.io/worldpainter-studio/studies/earthen/). Eight proposed procedural materials — Grass, Loam, Clay, Bedrock, Scree, Mud, Sand and Snow — appear on identical flat/relief terrain against parchment and midnight frames. Includes a mixed landscape, interface theme switch and downloadable comparison PNG. This is a visual prototype, not the editor palette or a physical erosion simulation. No app data, tools, forests or schema changes.
+
+
+## v2.8 — settlements brush
+
+Choose a settlement swatch, size the search area with W/S, and preview a terrain-fitted plan before placing it. Hamlet, Village, Town, Abbey, and Castle layouts use connected dry ground and save their plan geometry in the existing project format. See [Settlements brush](docs/kb/settlements.md).

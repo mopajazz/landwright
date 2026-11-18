@@ -83,6 +83,10 @@ World Settings contains **Living World**, enabled by default. It adds subtle wat
 
 The effects do not enter project history or exports. See [Living World](kb/living-world.md) for scope and performance details. Growth simulation, boats, travelers, day/night, and storytelling remain future topics.
 
+## Place a settlement
+
+Press **T** and pick a settlement swatch. Use **W/S** to adjust how much terrain the brush searches. Hover to see the layout, then click to place it. Try the same Village swatch on a riverbank and a hillside to see how the available ground changes the plan. [Settlements brush](kb/settlements.md)
+
 ## 8. Save something you can return to
 
 Use **Download project** in the header, or Ctrl/Cmd+S. Keep the `.world.json` file: it contains editable terrain, paint, forest density, river records, settlement records, and layer settings. Browser autosave is useful but tied to this browser and hosting origin.
@@ -95,7 +99,7 @@ Open Export map, choose 1024, 2048 or 4096 pixels, then Map image for a square t
 - [Brush strength and painting](kb/brushes.md)
 - [Rivers, paths, and reflow](kb/routes.md)
 - [Forests and clearings](kb/forests.md)
-- [Saved settlement compatibility](kb/settlements.md)
+- [Settlements brush](kb/settlements.md)
 - [Living World](kb/living-world.md)
 - [Saving, exporting, and troubleshooting](kb/projects.md)
 - [Engineering handoff](../handoff.md)
