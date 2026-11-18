@@ -13,7 +13,7 @@ Repository: https://github.com/mopajazz/worldpainter-studio
 
 Live app: https://mopajazz.github.io/worldpainter-studio/
 
-Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.5.1/cache `2.5.1` removes settlement controls and adds Space-drag pan (previous release `d36fe0f`). Read handoff §21 first, then §19 for woodland. Schema **6**, imports **1–6** remain. Verify HEAD/status before editing.
+Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.5.2/cache `2.5.2` removes Erase and adds D/E opacity keys (previous release `1b2200a`). Read handoff §22 first, then §19 for woodland. Schema **6**, imports **1–6** remain. Verify HEAD/status before editing.
 
 ## Find the contract
 
@@ -29,7 +29,7 @@ Discover the checkout and remote; cloud paths and remote aliases vary. This is s
 | Verification/release | `tests/`, `package.json`; §9 |
 | Holler/storytelling | §§11–12; establish current scope first |
 
-Keep 10 tools. Drawing, Details, Forest Scatter, and thumbnail preview were removed; preserve legacy content. Footprint/material selection keeps the active tool. Strength sculpts; Opacity affects Paint, Path, surface/forest Erase. Forest Paint edits density, preserving ground colors. Flatten protects the perimeter by default. Route previews remain transient; commit once, cancel without edits. Keep bed heights, river water, effective geometry, and picking consistent. Validate imports/work budgets before mutation; never replay saved carving on load.
+Keep nine tools. The user removed Erase: Shift+Paint erases the chosen target; D/E adjusts Paint/Path Opacity by5%, never selects a tool. Drawing, Details, Forest Scatter, and thumbnail preview were removed; preserve legacy content. Footprint/material selection keeps the active tool. Strength sculpts; Opacity affects Paint, Path, surface/forest Erase. Forest Paint edits density, preserving ground colors. Flatten protects the perimeter by default. Route previews remain transient; commit once, cancel without edits. Keep bed heights, river water, effective geometry, and picking consistent. Validate imports/work budgets before mutation; never replay saved carving on load.
 
 ## Extend Living World
 

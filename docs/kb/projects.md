@@ -36,4 +36,4 @@ Map export is not the orbit-camera screenshot. Neither PNG includes editor UI, r
 
 ## Main shortcuts
 
-R Raise · L Lower · Q Smooth · F Flatten · C/M Land · P/B Paint · E Erase · J Path · V River · H Pan. W/S changes brush or route width; Shift changes it by 10. Right/Alt-drag orbits in 3D; Space + left-drag or middle-drag pans. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z redoes. Escape cancels a route draft.
+R Raise · L Lower · Q Smooth · F Flatten · C/M Land · P/B Paint · J Path · V River · H Pan. D/E decreases/increases Opacity by5% in Paint or Path. Shift-click/drag in Paint erases the chosen target. W/S changes brush or route width; Shift changes it by 10. Right/Alt-drag orbits in 3D; Space + left-drag or middle-drag pans. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z redoes. Escape cancels a route draft.

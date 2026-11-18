@@ -20,7 +20,7 @@ World Settings→Reflow rivers appears when rivers exist. It samples the current
 
 ## Visibility and erasing
 
-Water off reveals the bed. Hiding River water hides local river water while retaining the channel. Erase→River water removes whole touched water routes but retains the carved terrain; undo restores them. To roll back both bed and water from creation, undo that river commit.
+Water off reveals the bed. Hiding River water hides local river water while retaining the channel. Paint → Shift erase target → River water, then Shift-click/drag, removes whole touched water routes but retains the carved terrain; undo restores them. To roll back both bed and water from creation, undo that river commit.
 
 ## Limits and saving
 

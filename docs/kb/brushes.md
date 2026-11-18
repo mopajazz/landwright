@@ -18,7 +18,11 @@ The terrain palette appears with Paint. Painting underwater is concealed by enab
 
 ## Opacity and erasing
 
-Paint opacity accumulates across separate strokes. Repeated pointer samples inside one held stroke do not multiply coverage indefinitely. Shift+Paint or Erase→Surface paint reveals natural terrain color without changing heights. A hidden/locked Surface layer cannot be painted or erased. Forest density has separate Forests protection; Shift+Forest or Erase→Forests clears trees without changing ground color.
+**D decreases Opacity by 5%; E increases it by 5%.** These keys work with Paint and Path, clamp to0–100%, and do not change tools or Strength. Typing in fields and open dialogs keeps ordinary keyboard behavior.
+
+There is no separate Erase tool. With Paint selected, hold Shift and click or drag. A ground material defaults the Shift target to Surface paint; Forest defaults it to Forests. The **Shift erase target** selector also offers existing river water, settlements and legacy drawings/landmarks. Selecting a target does not change the active tool; ordinary unmodified Paint still paints the selected material. Whole-object targets ignore Opacity, including at0%; surface/forest erasing uses Opacity.
+
+Paint opacity accumulates across separate strokes. Repeated pointer samples inside one held stroke do not multiply coverage indefinitely. Shift+Paint reveals natural terrain color without changing heights. A hidden/locked Surface layer cannot be painted or erased. Forest density has separate Forests protection; Shift+Forest clears trees without changing ground color.
 
 ## Flatten edges
 
@@ -30,4 +34,4 @@ Undo, reduce Strength, and use smaller/shorter gestures. Low Strength is the fir
 
 ## Erase settlements
 
-When places exist, Erase offers Settlements. A stroke removes whole touched places; Opacity does not fade buildings. Hidden or locked Settlements are protected. Undo restores removal. See [Settlements](settlements.md).
+When places exist, Paint offers Settlements in Shift erase target. A Shift stroke removes whole touched places; Opacity does not fade buildings. Hidden or locked Settlements are protected. Undo restores removal. See [Settlements](settlements.md).

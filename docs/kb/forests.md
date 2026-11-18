@@ -11,7 +11,7 @@ Forest paints tree density, leaving ground color and elevation intact. Other mat
 
 ## Clear or protect trees
 
-Hold Shift while painting Forest to clear density, or choose **Erase → Forests**. Opacity controls how much is removed. Surface paint erasing changes ground color and leaves trees alone. Forests has its own conditional layer: hide it for comparison or lock it to protect density edits. The row and eraser target appear whenever saved density is nonzero, even if terrain currently prevents visible trees. Clearing the final density removes those controls after the gesture ends.
+Hold Shift while painting Forest to clear density, or choose **Paint → Forest, then Shift-click/drag**. Opacity controls how much is removed. Surface paint erasing changes ground color and leaves trees alone. Forests has its own conditional layer: hide it for comparison or lock it to protect density edits. The row and eraser target appear whenever saved density is nonzero, even if terrain currently prevents visible trees. Clearing the final density removes those controls after the gesture ends.
 
 Undo/Redo restores the full density edit. Escape stops a brush stroke and keeps edits already applied; it only discards uncommitted geometry for Path/River.
 

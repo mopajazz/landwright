@@ -1,9 +1,9 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 17, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.5.1 sidebar simplification and Space pan; previous release `d36fe0f` (v2.5). See Git history and GitHub Pages for the release commit/deployment.
-**Displayed release:** `v2.5.1`
-**Browser asset/module cache revision:** `2.5.1`<br>
+**Implementation baseline:** v2.5.2 opacity keys and Shift erasing; previous release `1b2200a` (v2.5.1). See Git history and GitHub Pages for the release commit/deployment.
+**Displayed release:** `v2.5.2`
+**Browser asset/module cache revision:** `2.5.2`<br>
 **Project schema written by the application:** `6`
 
 §20 defines the current settlements/schema6 contracts and supersedes older statements that settlements are deferred. Sections 1–18 retain engineering context and release history; §19 defines the v2.4 woodland renderer and supersedes earlier forest rendering details. It distinguishes current behavior, compatibility support, known limitations, and deferred ideas. It is intended to let another developer or coding agent continue without relying on the chat history. Application behavior is defined by the source and tests; update this handoff whenever those contracts change.
@@ -859,3 +859,15 @@ Space keydown outside inputs/selects/textareas/contenteditable and open dialogs 
 Tests replace removed creation-mode integration tests with current sidebar-absence, saved-content retention,2D/3D translation, no-terrain-change, tool persistence, keyup/blur/typing and route-pan tests. Full suite134 passes. Tutorial/KB/README/help describe current controls. §20 historical135-test count is superseded.
 
 Real-browser v2.5.1 checks used held Space with native left-mouse drags:2D moved the map80px/40px;3D translated the camera without changing the selected Raise tool. Inspected simplified sidebar in dark/light themes; existing Willowbank/Northwatch records remained visible. Canvas fallback was used; no GPU performance claim.
+
+## 22. v2.5.2 opacity shortcuts and Shift erase — current override
+
+The user removed the standalone Erase toolbar tool and requested D/E opacity adjustment. **Nine tools** now supersede all historical ten-tool requirements. E never selects Erase. D lowers and E raises Paint/Path Opacity by5 percentage points, bounded0–100; keys preserve tools, Strength, saved project and undo history. They respect editable fields/dialogs and existing Ctrl/Cmd shortcuts. Hidden non-opacity tools ignore these keys. The opacity slider includes the shortcut hint and Help documents it.
+
+`gestureTool(e)` treats Shift+Paint as erase while keeping the actual tool Paint. Event-aware `activeLayer(e)` and `opacity(e)` route validation before snapshot/mutation. Normal paint always paints its selected material, regardless of chosen Shift target. Choosing a ground material resets Shift target to Surface; Forest chooses Forests (available even when empty). Paint contains the former target selector labelled Shift erase target; existing rivers, settlements and legacy shapes/landmarks remain erasable. Target changes preserve the current tool. Whole-object erase ignores paint Opacity (even0%); surface and forest clearing uses opacity-once-per-stroke coverage. Layer locks/visibility follow the target, not the selected paint material. Erasing river water keeps the carved bed. Conditional controls reconcile on release/Escape, not mid-stroke. No schema change; save/import remain6/1–6.
+
+Shift reverses Raise/Lower and removes Land as before; it erases only with Paint. Path’s Opacity keys affect newly committed route paint; Shift is not a path-record deletion tool. Space-panning still takes precedence over Paint and modifiers. Removed Erase icon may remain in the reusable icon module, but has no toolbar, shortcut or tool dispatch.
+
+Verification: full Node suite **139 passed,0failed**, including new D/E clamping/no-project-change, typing/dialog protection, nine-tool UI, Path committed-opacity and zero-opacity whole-object Shift-erasing tests. Existing2D/3D surface, forest, river and legacy erasing tests now send genuine Shift-modified Paint events. Preserve tutorial low-Strength5–10% guidance and refresh the skill snapshot with changes.
+
+Actual local-browser v2.5.2 check: D/D/E produced100→90→95% with Paint retained; painted a Hard Round Sand patch and Shift-clicked it away, then undid both test strokes. Inspected2D/Canvas3D and light/dark controls. No real-GPU performance claim.

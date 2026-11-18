@@ -1,6 +1,6 @@
 # Landwright: your first living landscape
 
-This tutorial covers the current v2.5.1 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
+This tutorial covers the current v2.5.2 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
 
 ## Before your first stroke: start with low Strength
 
@@ -33,7 +33,7 @@ If you need a level area, **Flatten (F)** approaches its target height. Preserve
 
 1. Select **Paint (P or B)**.
 2. Choose **Sand** and the **Coastline** footprint.
-3. Start with modest Opacity and paint along a dry bank. Repeat separate strokes to build color.
+3. Use D/E to decrease/increase Opacity in5% steps. Start with modest Opacity and paint along a dry bank. Repeat separate strokes to build color.
 4. Try Stone on your ridge and Grass in the lowlands.
 
 Tool, material, and footprint are separate choices. Choosing Sand does not select Paint for you, and Coastline does not secretly become a land-raising tool. Use **Land (C or M)** to add land; hold Shift with Land to remove it. Forest is different from the ground materials: it paints tree density without recoloring the ground.
@@ -58,7 +58,7 @@ Path changes surface paint, not elevation. It uses Opacity. A completed path is 
 
 River water has its own local levels and can exist above the ocean. The river cuts through rising terrain to maintain a non-rising profile; this is an authored terrain tool, not a fluid simulation.
 
-Use Water off/on to inspect the bed. The River water layer hides local river water without undoing the channel. Erase→River water removes whole touched water routes and leaves their channels; undo restores the water record.
+Use Water off/on to inspect the bed. The River water layer hides local river water without undoing the channel. Paint → Shift erase target → River water, then Shift-click/drag, removes whole touched water routes and leaves their channels; undo restores the water record.
 
 **Reflow rivers:** after sculpting near a river, World Settings offers an undoable reflow action. It recalculates from the current bed and recuts channels beneath the updated levels. **Repeated use can deepen the bed.** Use undo if the result is stronger than intended. Relief and River water must be visible and unlocked.
 
@@ -66,7 +66,7 @@ Use Water off/on to inspect the bed. The River water layer hides local river wat
 
 1. Choose **Paint → Forest**, keeping the same Paint tool and footprint controls.
 2. Start with **Forest density 40–65%** and modest Opacity. Brush a woodland onto gentle, dry land. It appears as textured canopy clusters with natural gaps, rather than outlined tree stamps.
-3. Hold Shift to clear trees, or use **Erase → Forests**. Ground color stays intact.
+3. Hold Shift to clear trees, or use **Paint → Forest, then Shift-click/drag**. Ground color stays intact.
 4. The conditional Forests layer lets you hide or lock the woodland. Undo restores a clearing.
 
 Trees avoid water, steep slopes, and saved path corridors. Density remains saved where unsuitable terrain hides trees; erase it if you want permanent removal. See [Forests and clearings](kb/forests.md) for target density, old-map compatibility, and path-corridor limits.

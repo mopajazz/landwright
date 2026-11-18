@@ -13,7 +13,7 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 - Start with Island, Archipelago, Continent, Atoll, Open ocean, or Flat grass. Each has a generated preview. Seed and relief live under Advanced generation.
 - Sculpt elevation with Raise, Lower, Smooth, or Flatten. The toolbox follows the active tool: footprint and size first, then Strength for sculpt tools; the paint material palette appears only with Paint. Four independent brush footprints cover Soft Round, Hard Round, Coastline, and Grain. Brush and material selections keep the current tool and survive tool changes. Coastline paints any selected material without changing height; use the explicit Land tool (C or M) to add or remove terrain. Strength controls sculpting power. Opacity applies only to Paint, Path, and surface Erase; surface paint opacity is capped within a single stroke and builds across separate strokes.
 - Paint five ground materials or tree density with Forest. Forest has its own density control and conditional layer/eraser; it keeps ground colors unchanged. Drawing and Details creation tools have been removed to keep the toolbox focused on terrain. Existing drawings and landmarks still load, render, export, and save.
-- Erase (E) always offers Surface paint, with River water and legacy Landmarks/Drawings targets when that content exists. Surface erasing uses brush opacity and reveals the natural terrain color without changing heights. Landmark/drawing erasing removes whole touched objects; undo restores them. Hidden and locked layers are protected.
+- Hold Shift while clicking/dragging with Paint to erase. Paint’s Shift erase target defaults to Surface paint for ground materials and Forests for Forest; River water and saved-object targets appear when that content exists. Surface erasing uses brush opacity and reveals the natural terrain color without changing heights. Landmark/drawing erasing removes whole touched objects; undo restores them. Hidden and locked layers are protected.
 - Hide and lock Surface and Relief. Legacy Drawings and Landmarks layers appear only when a project contains that content. Relief visibility controls shading/contours, while elevation remains the world foundation. Hidden or locked layers cannot be edited. Water has its own toggle and sea-level control.
 - Toggle the main workspace between 2D Map and 3D Terrain. All editing tools work directly on the 3D terrain. Left-drag edits with the active tool; right-drag or Alt-drag orbits and tilts; middle-drag or the Pan tool moves the camera. Scroll zooms, Shift+scroll resizes the brush, and Reset view recenters. The Orbit toggle supports touch; selecting a tool returns to editing while staying in 3D. Switch to terrain, heightmap, or biome visualization.
 - Export a 1536×1536 PNG of the current map view, including visible drawings and landmarks, or an 8-bit PNG heightmap at the selected world size. Map exports omit editor overlays such as grid and cursor.
@@ -30,11 +30,12 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 | Space + left drag / Middle drag | Pan |
 | Right drag or Alt + drag in 3D | Orbit and tilt |
 | R / L / Q / F | Raise / lower / smooth / flatten |
-| B or P / E / C or M / H | Paint / erase / land / pan |
+| B or P / C or M / H | Paint / land / pan |
+| D / E | Decrease / increase Opacity by5% in Paint or Path |
 | J / V | Path / river |
 | Enter or double-click / Escape | Finish route / cancel preview |
 | Shift + Raise/Lower or Land | Reverse elevation direction / remove land |
-| Shift + paint | Erase surface paint |
+| Shift + Paint | Erase the chosen target |
 | Ctrl or Cmd + Z | Undo |
 | Ctrl or Cmd + Shift + Z | Redo |
 | Ctrl or Cmd + S | Download editable project |
@@ -59,7 +60,7 @@ UI palette contrast checks and their scope are documented in [the contrast audit
 
 New world includes a **Flat grass** preset: a completely level grass field at elevation 80. Select **Small (128 × 128)**, **Medium (192 × 192)**, or **Large (256 × 256)** before creation. Size is retained in project files and undo history; existing projects open at their original 256 × 256 size.
 
-The toolbox is grouped by function: **Terrain** (Raise, Lower, Smooth, Flatten, River, Land), **Surface** (Path, Paint, Erase), and **Navigate** (Pan). Group separators remain visible in the collapsed rail. Icons share a 24-unit grid, 1.9-unit stroke, and 28px display size: peak/add, excavated basin/remove, sanding block, spirit level, shoreline, brush, eraser, and hand. Labels, shortcut hints, accessible names, and a selected-edge marker supplement the silhouettes.
+The toolbox is grouped by function: **Terrain** (Raise, Lower, Smooth, Flatten, River, Land), **Surface** (Path, Paint), and **Navigate** (Pan). Group separators remain visible in the collapsed rail. Icons share a 24-unit grid, 1.9-unit stroke, and 28px display size: peak/add, excavated basin/remove, sanding block, spirit level, shoreline, brush and hand. Labels, shortcut hints, accessible names, and a selected-edge marker supplement the silhouettes.
 
 ## Paths and rivers
 
@@ -67,7 +68,7 @@ Choose **Path (J)** or **River (V)**. Click points or drag a curve; the preview 
 
 Use W/S or Shift+wheel to adjust route width (2–32 blocks); Shift+W/S changes it by 10. Path offers Dirt, Stone, and Sand and uses paint opacity without changing elevation. River adds channel depth (1–16 blocks), softly carves the banks, and creates local water above sea level. Start at the source and work toward the mouth: its water profile never rises, so uphill terrain is cut through. This is an authored river tool, not a fluid simulation.
 
-The **River water** layer controls visibility/locking of local water; Relief locking also blocks river carving. The Water toggle reveals the bed. Erase → River water removes whole touched river water routes while retaining the carved channel; undo restores them. Surface erasing removes path paint. Route geometry and river levels save in v5 projects; v1–v4 projects migrate automatically. Finished routes cannot yet have individual points repositioned. Map PNGs include visible water; heightmaps export the actual carved bed.
+The **River water** layer controls visibility/locking of local water; Relief locking also blocks river carving. The Water toggle reveals the bed. Paint → Shift erase target → River water, then Shift-click/drag, removes whole touched river water routes while retaining the carved channel; undo restores them. Surface erasing removes path paint. Route geometry and river levels save in v5 projects; v1–v4 projects migrate automatically. Finished routes cannot yet have individual points repositioned. Map PNGs include visible water; heightmaps export the actual carved bed.
 
 Up to 64 routes / 32,768 sampled points are supported, with an additional shared raster-work budget to keep large or imported routes responsive.
 
@@ -87,7 +88,7 @@ Start with the [tutorial](docs/tutorial.md) or [knowledge base](docs/kb/index.md
 
 ## v2.3 — forests and clearings
 
-Paint → Forest now paints a saved density field, with a 65% default target and normal footprint/opacity controls. Shift clears trees; Erase → Forests and the conditional Forests layer keep woodland separate from ground paint. The original v2.3 stamps were superseded by the v2.4 integrated canopy described below. Trees avoid low coasts, cliffs, local river water and saved path corridors. Unsuitable terrain hides trees while keeping density for later restoration; path records still block after surface erasure.
+Paint → Forest now paints a saved density field, with a 65% default target and normal footprint/opacity controls. Shift clears trees; Paint → Shift erase target → Forests and the conditional Forests layer keep woodland separate from ground paint. The original v2.3 stamps were superseded by the v2.4 integrated canopy described below. Trees avoid low coasts, cliffs, local river water and saved path corridors. Unsuitable terrain hides trees while keeping density for later restoration; path records still block after surface erasure.
 
 Project v5 adds density and Forests layer settings; imports v1–v4 preserve all existing content and initialize empty density. Canopy breeze is optional Living World motion, excluded from saves/history/exports; static forests are included in saves and visible Map PNGs. No tools were added. See [Forests and clearings](docs/kb/forests.md). Holler originals remain unavailable and unintegrated.
 
@@ -104,3 +105,7 @@ Verified with 123 passing tests and actual browser Map/Heightmap exports. Real-G
 The Settlements placement/editing panel has been removed from the right sidebar. Existing saved settlements retain their rendering, names, layers, erasing, undo and export support; schema6 and imports1–6 remain compatible. No replacement settlement controls have been added.
 
 Hold **Space + left mouse drag** to pan in2D or3D from any active tool. Releasing Space preserves the selected tool; the current pan gesture continues until mouse release. Text fields and open dialogs keep ordinary Space behavior. Losing window focus or hiding the page clears the held-key state. Middle-drag, Pan(H), and3D orbit controls remain available.
+
+## v2.5.2 — opacity keys and Shift erasing
+
+D/E decreases/increases Paint or Path Opacity in5% steps. The dedicated Erase tool and E tool shortcut are removed; there are now nine toolbar tools. Hold Shift and click/drag with Paint to erase, using the natural material target or choosing another saved layer in Shift erase target. Normal Paint remains unchanged. Layer visibility/locks, whole-object erasing, undo and2D/3D support remain. Schema6 is unchanged. Space-drag pan and Shift reverse sculpting remain available.
