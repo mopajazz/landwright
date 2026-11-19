@@ -13,7 +13,7 @@ Read **§0 and §29 first** for the current state. Sections 14–29 retain relea
 | Contract | Current state |
 | --- | --- |
 | Application release | **v2.9**, settlements removed; terrain behavior is the focus |
-| Verified deployment | v2.9 local checks complete; production deployment evidence is recorded at the end of §29 |
+| Verified deployment | [Pages run44583324840](https://github.com/mopajazz/worldpainter-studio/actions/runs/44583324840) succeeded for `ed7776dd7374f8062468a75b0db244eaf4ba3864` (v2.9 runtime) |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
 | Runtime | Static HTML/CSS/ES modules; cache `2.9.0`; no build or runtime packages |
 | Project format | Writes **9**, imports **1–9**; authoritative terrain, paint, forest density, routes and supported legacy content; retired settlements/town symbols omitted |
@@ -1032,3 +1032,5 @@ Schema9 writes no `settlements` or `layers.settlements` field. Imports1–8 reta
 Archived release history is retained below/above for engineering context, not as active feature specifications. Current source, §0 and this section are authoritative.
 
 Verification for v2.9: full Node suite **151 passed, 0 failed**. Local browser loaded the former two-village schema8 map with terrain and river intact, no settlement controls/layer, a ground-only Paint palette with Forest density and all nine tools. 2D and 3D remain available. Responsive water is a future goal, not a delivered simulation.
+
+Production v2.9: runtime commit `ed7776dd7374f8062468a75b0db244eaf4ba3864`, Pages run44583324840 succeeded. Browser confirmed footer v2.9, simplified Paint controls, no settlement menus or layer, and the existing terrain project intact. No application-origin console errors; browser-extension metadata warnings excluded. Local light/dark and 2D/Canvas3D inspected; no claim of real-GPU performance or new hydrology. Screenshots: `/workspace/shared/landwright-v2.9-terrain.jpg` and `/workspace/shared/landwright-v2.9-live.jpg`.
