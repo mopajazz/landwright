@@ -116,3 +116,10 @@ test('Flatten D/E adjust target height precisely without editing terrain or stre
 
 
 test('settlements and their controls are retired from old maps while Paint stays focused on ground',async()=>{flatTestWorld();const before=await state(),old={...before,version:8,settlements:[{id:'old',kind:'village',x:64,y:64,scale:1,rotation:0,seed:42,name:'Old Village'}],layers:{...before.layers,settlements:{visible:true,locked:false}}};Object.defineProperty($('file'),'files',{configurable:true,value:[{name:'old-map.json',size:100,text:async()=>JSON.stringify(old)}]});await $('file').onchange();const after=await state();assert.equal(after.version,9);assert.equal(Object.hasOwn(after,'settlements'),false);assert.equal(Object.hasOwn(after.layers,'settlements'),false);for(const key of['heights','paint','paintColors','paintAlpha','forest','routes','surfaceMaterials'])assert.deepEqual(after[key],before[key]);clickTool('paint');for(const id of['paint-mode-settings','paint-ground','paint-places','place-settings','place-kinds','place-name','commit-place','cancel-place'])assert.equal($(id),null);assert.equal(doc.querySelector('[data-layer="settlements"]'),null);assert.ok(![...$('erase-target').options].some(o=>o.value==='settlements'));assert.equal(doc.querySelectorAll('[data-tool]').length,9);assert.equal($('palette-section').hidden,false);});
+test('holding a paint stroke retains full-resolution ground and woodland canvases',()=>{
+ flatTestWorld();clickTool('paint');draws=[];pointer('pointerdown');
+ const rasters=draws.filter(a=>a.length===5&&a[0] instanceof w.HTMLCanvasElement&&a[3]>100).map(a=>a[0]);
+ assert.ok(rasters.length>=2);for(const raster of rasters)assert.equal(raster.width,128*4);
+ pointer('pointermove',520,382);for(const raster of rasters)assert.equal(raster.width,128*4);
+ pointer('pointerup');for(const raster of rasters)assert.equal(raster.width,128*4);
+});

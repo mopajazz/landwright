@@ -66,3 +66,10 @@ test('bilinear coverage mixes pigment linearly and world samples agree across re
   }
 });
 function mixByte(a,b,t){return a+(b-a)*t;}
+test('cached full-resolution terrain stays identical to a fresh render across local and global edits',()=>{
+  const cache={},s=scene(7);
+  const check=()=>{const incremental=renderEarthen({...s,cache}),fresh=renderEarthen(s);assert.deepEqual(incremental.data,fresh.data);assert.equal(incremental.width,64);return incremental;};
+  const initial=check(),buffer=initial.data; s.heights[120]+=9;s.baseColors[120*4]=190;
+  assert.equal(check().data,buffer,'local edits retain the high-resolution buffer');
+  s.weights.fill(0,120*8,121*8);s.paintAlpha[120]=0;check();s.sea=95;check();s.water=false;check();s.view='height';check();s.view='terrain';check();
+});

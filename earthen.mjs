@@ -1,4 +1,5 @@
-import {MATERIAL_IDS} from './material-paint.mjs?v=2.9.1';
+import{rasterFrame}from'./raster-cache.mjs?v=2.9.2';
+import {MATERIAL_IDS} from './material-paint.mjs?v=2.9.2';
 
 export const EARTHEN_MATERIALS = [
   [1,'grass','Grass','Living ground',[105,125,72]],
@@ -137,12 +138,12 @@ function interpolate(values,a,b,c,d,wa,wb,wc,wd){
 export function renderEarthen(s){
   const {n,heights,sea,baseColors,riverWater,water=true,view='terrain'}=s;
   const width=clamp(Math.round(s.resolution??n),1,1024),height=width;
-  const data=new Uint8ClampedArray(width*height*4);
   const terrain=view==='terrain',ctx=terrain?context(s):null,atlas=terrain?pattern():null;
+  const {data,bounds}=rasterFrame(s.cache,n,width,[heights,baseColors,...(riverWater?[riverWater]:[]),...(ctx?Object.values(ctx):[])],`${view}|${water}|${sea}`);
   const out=[0,0,0],f={x:0,y:0,h:0,low:0,slope:0,shelter:0,wet:0};
-  for(let py=0;py<height;py++){
+  for(let py=bounds.y0;py<bounds.y1;py++){
     const y=clamp((py+.5)*n/height-.5,0,n-1),iy=Math.floor(y),v=y-iy;
-    for(let px=0;px<width;px++){
+    for(let px=bounds.x0;px<bounds.x1;px++){
       const x=clamp((px+.5)*n/width-.5,0,n-1),ix=Math.floor(x),u=x-ix;
       const a=iy*n+ix,b=ix+1<n?a+1:a,c=iy+1<n?a+n:a,d=c+(b-a);
       const wa=(1-u)*(1-v),wb=u*(1-v),wc=(1-u)*v,wd=u*v;

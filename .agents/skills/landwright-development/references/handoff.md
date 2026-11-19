@@ -2,20 +2,20 @@
 
 **Documentation date:** November 19, 2026 (America/New_York)<br>
 **Implementation baseline:** v2.9 removes the settlement subsystem; Grain restored in §30; read §29 before any historical settlement material.
-**Displayed release:** `v2.9.1`
-**Browser asset/module cache revision:** `2.9.1`<br>
+**Displayed release:** `v2.9.2`
+**Browser asset/module cache revision:** `2.9.2`<br>
 **Project schema written by the application:** `9`
 
-Read **§0, §29 and §30 first** for the current state. Sections 14–29 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
+Read **§0 and §§29–31 first** for the current state. Sections 14–29 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
 
 ## 0. Current release — start here
 
 | Contract | Current state |
 | --- | --- |
-| Application release | **v2.9.1**, settlements removed; terrain behavior is the focus |
+| Application release | **v2.9.2**, settlements removed; terrain behavior is the focus |
 | Verified deployment | [Pages run44583324840](https://github.com/mopajazz/worldpainter-studio/actions/runs/44583324840) succeeded for `ed7776dd7374f8062468a75b0db244eaf4ba3864` (v2.9 runtime) |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
-| Runtime | Static HTML/CSS/ES modules; cache `2.9.1`; no build or runtime packages |
+| Runtime | Static HTML/CSS/ES modules; cache `2.9.2`; no build or runtime packages |
 | Project format | Writes **9**, imports **1–9**; authoritative terrain, paint, forest density, routes and supported legacy content; retired settlements/town symbols omitted |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan |
 | Erasing | **Shift + Paint** click/drag; Paint’s Shift erase target selects the eligible layer. No Erase tool or E tool shortcut |
@@ -26,7 +26,7 @@ Read **§0, §29 and §30 first** for the current state. Sections 14–29 retain
 | Map PNG | Independent **1024² / 2048² (default) / 4096²**; 4K square, not UHD landscape |
 | Heightmap | **N² actual bed elevations**; no water, canopy or roof relief |
 | Settlements | Entire subsystem removed: no menus, previews, layers, buildings, erasing targets or artwork. Legacy records/town symbols omitted on import |
-| Verification | Current full application run: **151 passed, 0 failed** (`/tmp/grain-final.log`) |
+| Verification | Current full application run: **155 passed, 0 failed** (`/tmp/sharp-tests.log`) |
 | Knowledge base | [New worlds/resolution](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/kb/worlds.md), [tutorial](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/tutorial.md), [KB index](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/kb/index.md) |
 
 **Release evidence:** production browser showed v2.6, all six shape choices, the updated preview summary, all three export presets, and no application console errors. Local browser produced an actual 4096×4096 PNG; the 256×256 Heightmap matched every rounded saved bed pixel. Native Enter created a named flat 128 world; Undo restored the entire original project as parsed JSON. Dark/light and a 500px window were inspected; this does not establish real-phone touch behavior, full WCAG compliance, or GPU performance.
@@ -1040,3 +1040,13 @@ Production v2.9: runtime commit `ed7776dd7374f8062468a75b0db244eaf4ba3864`, Page
 The user missed Grain. Restore its existing deterministic `brushWeight` behavior as the fourth footprint; no new tool, slider, texture system or schema change. Four buttons use two columns, including narrow toolboxes. Grain modulates coverage with stable cell noise and soft edges; it works with selected materials, Forest density and sculpting without changing tool/material. Material texture is independent. Section25 statements retiring Grain are superseded. Keep water behavior as the next major goal and settlements removed.
 
 Verification: full suite151/151 passes (`/tmp/grain-final.log`), including all four footprints painting Sand in3D without changing relief/landmarks, no tool switching, and Grain status text. Local light/dark and2D/Canvas3D menus inspected. No schema change; writes9.
+
+## 31. v2.9.2 — sharp textures throughout editing
+
+Root cause of the whole-map blur: texture() chose N² while pointer-down and(4N)² after release; woodland switched2N/4N. That shortcut is superseded. Both derived rasters now keep4N in Terrain throughout strokes; diagnostics retainN and project schema stays9.
+
+`raster-cache.mjs` retains the previous RGBA buffer and cell-input copies. The renderers compute current terrain context/woodland fields, compare actual dependencies, and rerender the rectangle containing changed cells plus two cells of interpolation/shadow padding. Earthen dependencies include bed, base RGBA, visible river field, material coverage and derived wetness/slope/shelter/light; view/water/sea and size/resolution invalidate appropriately. Woodland clears the dirty area before repainting the current forest extent so removal cannot leave ghosts. Empty forest clears RGBA. Camera motion reuses textures; normal scheduled-frame coalescing remains. Cache state is derived only and excluded from save/history/export data. Full exports use the same sharp pixels.
+
+Verification: full Node suite155/155 passes (`/tmp/sharp-tests.log`). Tests compare cached material/woodland pixels against fresh renders after local edits, water/diagnostic changes and forest clearing, verify bounded/empty cache damage and resize invalidation, and hold a Paint gesture while asserting both displayed raster canvases remain4N before/after release. One256² flat scene benchmark: local48ms vs full313ms with byte-identical pixels. This is a single CPU measurement, not anFPS guarantee; large edits/global settings can still rebuild large areas.
+
+Local browser acceptance: sculpted the existing128² river/hillside map, restored it with Undo and switched to Canvas3D. No application-origin errors were observed; extension metadata errors are unrelated. The automated held-gesture test verifies raster sizes; browser visual checks do not establish a GPU frame rate.

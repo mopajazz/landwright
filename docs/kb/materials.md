@@ -21,3 +21,5 @@ During an edit the renderer uses a smaller raster, then rebuilds finer texture o
 ## Existing projects
 
 The app writes schema9 and imports versions1–8. Existing painted colors/opacity remain intact; those painted areas acquire new material texture when repainted. New projects use procedural texture for natural unpainted ground as well. The saved file contains small material coverage values per cell, not texture images. Downloaded v9 projects require the current app.
+
+Ground textures keep the same resolution while you hold a brush stroke and after release. The editor caches unchanged areas and updates affected pixels; it no longer blurs the whole map during editing.

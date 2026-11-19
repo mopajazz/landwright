@@ -1,23 +1,24 @@
-import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.9.1';
-import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.9.1';
-import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.9.1';
-import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.9.1';
-import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.9.1';
-import{generate,stroke}from'./terrain.mjs?v=2.9.1';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.9.1';
-import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.9.1';
-import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.9.1';
-import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.9.1';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.9.1';
-import{initUI}from'./ui.mjs?v=2.9.1';
-import{toolIcon}from'./icons.mjs?v=2.9.1';
-import{touchesShape}from'./eraser.mjs?v=2.9.1';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.9.1';
+import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.9.2';
+import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.9.2';
+import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.9.2';
+import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.9.2';
+import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.9.2';
+import{generate,stroke}from'./terrain.mjs?v=2.9.2';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.9.2';
+import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.9.2';
+import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.9.2';
+import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.9.2';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.9.2';
+import{initUI}from'./ui.mjs?v=2.9.2';
+import{toolIcon}from'./icons.mjs?v=2.9.2';
+import{touchesShape}from'./eraser.mjs?v=2.9.2';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.9.2';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface',routes=[],routeDraft=null,routeHover=null,riverWater=new Float32Array(N*N).fill(-1),surfaceHeights=heights,riverWaterDirty=true;
 document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Shape land · Shift removes land (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 $('rail-settings').innerHTML=toolIcon('settings');
 let surfaceMaterials=new Uint8Array(N*N*8),forest=new Float32Array(N*N),forestTrees=[],woodland=null,surfaceDirty=true;const forestHabitat=createForestHabitatCache();
 let spacePan=false,detailMask=null;
+const groundRasterCache={},forestRasterCache={};
 const groundMap=document.createElement('canvas'),groundContext=groundMap.getContext('2d');groundMap.width=groundMap.height=N;
 const forestMap=document.createElement('canvas');forestMap.width=forestMap.height=1024;const forestContext=forestMap.getContext('2d');
 let livingLoop=null,livingScene=null,livingPrefs={enabled:true,clouds:true,waterMotion:true,vegetationMotion:true};const livingCanvas=$('living-overlay'),livingContext=livingCanvas.getContext('2d'),motionQuery=document.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -46,10 +47,10 @@ function color(i){
  let x=i%N,y=Math.floor(i/N),s=1;if(shade&&layers.elevation.visible){let dx=heights[y*N+Math.min(N-1,x+1)]-heights[y*N+Math.max(0,x-1)],dy=heights[Math.min(N-1,y+1)*N+x]-heights[Math.max(0,y-1)*N+x];s=Math.max(.47,Math.min(1.4,1+(dx+dy)*.055));}
  let grain=grainNoise[i];return c.map(v=>Math.max(0,Math.min(255,v*s+grain)));
 }
-function texture(){let img=pixels;for(let i=0;i<N*N;i++){let c=color(i);if(contours&&layers.elevation.visible&&!(water&&riverWater[i]>heights[i])&&view!=='biome'&&heights[i]>sea&&i>=N&&Math.floor(heights[i]/10)!==Math.floor(heights[i-N]/10))c=c.map(v=>v*.78);let j=i*4;img.data[j]=c[0];img.data[j+1]=c[1];img.data[j+2]=c[2];img.data[j+3]=255;}oc.putImageData(img,0,0);let raw=forestHabitat.get(routes,N).riverWater,rendered=renderEarthen({n:N,resolution:view==='terrain'&&!down?N*4:N,heights,sea,rawRiverWater:raw,riverWater,water,paintAlpha,weights:surfaceMaterials,baseColors:img.data,surfaceVisible:layers.surface.visible,shade,elevationVisible:layers.elevation.visible,view});if(groundMap.width!==rendered.width)groundMap.width=groundMap.height=rendered.width;let groundImage=groundContext.createImageData(rendered.width,rendered.height);groundImage.data.set(rendered.data);groundContext.putImageData(groundImage,0,0);}
+function texture(){let img=pixels;for(let i=0;i<N*N;i++){let c=color(i);if(contours&&layers.elevation.visible&&!(water&&riverWater[i]>heights[i])&&view!=='biome'&&heights[i]>sea&&i>=N&&Math.floor(heights[i]/10)!==Math.floor(heights[i-N]/10))c=c.map(v=>v*.78);let j=i*4;img.data[j]=c[0];img.data[j+1]=c[1];img.data[j+2]=c[2];img.data[j+3]=255;}oc.putImageData(img,0,0);let raw=forestHabitat.get(routes,N).riverWater,rendered=renderEarthen({n:N,resolution:view==='terrain'?N*4:N,cache:groundRasterCache,heights,sea,rawRiverWater:raw,riverWater,water,paintAlpha,weights:surfaceMaterials,baseColors:img.data,surfaceVisible:layers.surface.visible,shade,elevationVisible:layers.elevation.visible,view});if(groundMap.width!==rendered.width)groundMap.width=groundMap.height=rendered.width;let groundImage=groundContext.createImageData(rendered.width,rendered.height);groundImage.data.set(rendered.data);groundContext.putImageData(groundImage,0,0);}
 // Picking needs current derived heights, not a synchronous high-resolution raster.
 function updateSurface(){if(!surfaceDirty&&!riverWaterDirty)return;if(riverWaterDirty){riverWater=riverField(layers.rivers.visible?routes:[],N);riverWaterDirty=false;}surfaceHeights=waterSurface(heights,riverWater,water);let habitat=forestHabitat.get(routes,N);woodland=buildWoodland({n:N,heights,forest,sea,riverWater:habitat.riverWater,paths:habitat.paths,shade:shade&&layers.elevation.visible});forestTrees=woodland.accents;if(visibleForest())surfaceHeights=woodlandSurface(surfaceHeights,woodland);detailMask=view==='terrain'?new Float32Array(N*N).fill(1):visibleForest()?woodland.coverage:new Float32Array(N*N);surfaceDirty=false;}
-function flushTexture(){if(textureDirty){updateSurface();let foliage=renderWoodland(woodland,down?N*2:N*4);if(forestMap.width!==foliage.width)forestMap.width=forestMap.height=foliage.width;let image=forestContext.createImageData(foliage.width,foliage.height);image.data.set(foliage.data);forestContext.putImageData(image,0,0);texture();livingScene=buildLivingScene({n:N,heights,riverWater,sea,water,view,routes,riversVisible:layers.rivers.visible,trees:layers.forests.visible?forestTrees:[]});textureDirty=false;}}
+function flushTexture(){if(textureDirty){updateSurface();let foliage=renderWoodland(woodland,N*4,forestRasterCache);if(forestMap.width!==foliage.width)forestMap.width=forestMap.height=foliage.width;let image=forestContext.createImageData(foliage.width,foliage.height);image.data.set(foliage.data);forestContext.putImageData(image,0,0);texture();livingScene=buildLivingScene({n:N,heights,riverWater,sea,water,view,routes,riversVisible:layers.rivers.visible,trees:layers.forests.visible?forestTrees:[]});textureDirty=false;}}
 function visibleForest(){return layers.forests.visible&&view!=='height';}
 function sceneMarks(){return view==='height'||!layers.landmarks.visible?[]:marks.slice();}
 function transform(){let w=map.clientWidth,h=map.clientHeight;let scale=Math.max(.05,Math.min((w-70)/N,(h-135)/N))*zoom;return{scale,x:(w-N*scale)/2+pan.x,y:(h-N*scale)/2+pan.y-6}}
