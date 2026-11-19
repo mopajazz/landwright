@@ -18,13 +18,15 @@ Living World does not simulate creatures, boats, travelers, day/night, weather o
 
 ## Automatic pause behavior
 
-Motion pauses during terrain gestures, panning/orbiting, and open route previews. It resumes when the gesture/preview ends. It also stops in hidden tabs, in Heightmap/Biomes views, and when the browser reports `prefers-reduced-motion: reduce`. The status text explains why motion is paused. If both effect options are off, no animation is needed. Canopy breeze needs visible, suitable forest trees.
+Atmospheric effects pause during terrain gestures, panning/orbiting, and open route previews. It resumes when the gesture/preview ends. It also stops in hidden tabs, in Heightmap/Biomes views, and when the browser reports `prefers-reduced-motion: reduce`. The status text explains why motion is paused. If both effect options are off, no animation is needed. Canopy breeze needs visible, suitable forest trees.
 
-The loop targets at most 30 effect draws per second and does not continuously rebuild terrain or repaint the full 3D mesh. A device may still run slowly; disable Clouds first or turn Living World off. Actual frame rate depends on hardware and map complexity.
+In the sea-connected water draft, a separate waterfront animation can advance during sculpting when Terrain view, Water, Living World, and Water motion are on. Reduced motion settles the coastline immediately. A hidden tab pauses the advance until you return.
+
+The atmosphere loop targets at most 30 effect draws per second and does not continuously rebuild terrain or repaint the full 3D mesh. A device may still run slowly; disable Clouds first or turn Living World off. Actual frame rate depends on hardware and map complexity.
 
 ## Does it change my map or exports?
 
-No. Motion effects do not carve terrain, change paint, alter river records, trigger reflow, enter project saves, or appear in Map/Heightmap exports. Export produces clean static cartography. Browser screenshots can capture the atmosphere, but no video/animated export is included.
+Motion effects stay out of terrain, paint, river records and project saves. Map PNG uses the settled coastline. Heightmap PNG records the bed. Export produces static cartography. Browser screenshots can capture the atmosphere, but no video/animated export is included.
 
 ## Why is nothing moving?
 

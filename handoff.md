@@ -1052,3 +1052,10 @@ Verification: full Node suite155/155 passes (`/tmp/sharp-tests.log`). Tests comp
 Local browser acceptance: sculpted the existing128² river/hillside map, restored it with Undo and switched to Canvas3D. No application-origin errors were observed; extension metadata errors are unrelated. The automated held-gesture test verifies raster sizes; browser visual checks do not establish a GPU frame rate.
 
 Release attempt: runtime commit `ae40db854d3e37e704e37770e3864a493e0940f6`; Pages run44587451759 built successfully but GitHub returned HTTP500 creating the deployment. A failed-job retry remained queued with no jobs. This is hosting evidence, not a test failure; verify a subsequent successful deployment and live v2.9.2 before claiming release.
+
+
+## 32. Draft experiment — sea-connected water
+
+PR #4 adds the visual response described in §29. The ocean reaches below-sea-level cells through four-neighbor routes from the map perimeter. Enclosed basins start dry, and a new cut can flood while the user is sculpting. The compact ocean raster and derived surface are shared by 2D and WebGL/Canvas 3D. Ground and woodland retain their existing terrain resolution. Authored river levels, bed heights, project schema 9 and the nine-tool editor are preserved.
+
+Project open, Undo/Redo, reduced motion and Map PNG export use settled water. Heightmap view and its PNG show bed elevation. Hidden tabs pause the advance. Living World or Water motion off settles the coastline. This draft approximates ocean coverage visually and keeps all transient data out of project saves. See [experiment notes](docs/reactive-water-experiment.md). Verify frame pacing on representative hardware before marking the PR ready.

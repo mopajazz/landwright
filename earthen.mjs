@@ -1,5 +1,5 @@
-import{rasterFrame}from'./raster-cache.mjs?v=2.9.2';
-import {MATERIAL_IDS} from './material-paint.mjs?v=2.9.2';
+import{rasterFrame}from'./raster-cache.mjs?v=2.9.2-water.1';
+import {MATERIAL_IDS} from './material-paint.mjs?v=2.9.2-water.1';
 
 export const EARTHEN_MATERIALS = [
   [1,'grass','Grass','Living ground',[105,125,72]],
@@ -136,10 +136,10 @@ function interpolate(values,a,b,c,d,wa,wb,wc,wd){
 }
 
 export function renderEarthen(s){
-  const {n,heights,sea,baseColors,riverWater,water=true,view='terrain'}=s;
+  const {n,heights,sea,baseColors,riverWater,water=true,view='terrain',oceanOpaque}=s;
   const width=clamp(Math.round(s.resolution??n),1,1024),height=width;
   const terrain=view==='terrain',ctx=terrain?context(s):null,atlas=terrain?pattern():null;
-  const {data,bounds}=rasterFrame(s.cache,n,width,[heights,baseColors,...(riverWater?[riverWater]:[]),...(ctx?Object.values(ctx):[])],`${view}|${water}|${sea}`);
+  const {data,bounds}=rasterFrame(s.cache,n,width,[heights,baseColors,...(oceanOpaque?[oceanOpaque]:[]),...(riverWater?[riverWater]:[]),...(ctx?Object.values(ctx):[])],`${view}|${water}|${sea}|${!!oceanOpaque}`);
   const out=[0,0,0],f={x:0,y:0,h:0,low:0,slope:0,shelter:0,wet:0};
   for(let py=bounds.y0;py<bounds.y1;py++){
     const y=clamp((py+.5)*n/height-.5,0,n-1),iy=Math.floor(y),v=y-iy;
@@ -152,7 +152,7 @@ export function renderEarthen(s){
       let green=interpolate(baseColors,a4+1,b4+1,c4+1,d4+1,wa,wb,wc,wd);
       let blue=interpolate(baseColors,a4+2,b4+2,c4+2,d4+2,wa,wb,wc,wd);
       const nearest=Math.round(y)*n+Math.round(x);
-      const underwater=water&&(heights[nearest]<sea||riverWater?.[nearest]>heights[nearest]+.01);
+      const underwater=water&&((oceanOpaque?oceanOpaque[nearest]:heights[nearest]<sea)||riverWater?.[nearest]>heights[nearest]+.01);
       if(terrain&&!underwater){
         // Ignore zero-weight neighbors to keep full-resolution single-cell draws cheap.
         let channels=ctx.active[a]|(wb?ctx.active[b]:0)|(wc?ctx.active[c]:0)|(wd?ctx.active[d]:0);

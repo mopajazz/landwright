@@ -83,7 +83,7 @@ The river upgrade retained v4 compatibility (v2.3 now writes v5 for forests): op
 
 ## Living World and user documentation
 
-World Settings → **Living World** adds a visual-only, separately rendered overlay: water shimmer, downstream river streaks, drifting clouds, and soft cloud shadows in 2D/3D. It is on by default, with separate Water motion / Clouds options. Effects pause during editing, route previews, hidden tabs, reduced motion, and diagnostic views. The overlay targets 30 draws/sec, leaves project data/history unchanged, and is excluded from PNG exports. Preferences use `landwright-living`. Atmosphere does not include simulation, inhabitants, day/night, or storytelling. Static forests are saved separately in v5; optional Canopy breeze animates bounded foliage glints.
+World Settings → **Living World** adds a visual-only, separately rendered overlay: water shimmer, downstream river streaks, drifting clouds, and soft cloud shadows in 2D/3D. It is on by default, with separate Water motion / Clouds options. Atmospheric effects pause during editing, route previews, hidden tabs, reduced motion, and diagnostic views. The overlay targets 30 draws/sec, leaves project data/history unchanged, and is excluded from PNG exports. Preferences use `landwright-living`. Atmosphere does not include simulation, inhabitants, day/night, or storytelling. Static forests are saved separately in v5; optional Canopy breeze animates bounded foliage glints.
 
 Start with the [tutorial](docs/tutorial.md) or [knowledge base](docs/kb/index.md), also linked from in-app Help. **Before Raise or Lower, start around 5–10% Strength, use short strokes, inspect, and increase gradually.** Paint Opacity does not reduce sculpting power.
 
@@ -122,4 +122,8 @@ New World now offers a live preview of the selected terrain and detail, descript
 
 Settlement tools, menus, artwork and saved-place rendering have been removed. Older maps still import their terrain, surface paint, forest density and routes; retired settlement records and old town symbols are omitted. The nine-tool terrain workflow remains.
 
-Next actionable goal: **Make water spread into newly connected low ground when the user cuts a channel, with an immediate visual response that keeps sculpting smooth.** This behavior is the next focus, not a simulation included in this removal release.
+### Sea-connected water experiment
+
+A low basin stays dry until a channel below sea level connects it to ocean water at the edge of the map. In Terrain view, use the Lower or Land tool to open a channel and watch seawater spread while you sculpt. The River tool's authored water keeps its local level above the ocean.
+
+Turn off Living World or Water motion for an immediate settled result. Reduced motion and Biomes also use the settled result. Water off and Heightmap view reveal the bed. Undo, redo, reopening, and Map PNG export show the settled coastline for the terrain in use. The Heightmap PNG contains bed elevations.

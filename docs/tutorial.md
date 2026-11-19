@@ -58,6 +58,8 @@ Path changes surface paint, not elevation. It uses Opacity. A completed path is 
 
 River water has its own local levels and can exist above the ocean. The river cuts through rising terrain to maintain a non-rising profile; this is an authored terrain tool, not a fluid simulation.
 
+In the sea-connected water draft, a low basin stays dry until you open a channel from the ocean. Start with short Lower strokes at 5–10% Strength. With **Living World → Water motion** enabled in Terrain view, you can see the advance during sculpting. Turning motion off shows the settled water immediately.
+
 Use Water off/on to inspect the bed. The River water layer hides local river water without undoing the channel. Paint → Shift erase target → River water, then Shift-click/drag, removes whole touched water routes and leaves their channels; undo restores the water record.
 
 **Reflow rivers:** after sculpting near a river, World Settings offers an undoable reflow action. It recalculates from the current bed and recuts channels beneath the updated levels. **Repeated use can deepen the bed.** Use undo if the result is stronger than intended. Relief and River water must be visible and unlocked.
