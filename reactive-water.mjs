@@ -75,14 +75,21 @@ export function createReactiveWater(size, { cellsPerSecond = 24 } = {}) {
     active = true;
     return connected;
   }
+  function initialize(heights, nextSea, waterEnabled = true) {
+    setTerrain(heights, nextSea, waterEnabled);
+    progress.set(target);
+    active = false;
+    return connected;
+  }
   function advance(dt) {
     if (!active) return false;
     if (!Number.isFinite(dt) || dt < 0) throw new RangeError('Invalid delta time');
-    time += Math.min(dt, 0.1);
+    const step = Math.min(dt, 0.1);
+    time += step;
     let changing = false;
     for (let i = 0; i < count; i++) {
       if (!target[i]) {
-        if (progress[i] > 0) { progress[i] = Math.max(0, progress[i] - dt * 5); changing = true; }
+        if (progress[i] > 0) { progress[i] = Math.max(0, progress[i] - step * 5); changing = true; }
         continue;
       }
       // Arrival advances from old water at a fixed rate across the grid.
@@ -90,12 +97,17 @@ export function createReactiveWater(size, { cellsPerSecond = 24 } = {}) {
       const value = Math.min(1, Math.max(0, (time - arrival) * 4));
       if (value > progress[i]) { progress[i] = value; changing = true; }
     }
-    active = changing;
+    // A distant wavefront can have a delayed arrival. Do not halt between fronts.
+    active = changing || queueHasPending();
     return changing;
+  }
+  function queueHasPending() {
+    for (let i = 0; i < count; i++) if (target[i] && progress[i] < 1) return true;
+    return false;
   }
   function reset() { target.fill(0); connected.fill(0); progress.fill(0); distance.fill(-1); active = false; time = 0; }
   return {
-    setTerrain, advance, reset,
+    setTerrain, initialize, advance, reset,
     get coverage() { return progress; },
     get connected() { return connected; },
     get active() { return active; },
