@@ -13,7 +13,7 @@ Repository: https://github.com/mopajazz/worldpainter-studio
 
 Live app: https://mopajazz.github.io/worldpainter-studio/
 
-Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.9/cache `2.9.0` removes settlements and refocuses on terrain behavior. Read handoff §0 and §29 first; §25–26 cover materials/sculpt controls, §23 for New World/export and §19 for woodland. Schema **9**, imports **1–9**. Verify HEAD/status before editing.
+Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.9.1/cache `2.9.1` removes settlements and refocuses on terrain behavior. Read handoff §0 and §29 first; §25–26 cover materials/sculpt controls, §23 for New World/export and §19 for woodland. Schema **9**, imports **1–9**. Verify HEAD/status before editing.
 
 ## Find the contract
 
@@ -56,7 +56,7 @@ Woodland coverage, canopy height and RGBA are derived, never saved. Keep picking
 
 Keep terrain grids 128/192/256 separate from MapPNG sizes 1024/2048/4096. Live previews must never mutate active terrain/history. Keep Cancel/Escape safe, creation atomic, backup editable, and Heightmap bed-only at N. Do not claim larger editable worlds, rectangular/retro formats or extra terrain detail from 4K image scaling.
 
-Eight ground materials exclude Forest4; coverage order is[1,2,3,5,6,7,8,9]. Preserve legacy paint RGB/alpha and original v1/v2 palette migration. Schema7 coverage is canonical Base64, empty for zero weights; validate before mutation. Three visible footprints; Grain retired. Ground texture is derived, uses raw bed/all-river context and never changes elevation. Share the ground raster across2D/3D/MapPNG; keep diagnostics and Heightmap clean. Active edits use N² then restore4N on release. Profile release rebuilds and Canvas hover; do not promise a fixedFPS.
+Eight ground materials exclude Forest4; coverage order is[1,2,3,5,6,7,8,9]. Preserve legacy paint RGB/alpha and original v1/v2 palette migration. Schema7 coverage is canonical Base64, empty for zero weights; validate before mutation. Four visible footprints: Soft Round, Coastline, Hard Round, Grain. Grain restores the original deterministic scattered weight; material textures remain independent. Ground texture is derived, uses raw bed/all-river context and never changes elevation. Share the ground raster across2D/3D/MapPNG; keep diagnostics and Heightmap clean. Active edits use N² then restore4N on release. Profile release rebuilds and Canvas hover; do not promise a fixedFPS.
 
 
 Settlements are removed by explicit user instruction. Do not restore their menus, assets, modules, layers, placement, saved-building rendering or a stamp editor. Schema9 omits retired settlement data and legacy town symbols while importing the remaining content of older projects. See handoff§29; earlier settlement instructions are archived history. The next actionable goal is immediate believable water spreading into newly connected low ground when a channel is cut, while sculpting stays smooth. Do not claim a simulation ships before implementing and verifying it.

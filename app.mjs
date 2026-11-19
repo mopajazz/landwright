@@ -1,18 +1,18 @@
-import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.9.0';
-import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.9.0';
-import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.9.0';
-import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.9.0';
-import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.9.0';
-import{generate,stroke}from'./terrain.mjs?v=2.9.0';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.9.0';
-import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.9.0';
-import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.9.0';
-import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.9.0';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.9.0';
-import{initUI}from'./ui.mjs?v=2.9.0';
-import{toolIcon}from'./icons.mjs?v=2.9.0';
-import{touchesShape}from'./eraser.mjs?v=2.9.0';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.9.0';
+import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.9.1';
+import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.9.1';
+import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.9.1';
+import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.9.1';
+import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.9.1';
+import{generate,stroke}from'./terrain.mjs?v=2.9.1';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.9.1';
+import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.9.1';
+import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.9.1';
+import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.9.1';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.9.1';
+import{initUI}from'./ui.mjs?v=2.9.1';
+import{toolIcon}from'./icons.mjs?v=2.9.1';
+import{touchesShape}from'./eraser.mjs?v=2.9.1';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.9.1';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface',routes=[],routeDraft=null,routeHover=null,riverWater=new Float32Array(N*N).fill(-1),surfaceHeights=heights,riverWaterDirty=true;
 document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Shape land · Shift removes land (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 $('rail-settings').innerHTML=toolIcon('settings');
@@ -158,7 +158,7 @@ function selectTool(t){
  $('erase-settings').hidden=t!=='paint';$('opacity-label').hidden=!usesOpacity(t);$('brush-controls').hidden=t==='river';$('size-label').hidden=isRouteTool();$('size-shortcuts').hidden=isRouteTool();$('size').disabled=t==='pan'||isRouteTool();$('opacity').disabled=t==='pan'||t==='river';$('strength-label').hidden=!['raise','lower','smooth','flatten'].includes(t);$('target-label').hidden=t!=='flatten';$('edge-protection-label').hidden=t!=='flatten';
  $('route-settings').hidden=!isRouteTool();$('route-title').textContent=t==='river'?'RIVER':'PATH';$('path-material-label').hidden=t!=='path';$('river-depth-label').hidden=t!=='river';$('river-taper-label').hidden=t!=='river';$('river-meander-label').hidden=t!=='river';updateRouteControls();
  $('sculpt-settings').hidden=!['raise','lower','smooth','flatten'].includes(t);$('brush-settings').hidden=isRouteTool();document.querySelectorAll('[data-brush]').forEach(b=>b.disabled=!['raise','lower','smooth','flatten','paint'].includes(t));
- $('forest-settings').hidden=!(t==='paint'&&material===4);$('palette-section').hidden=t!=='paint';$('paint-status').textContent=t==='paint'?`${materials[material-1][0]} · ${brushPreset==='coast'?'Coastline':brushPreset==='hard'?'Hard Round':'Soft Round'} · Shift erases ${$('erase-target').selectedOptions[0]?.textContent||'paint'}`:`${materials[material-1][0]} selected · Use Paint (P) to apply.`;
+ $('forest-settings').hidden=!(t==='paint'&&material===4);$('palette-section').hidden=t!=='paint';$('paint-status').textContent=t==='paint'?`${materials[material-1][0]} · ${brushPreset==='coast'?'Coastline':brushPreset==='hard'?'Hard Round':brushPreset==='grain'?'Grain':'Soft Round'} · Shift erases ${$('erase-target').selectedOptions[0]?.textContent||'paint'}`:`${materials[material-1][0]} selected · Use Paint (P) to apply.`;
  document.querySelectorAll('[data-tool]').forEach(b=>{b.classList.toggle('selected',b.dataset.tool===t);b.setAttribute('aria-pressed',b.dataset.tool===t);});
  $('toolhint').textContent={raise:'Raise terrain',lower:'Lower terrain',smooth:'Smooth terrain',flatten:'Flatten to target height',paint:'Paint '+materials[material-1][0],pan:'Pan the map',land:'Shape coastline · Shift to remove land',path:'Place path · Enter to finish · Escape to cancel',river:'Place river downstream · Enter to finish'}[t];$('toolkeys').textContent=isRouteTool()?'W/S route width · Shift + wheel resize · Scroll to zoom':t==='flatten'?'D/E target height · Shift ×10 · W/S brush size':t==='pan'?'Drag to pan · Space + drag from any tool · Scroll to zoom':'W/S brush size · Shift + wheel resize · Scroll to zoom';map.style.cursor=t==='pan'?'grab':'crosshair';
 }
@@ -205,7 +205,7 @@ $('export').onclick=()=>{updateExportSize();$('exportdialog').showModal();};$('e
 $('erase-target').onchange=()=>{eraseTarget=$('erase-target').value;$('erase-description').textContent={forests:'Thin or clear trees without changing the ground. Opacity controls removal.',surface:'Reveal the natural terrain color. Elevation stays intact.',landmarks:'Remove whole landmarks touched by the brush. Undo to restore.',shapes:'Remove whole drawings touched by the brush. Undo to restore.'}[eraseTarget];selectTool(tool);};
 function updateBrushUI(){
  document.querySelectorAll('[data-brush]').forEach(b=>{b.classList.toggle('selected',b.dataset.brush===brushPreset);b.setAttribute('aria-pressed',b.dataset.brush===brushPreset);});
- $('brush-description').textContent={soft:'Soft transitions for elevation and terrain paint.',coast:'Irregular footprint for rugged painted edges. Use Land to add or remove terrain.',hard:'Solid circular coverage with crisp edges. Useful for fills and clean boundaries.',grain:'Stippled color for textured soil, rocks and vegetation.'}[brushPreset];
+ $('brush-description').textContent={soft:'Soft transitions for elevation and terrain paint.',coast:'Irregular footprint for rugged painted edges. Use Land to add or remove terrain.',hard:'Solid circular coverage with crisp edges. Useful for fills and clean boundaries.',grain:'Scattered coverage with soft edges. Works with any material; its terrain texture stays intact.'}[brushPreset];
 }
 function chooseBrush(preset){
  brushPreset=preset;

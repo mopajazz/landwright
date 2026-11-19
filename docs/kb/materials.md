@@ -1,6 +1,6 @@
 # Earthen materials
 
-Texture belongs to the material. Paint a material onto terrain using Soft Round, Hard Round or Coastline; each footprint works with every ground material. Grain has been removed from the menu.
+Texture belongs to the material. Paint a material onto terrain using Soft Round, Hard Round, Coastline or Grain; each footprint works with every ground material. Grain scatters coverage; the selected material still supplies its own terrain-responsive texture.
 
 | Family | Material | Character |
 | --- | --- | --- |

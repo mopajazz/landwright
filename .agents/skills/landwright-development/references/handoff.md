@@ -1,21 +1,21 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 19, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.9 removes the settlement subsystem; read §29 before any historical settlement material.
-**Displayed release:** `v2.9`
-**Browser asset/module cache revision:** `2.9.0`<br>
+**Implementation baseline:** v2.9 removes the settlement subsystem; Grain restored in §30; read §29 before any historical settlement material.
+**Displayed release:** `v2.9.1`
+**Browser asset/module cache revision:** `2.9.1`<br>
 **Project schema written by the application:** `9`
 
-Read **§0 and §29 first** for the current state. Sections 14–29 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
+Read **§0, §29 and §30 first** for the current state. Sections 14–29 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
 
 ## 0. Current release — start here
 
 | Contract | Current state |
 | --- | --- |
-| Application release | **v2.9**, settlements removed; terrain behavior is the focus |
+| Application release | **v2.9.1**, settlements removed; terrain behavior is the focus |
 | Verified deployment | [Pages run44583324840](https://github.com/mopajazz/worldpainter-studio/actions/runs/44583324840) succeeded for `ed7776dd7374f8062468a75b0db244eaf4ba3864` (v2.9 runtime) |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
-| Runtime | Static HTML/CSS/ES modules; cache `2.9.0`; no build or runtime packages |
+| Runtime | Static HTML/CSS/ES modules; cache `2.9.1`; no build or runtime packages |
 | Project format | Writes **9**, imports **1–9**; authoritative terrain, paint, forest density, routes and supported legacy content; retired settlements/town symbols omitted |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan |
 | Erasing | **Shift + Paint** click/drag; Paint’s Shift erase target selects the eligible layer. No Erase tool or E tool shortcut |
@@ -26,7 +26,7 @@ Read **§0 and §29 first** for the current state. Sections 14–29 retain relea
 | Map PNG | Independent **1024² / 2048² (default) / 4096²**; 4K square, not UHD landscape |
 | Heightmap | **N² actual bed elevations**; no water, canopy or roof relief |
 | Settlements | Entire subsystem removed: no menus, previews, layers, buildings, erasing targets or artwork. Legacy records/town symbols omitted on import |
-| Verification | Current full application run: **151 passed, 0 failed** (`/tmp/no-settlements-final.log`) |
+| Verification | Current full application run: **151 passed, 0 failed** (`/tmp/grain-final.log`) |
 | Knowledge base | [New worlds/resolution](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/kb/worlds.md), [tutorial](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/tutorial.md), [KB index](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/kb/index.md) |
 
 **Release evidence:** production browser showed v2.6, all six shape choices, the updated preview summary, all three export presets, and no application console errors. Local browser produced an actual 4096×4096 PNG; the 256×256 Heightmap matched every rounded saved bed pixel. Native Enter created a named flat 128 world; Undo restored the entire original project as parsed JSON. Dark/light and a 500px window were inspected; this does not establish real-phone touch behavior, full WCAG compliance, or GPU performance.
@@ -1034,3 +1034,9 @@ Archived release history is retained below/above for engineering context, not as
 Verification for v2.9: full Node suite **151 passed, 0 failed**. Local browser loaded the former two-village schema8 map with terrain and river intact, no settlement controls/layer, a ground-only Paint palette with Forest density and all nine tools. 2D and 3D remain available. Responsive water is a future goal, not a delivered simulation.
 
 Production v2.9: runtime commit `ed7776dd7374f8062468a75b0db244eaf4ba3864`, Pages run44583324840 succeeded. Browser confirmed footer v2.9, simplified Paint controls, no settlement menus or layer, and the existing terrain project intact. No application-origin console errors; browser-extension metadata warnings excluded. Local light/dark and 2D/Canvas3D inspected; no claim of real-GPU performance or new hydrology. Screenshots: `/workspace/shared/landwright-v2.9-terrain.jpg` and `/workspace/shared/landwright-v2.9-live.jpg`.
+
+## 30. v2.9.1 — restore Grain
+
+The user missed Grain. Restore its existing deterministic `brushWeight` behavior as the fourth footprint; no new tool, slider, texture system or schema change. Four buttons use two columns, including narrow toolboxes. Grain modulates coverage with stable cell noise and soft edges; it works with selected materials, Forest density and sculpting without changing tool/material. Material texture is independent. Section25 statements retiring Grain are superseded. Keep water behavior as the next major goal and settlements removed.
+
+Verification: full suite151/151 passes (`/tmp/grain-final.log`), including all four footprints painting Sand in3D without changing relief/landmarks, no tool switching, and Grain status text. Local light/dark and2D/Canvas3D menus inspected. No schema change; writes9.

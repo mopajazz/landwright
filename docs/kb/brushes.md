@@ -32,4 +32,4 @@ Flatten approaches Target height. D lowers / E raises the target by 1 block; Shi
 
 Undo, reduce Strength, and use smaller/shorter gestures. Low Strength is the first control to try; a smaller brush only reduces area. Check whether you held the pointer in one place or made many passes before releasing.
 
-Material texture is independent of footprint. Grain has been retired from the menu. See [Earthen materials](materials.md) for blending, terrain response and old-project compatibility.
+Material texture is independent of footprint. Grain is available again: it gives deterministic scattered coverage with soft edges, using any selected material. It also works with sculpt tools and Forest density without switching tools. See [Earthen materials](materials.md) for blending, terrain response and old-project compatibility.
