@@ -1,6 +1,6 @@
 # Settlements shaped by terrain
 
-Select **Paint (P/B) → Settlements** in the left toolbox. Choose Hamlet, Village, Town, Abbey or Castle. W/S changes the search-brush diameter; Shift+W/S changes it by10. Brush across an area, then release to inspect the actual proposed layout. Paint more area to extend the search.
+Select **Paint (P/B) → Settlements** in the left toolbox. Choose Hamlet, Village, Town, Abbey or Castle from the illustrated cards. Their artwork identifies the place type; the map preview shows the actual layout that fits your terrain. W/S changes the search-brush diameter; Shift+W/S changes it by10. Brush across an area, then release to inspect the actual proposed layout. Paint more area to extend the search.
 
 - Hamlet: a few roofs and a short approach.
 - Village: buildings follow a lane guided by a riverbank or gentle contour.

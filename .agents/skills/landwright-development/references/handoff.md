@@ -2,8 +2,8 @@
 
 **Documentation date:** November 18, 2026 (America/New_York)<br>
 **Implementation baseline:** v2.8 terrain-shaped settlement brushes; see §27. Earthen materials are documented in §25. Previous release v2.6 was `d7ae907`.
-**Displayed release:** `v2.8`
-**Browser asset/module cache revision:** `2.8.0`<br>
+**Displayed release:** `v2.8.1`
+**Browser asset/module cache revision:** `2.8.1`<br>
 **Project schema written by the application:** `8`
 
 Read **§0 first** for the current state. Sections 14–27 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
@@ -12,10 +12,10 @@ Read **§0 first** for the current state. Sections 14–27 retain release histor
 
 | Contract | Current state |
 | --- | --- |
-| Application release | **v2.8**, terrain-shaped settlement brushes |
+| Application release | **v2.8.1**, illustrated settlement card correction |
 | Verified deployment | [Pages run44451516984](https://github.com/mopajazz/worldpainter-studio/actions/runs/44451516984) succeeded for `c4d3428c69f024b9accf57d80c74a021d9e1cd23` (v2.8 runtime) |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
-| Runtime | Static HTML/CSS/ES modules; cache `2.8.0`; no build or runtime packages |
+| Runtime | Static HTML/CSS/ES modules; cache `2.8.1`; no build or runtime packages |
 | Project format | Writes **8**, imports **1–8**; authoritative terrain, paint, forest density, routes, saved settlements and legacy content |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan |
 | Erasing | **Shift + Paint** click/drag; Paint’s Shift erase target selects the eligible layer. No Erase tool or E tool shortcut |
@@ -1008,3 +1008,13 @@ Pure planner fixtures compare riverside and hillside Village lanes, all five for
 Final v2.8 verification:175/175 Node tests passed, including the final name-control reload test and cached-occupancy path. Read-only whole-change review found no remaining release blocker after corrections. Actual128² Heightmap matched every saved Float32 bed pixel; actual4096² MapPNG and schema8 project with10/8-building Village layouts were inspected. Browser2D/Canvas3D and both themes were checked; realGPU performance is not established.
 
 Release v2.8: runtime commit `c4d3428c69f024b9accf57d80c74a021d9e1cd23`, Pages run44451516984 succeeded. Production browser confirmed v2.8, all five settlement choices inside left Paint mode and preserved old terrain/landmarks; no application console errors. Later documentation-only commits do not change the runtime release. Session screenshot `/workspace/shared/landwright-v2.8-settlements.jpg` shows the two-Village acceptance fixture, not generated concept art.
+
+## 28. v2.8.1 — settlement selector art correction
+
+User rejected v2.8 selector buttons: tiny procedural roof previews did not resemble the supplied illustrated swatches, and the final Castle card stretched to a different size. Root cause was `renderPlaceCards()` repurposing tiny map geometry with fixed transforms and CSS giving Castle a full-width canvas.
+
+Replace that thumbnail generator with five original painted atlas illustrations in `assets/settlements/*.webp`. Their HTML images have explicit square dimensions, lazy loading, async decoding and decorative empty alt text; the button itself retains the accessible kind label and aria-pressed selection semantics. All five cards share the same dimensions; Castle centers in the final row at one-column width. Labels are Georgia, and the active card has a gold outline/check while keyboard focus remains distinct.
+
+These images illustrate place archetypes in the selector, not exact on-map sprite stamps. Terrain-aware geometry, layouts, project schema8, placement/Undo and nine tools keep their v2.8 contract. Removed five startup planner/thumbnail-render calls. Art provenance is in `assets/settlements/README.md`. WebP encoding preserves original square composition; about3.4MiB total, loaded lazily.
+
+Full suite175/175 passes (`/tmp/settlement-cards-tests.log`). Browser checks confirmed all five images loaded, correct selected-kind handling, both themes, and identical63×93pixel buttons at180px sidebar width (image area square, name below). Wider sidebars scale cards consistently. Visual acceptance must inspect actual screenshots; passing geometry tests alone did not catch this art-direction failure.

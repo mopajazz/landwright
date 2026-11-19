@@ -1,20 +1,20 @@
-import{planSettlement}from'./settlement-planner.mjs?v=2.8.0';
-import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.8.0';
-import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.8.0';
-import{settlementRadius,validSettlement,settlementTouches,settlementWork,SETTLEMENT_PROJECT_WORK_LIMIT,settlementFields,settlementSurface,drawSettlement,drawSettlementName}from'./settlements.mjs?v=2.8.0';
-import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.8.0';
-import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.8.0';
-import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.8.0';
-import{generate,stroke}from'./terrain.mjs?v=2.8.0';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.8.0';
-import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.8.0';
-import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.8.0';
-import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.8.0';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.8.0';
-import{initUI}from'./ui.mjs?v=2.8.0';
-import{toolIcon}from'./icons.mjs?v=2.8.0';
-import{touchesShape}from'./eraser.mjs?v=2.8.0';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.8.0';
+import{planSettlement}from'./settlement-planner.mjs?v=2.8.1';
+import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.8.1';
+import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.8.1';
+import{settlementRadius,validSettlement,settlementTouches,settlementWork,SETTLEMENT_PROJECT_WORK_LIMIT,settlementFields,settlementSurface,drawSettlement,drawSettlementName}from'./settlements.mjs?v=2.8.1';
+import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.8.1';
+import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.8.1';
+import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.8.1';
+import{generate,stroke}from'./terrain.mjs?v=2.8.1';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.8.1';
+import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.8.1';
+import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.8.1';
+import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.8.1';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.8.1';
+import{initUI}from'./ui.mjs?v=2.8.1';
+import{toolIcon}from'./icons.mjs?v=2.8.1';
+import{touchesShape}from'./eraser.mjs?v=2.8.1';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.8.1';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface',routes=[],routeDraft=null,routeHover=null,riverWater=new Float32Array(N*N).fill(-1),surfaceHeights=heights,riverWaterDirty=true;
 document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Shape land · Shift removes land (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 $('rail-settings').innerHTML=toolIcon('settings');
@@ -264,10 +264,9 @@ function setPaintMode(mode){cancelStroke();paintMode=mode;if(mode==='settlements
 $('paint-ground').onclick=()=>setPaintMode('ground');$('paint-places').onclick=()=>setPaintMode('settlements');$('commit-place').onclick=finishPlace;$('cancel-place').onclick=()=>cancelStroke();
 $('place-name').onkeydown=e=>{if(e.isComposing||e.ctrlKey||e.metaKey||e.altKey)return;if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();e.key==='Enter'?finishPlace():cancelStroke();}};
 $('place-name').oninput=()=>{if(placeDraft?.record){placeDraft.record={...placeDraft.record,name:placeName()};draw();}};
-$('place-kinds').innerHTML=['hamlet','village','town','abbey','castle'].map(kind=>`<button data-place-kind="${kind}" aria-pressed="${kind===placeKind}" aria-label="${kind[0].toUpperCase()+kind.slice(1)} settlement brush"><canvas width="160" height="100" aria-hidden="true"></canvas><span>${kind[0].toUpperCase()+kind.slice(1)}</span></button>`).join('');
+$('place-kinds').innerHTML=['hamlet','village','town','abbey','castle'].map(kind=>`<button data-place-kind="${kind}" aria-pressed="${kind===placeKind}" aria-label="${kind[0].toUpperCase()+kind.slice(1)} settlement brush"><img src="./assets/settlements/${kind}.webp?v=2.8.1" alt="" width="1254" height="1254" loading="lazy" decoding="async"><span>${kind[0].toUpperCase()+kind.slice(1)}</span></button>`).join('');
 $('place-kinds').onclick=e=>{const b=e.target.closest('[data-place-kind]');if(!b)return;placeKind=b.dataset.placeKind;document.querySelectorAll('[data-place-kind]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));if(placeDraft){placeDirty=true;scheduleFrame();}selectTool(tool);};
-function renderPlaceCards(){const n=48,ground=new Float32Array(n*n).fill(80),mask=Uint8Array.from(ground,(_,i)=>Math.hypot(i%n-24,Math.floor(i/n)-24)<19?1:0);for(let button of document.querySelectorAll('[data-place-kind]')){let canvas=button.querySelector('canvas'),c=canvas.getContext('2d'),record=planSettlement({kind:button.dataset.placeKind,mask,n,heights:ground,sea:62,riverWater:new Float32Array(n*n).fill(-1),settlements:[],seed:42,id:'sample',name:'Sample'});c.fillStyle='#778360';c.fillRect(0,0,160,100);c.save();c.translate(5,-22);c.scale(3.15,3.15);if(record)drawSettlement(c,record);c.restore();}}
-renderPlaceCards();
+
 
 initUI();renderLayers();renderPresets();
 try{let saved=localStorage.getItem('worldpainter-project');if(saved)load(JSON.parse(saved))}catch{}selectTool(tool);historyUI();refresh();resize();

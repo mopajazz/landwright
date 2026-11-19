@@ -13,7 +13,7 @@ Repository: https://github.com/mopajazz/worldpainter-studio
 
 Live app: https://mopajazz.github.io/worldpainter-studio/
 
-Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.8/cache `2.8.0` integrates eight procedural earthen materials. Read handoff §0 and §27 first; §25–26 cover materials/sculpt controls, §23 for New World/export and §19 for woodland. Schema **8**, imports **1–8**. Verify HEAD/status before editing.
+Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.8.1/cache `2.8.1` integrates eight procedural earthen materials. Read handoff §0 and §§27–28 first; §25–26 cover materials/sculpt controls, §23 for New World/export and §19 for woodland. Schema **8**, imports **1–8**. Verify HEAD/status before editing.
 
 ## Find the contract
 
@@ -59,3 +59,5 @@ The user removed the right Settlements panel, then explicitly requested terrain-
 Keep terrain grids 128/192/256 separate from MapPNG sizes 1024/2048/4096. Live previews must never mutate active terrain/history. Keep Cancel/Escape safe, creation atomic, backup editable, and Heightmap bed-only at N. Do not claim larger editable worlds, rectangular/retro formats or extra terrain detail from 4K image scaling.
 
 Eight ground materials exclude Forest4; coverage order is[1,2,3,5,6,7,8,9]. Preserve legacy paint RGB/alpha and original v1/v2 palette migration. Schema7 coverage is canonical Base64, empty for zero weights; validate before mutation. Three visible footprints; Grain retired. Ground texture is derived, uses raw bed/all-river context and never changes elevation. Share the ground raster across2D/3D/MapPNG; keep diagnostics and Heightmap clean. Active edits use N² then restore4N on release. Profile release rebuilds and Canvas hover; do not promise a fixedFPS.
+
+Settlement selection cards use original painted WebP artwork in `assets/settlements/`, not generated miniature roof diagrams. Keep all five cards equally sized, preserve labels/aria-pressed/focus visibility, and browser-check loaded images in both themes and narrow/wide sidebars. Card artwork illustrates archetypes; actual terrain preview is procedural geometry.

@@ -1,5 +1,5 @@
 // Pure, bounded terrain search. All saved coordinates are absolute map units.
-import{SETTLEMENT_KINDS,settlementFields,validSettlement}from'./settlements.mjs?v=2.8.0';
+import{SETTLEMENT_KINDS,settlementFields,validSettlement}from'./settlements.mjs?v=2.8.1';
 export function planSettlement({kind,mask,n,heights,sea,riverWater,settlements=[],occupancy,seed=1,id='settlement',name}){
  if(!Object.hasOwn(SETTLEMENT_KINDS,kind)||!Number.isInteger(n)||n<8||n>256||mask?.length!==n*n||heights?.length!==n*n)return null;
  let size=n*n,safe=new Uint8Array(size),distance=new Float32Array(size),waterDistance=new Float32Array(size),occupied=occupancy instanceof Uint8Array&&occupancy.length===size?occupancy:settlementFields(settlements,n).mask,used=new Uint8Array(size),cx=0,cy=0,count=0;
