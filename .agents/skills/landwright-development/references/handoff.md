@@ -13,7 +13,7 @@ Read **§0 first** for the current state. Sections 14–27 retain release histor
 | Contract | Current state |
 | --- | --- |
 | Application release | **v2.8**, terrain-shaped settlement brushes |
-| Verified deployment | [Pages run44390191940](https://github.com/mopajazz/worldpainter-studio/actions/runs/44390191940) succeeded for `f0ab812c57e7e1e3a3526c19dcd7c500151cc8a1` |
+| Verified deployment | [Pages run44451516984](https://github.com/mopajazz/worldpainter-studio/actions/runs/44451516984) succeeded for `c4d3428c69f024b9accf57d80c74a021d9e1cd23` (v2.8 runtime) |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
 | Runtime | Static HTML/CSS/ES modules; cache `2.8.0`; no build or runtime packages |
 | Project format | Writes **8**, imports **1–8**; authoritative terrain, paint, forest density, routes, saved settlements and legacy content |
@@ -1006,3 +1006,5 @@ Committed roofs/lanes/courts/walls share the existing2D/3D/MapPNG composition. H
 Pure planner fixtures compare riverside and hillside Village lanes, all five forms, high Castle placement, partial dry masks, no-authority mutation, principal halls, canonical copying and adversarial work limits. DOM tests cover transient previews, exact commit/oneUndo/Redo, later sculpt preservation,3D placement, cancel/lock, sea invalidation, name-key handling and malformed imports. Browser fixture `docs/examples/river-and-hillside.world.json` has Bendhaven10 buildings beside the river and Ridgewell8 on the slope, both from42-block brushes; actual project is schema8 and terrain matches post-import Float32 bed exactly. Actual4096² MapPNG export verified. Pure256² planning medians5–11ms in this environment, with cold max~41ms; not a guaranteed FPS. Natural artwork scale is intentionally small; this release is not hand-painted sprite import, inhabitants, water-speed simulation, new clouds or erosion.
 
 Final v2.8 verification:175/175 Node tests passed, including the final name-control reload test and cached-occupancy path. Read-only whole-change review found no remaining release blocker after corrections. Actual128² Heightmap matched every saved Float32 bed pixel; actual4096² MapPNG and schema8 project with10/8-building Village layouts were inspected. Browser2D/Canvas3D and both themes were checked; realGPU performance is not established.
+
+Release v2.8: runtime commit `c4d3428c69f024b9accf57d80c74a021d9e1cd23`, Pages run44451516984 succeeded. Production browser confirmed v2.8, all five settlement choices inside left Paint mode and preserved old terrain/landmarks; no application console errors. Later documentation-only commits do not change the runtime release. Session screenshot `/workspace/shared/landwright-v2.8-settlements.jpg` shows the two-Village acceptance fixture, not generated concept art.
