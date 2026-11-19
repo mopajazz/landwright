@@ -20,4 +20,4 @@ During an edit the renderer uses a smaller raster, then rebuilds finer texture o
 
 ## Existing projects
 
-The app writes schema7 and imports versions1–6. Existing painted colors/opacity remain intact; those painted areas acquire new material texture when repainted. New projects use procedural texture for natural unpainted ground as well. The saved file contains small material coverage values per cell, not texture images. Downloaded v7 projects require the current app.
+The app writes schema8 and imports versions1–7. Existing painted colors/opacity remain intact; those painted areas acquire new material texture when repainted. New projects use procedural texture for natural unpainted ground as well. The saved file contains small material coverage values per cell, not texture images. Downloaded v8 projects require the current app.

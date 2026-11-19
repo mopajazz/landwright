@@ -14,7 +14,7 @@ Preferences are local to this browser under `landwright-living`. They are not te
 - A small number of clouds drift over the landscape with low-opacity shadows.
 - The separate overlay works in 2D and 3D; the base map and terrain geometry remain authoritative.
 
-This pass does not add creatures, settlements, boats, travelers, day/night, weather simulation, or storytelling. Those remain future work. Cloud shadows are stylized projected overlays, not physically accurate lighting or volumetric clouds.
+Living World does not simulate creatures, boats, travelers, day/night, weather or storytelling. Terrain-shaped settlements are now available separately in Paint; they are saved layouts, not a civilization simulation. Cloud shadows are stylized projected overlays, not physically accurate lighting or volumetric clouds.
 
 ## Automatic pause behavior
 

@@ -13,7 +13,7 @@ Repository: https://github.com/mopajazz/worldpainter-studio
 
 Live app: https://mopajazz.github.io/worldpainter-studio/
 
-Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.7.1/cache `2.7.1` integrates eight procedural earthen materials. Read handoff §0, §25 and §26 first, §23 for New World/export and §19 for woodland. Schema **7**, imports **1–7**. Verify HEAD/status before editing.
+Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.8/cache `2.8.0` integrates eight procedural earthen materials. Read handoff §0 and §27 first; §25–26 cover materials/sculpt controls, §23 for New World/export and §19 for woodland. Schema **8**, imports **1–8**. Verify HEAD/status before editing.
 
 ## Find the contract
 
@@ -25,7 +25,7 @@ Discover the checkout and remote; cloud paths and remote aliases vary. This is s
 | Paths/rivers/reflow | `routes.mjs`, `editor.mjs`; §§3, 7, 15 |
 | 3D/performance | `terrain3d.mjs`, `gpu-terrain.mjs`; §6 |
 | Forest density/placement | `forests.mjs`, app composition/lifecycle; §§18–19 |
-| Saved settlements | `settlements.mjs`, app composition; §§20–22; creation UI removed |
+| Saved settlements | `settlement-planner.mjs`, `settlements.mjs`, app composition; §27 (supersedes §§20–22) |
 | Living World | `living.mjs`, app lifecycle; §16 |
 | Saves/undo/export | `editor.mjs`, app state/composition; §§7–8 |
 | Verification/release | `tests/`, `package.json`; §9 |
@@ -54,7 +54,7 @@ Woodland coverage, canopy height and RGBA are derived, never saved. Keep picking
 - Assuming Holler originals are accessible: Windows paths/ChatGPT Library references are not downloaded assets. Locate files and tell the user they were found before integration.
 - Assuming inhabitants, day/night, or storytelling shipped. Revisit storytelling after terrain; do not add it implicitly.
 
-The user removed the Settlements creation/editing panel. Do not restore it or add a replacement tool. Preserve saved settlement rendering/import/export/layers and erasing. Space + left-drag temporarily pans 2D/3D; retain tool selection and protect typing/dialogs. Cache fields by immutable records identity. Roofs and clearings are derived, never bed edits or forest-density deletion. Names are plain text. Schema6 keeps at most64 canonical records; older schemas migrate with an empty list. Check cancel/import/undo and actual2D/3D/export behavior. No simulation or Holler-source integration is implied.
+The user removed the right Settlements panel, then explicitly requested terrain-shaped brushes. Current creation lives in left Paint → Settlements; keep nine tools. See §27. Preserve saved settlement rendering/import/export/layers and erasing. Space + left-drag temporarily pans 2D/3D; retain tool selection and protect typing/dialogs. Cache fields by immutable records identity. Roofs and clearings are derived, never bed edits or forest-density deletion. Names are plain text. Schema8 keeps at most64 canonical records, importing legacy1–7 and preserving seeded geometry. Check cancel/import/undo and actual2D/3D/export behavior. No simulation or Holler-source integration is implied. Search masks and proposals stay transient; commit the exact reviewed layout once, never replan saved geometry. Cancel/tool changes must redraw; pan/orbit preserve the draft. Sea/terrain changes invalidate proposals. Validate name edits as well as initial plans. Use cached occupancy, feature-based erasing and shared8M geometry-work budget.
 
 Keep terrain grids 128/192/256 separate from MapPNG sizes 1024/2048/4096. Live previews must never mutate active terrain/history. Keep Cancel/Escape safe, creation atomic, backup editable, and Heightmap bed-only at N. Do not claim larger editable worlds, rectangular/retro formats or extra terrain detail from 4K image scaling.
 

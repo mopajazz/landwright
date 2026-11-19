@@ -1,0 +1,10 @@
+# Terrain-shaped settlement brushes
+User authorizes implementation of Hamlet, Village, Town, Abbey and Castle. Supersedes the previous removal of settlement creation, while keeping the right sidebar free of placement controls and retaining nine toolbar tools.
+
+Paint has Ground / Settlements modes in its left settings. Brush circles accumulate a bounded search mask; W/S controls diameter. Preview is actual proposed buildings, lanes, courts and walls, never a filled circular stamp. A released stroke leaves the preview available. Place/Enter commits the exact layout once; Cancel/Escape, switching tools/modes, imports and world creation discard it without editing project/history. Space-pan and 3D orbit retain it. Name is optional, defaults to type. Water, slope, map bounds and existing settlement geometry constrain buildable components individually; partly suitable masks produce smaller layouts with clear feedback. No flattening or density deletion.
+
+Each place uses distinctive form: Hamlet short approach and few roofs; Village a contour/bank lane; Town central open square and branches; Abbey main hall/court/outbuildings; Castle high keep, shoulder court, ridge-following wall. A deterministic search across gentle dry ground makes riverside and hillside villages differ, demonstrated with controlled fixtures and browser images. Terrain/river data is read-only.
+
+Schema8 stores explicit bounded layout geometry; imports1–7 preserve old seeded records and old pixels. Saved layouts never replan after sculpting. Shared2D/3D/MapPNG rendering, canopy clearing only along built features, bed-only Heightmap, layer locks/hiding and Shift erasing remain. Preview is transient and excluded from autosave/export, one placement one Undo. Render/proposal work scheduled per frame and bounded by supported256² terrain and geometry limits.
+
+Architectural decision: procedural vector roofs/walls integrated with the terrain, following the reference's earthy roof palette. No downloaded source-library assets are implied. Existing atmosphere remains independent; erosion is outside this brush upgrade.

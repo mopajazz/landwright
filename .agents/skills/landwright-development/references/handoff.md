@@ -1,22 +1,22 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 18, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.7.1 sculpting controls; see §26. Earthen materials are documented in §25. Previous release v2.6 was `d7ae907`.
-**Displayed release:** `v2.7.1`
-**Browser asset/module cache revision:** `2.7.1`<br>
-**Project schema written by the application:** `7`
+**Implementation baseline:** v2.8 terrain-shaped settlement brushes; see §27. Earthen materials are documented in §25. Previous release v2.6 was `d7ae907`.
+**Displayed release:** `v2.8`
+**Browser asset/module cache revision:** `2.8.0`<br>
+**Project schema written by the application:** `8`
 
-Read **§0 first** for the current state. Sections 14–25 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
+Read **§0 first** for the current state. Sections 14–27 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
 
 ## 0. Current release — start here
 
 | Contract | Current state |
 | --- | --- |
-| Application release | **v2.7.1**, Flatten target shortcuts and gentler sculpt defaults |
+| Application release | **v2.8**, terrain-shaped settlement brushes |
 | Verified deployment | [Pages run44390191940](https://github.com/mopajazz/worldpainter-studio/actions/runs/44390191940) succeeded for `f0ab812c57e7e1e3a3526c19dcd7c500151cc8a1` |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
-| Runtime | Static HTML/CSS/ES modules; cache `2.7.1`; no build or runtime packages |
-| Project format | Writes **7**, imports **1–7**; authoritative terrain, paint, forest density, routes, saved settlements and legacy content |
+| Runtime | Static HTML/CSS/ES modules; cache `2.8.0`; no build or runtime packages |
+| Project format | Writes **8**, imports **1–8**; authoritative terrain, paint, forest density, routes, saved settlements and legacy content |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan |
 | Erasing | **Shift + Paint** click/drag; Paint’s Shift erase target selects the eligible layer. No Erase tool or E tool shortcut |
 | Opacity | **D decreases / E increases by 5%**, Paint and Path; Flatten adjusts target by 1 (Shift ×10); preserve Strength/history |
@@ -25,8 +25,8 @@ Read **§0 first** for the current state. Sections 14–25 retain release histor
 | Terrain detail | Quick sketch/Small **128²**, Standard/Medium **192²**, Detailed/Large **256²** |
 | Map PNG | Independent **1024² / 2048² (default) / 4096²**; 4K square, not UHD landscape |
 | Heightmap | **N² actual bed elevations**; no water, canopy or roof relief |
-| Settlements | Creation/editing panel removed. Preserve saved records, rendering, names, layers, Shift erasing, undo and export |
-| Verification | Current full application run: **157 passed, 0 failed** (`/tmp/flatten-full.log`) |
+| Settlements | Paint → Settlements on left; five search-area brushes, actual preview, one Place/Undo. Right placement panel remains removed |
+| Verification | Current full application run: **175 passed, 0 failed** (`/tmp/places-release-tests.log`) |
 | Knowledge base | [New worlds/resolution](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/kb/worlds.md), [tutorial](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/tutorial.md), [KB index](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/kb/index.md) |
 
 **Release evidence:** production browser showed v2.6, all six shape choices, the updated preview summary, all three export presets, and no application console errors. Local browser produced an actual 4096×4096 PNG; the 256×256 Heightmap matched every rounded saved bed pixel. Native Enter created a named flat 128 world; Undo restored the entire original project as parsed JSON. Dark/light and a 500px window were inspected; this does not establish real-phone touch behavior, full WCAG compliance, or GPU performance.
@@ -978,3 +978,31 @@ Raise/Lower now share an 8% starting Strength; Smooth/Flatten share their existi
 Future direction: develop consistent, distinctive tool icons and an MX Creative Console profile after interaction bindings settle. No hardware profile is shipped or configured by this change.
 
 Verification for §26:157/157 full-suite tests pass (`/tmp/flatten-full.log`), including target bounds/steps, focus/dialog/modifier guards, unchanged project state and separate strength-group memory. Local browser showed Raise8%, Flatten35%, target120→119→129 in2D and129→128 in3D; Lower returned to8%. Syntax and diff checks pass.
+
+## 27. v2.8 — terrain-shaped settlement brushes
+
+Current request explicitly supersedes the old ban on settlement creation. Preserve nine toolbar tools and the removed right placement sidebar. Paint has Ground / Settlements modes. Settlements offers Hamlet, Village, Town, Abbey and Castle, brush Size/W/S, optional name, live status and Place/Cancel. Ground-material/Forest behavior remains separate. D/E is inactive for settlement placement; Flatten Target height and Ground Paint/Path Opacity shortcuts remain. Raise/Lower still start8%.
+
+### Planner and exact layout
+
+`settlement-planner.mjs` exports `planSettlement({kind,mask,n,heights,sea,riverWater,settlements,occupancy?,seed,id,name})`. It preprocesses bounded safety/clearance/water-distance fields, chooses a connected dry buildable region and traces bank/contour-cost lanes, then places individually checked footprints. Water/cliffs/outside-mask/occupied cells stay clear. Partly suitable masks fit smaller layouts. Hamlet has a short approach; Town a square/branches; Abbey requires its hall; Castle requires a high defensible keep with safe ridge wall/court where possible. Courts/walls may be omitted if they cannot fit. No source arrays are mutated, no terrain flattened. This is procedural geometry, not imported Holler assets or civilization simulation.
+
+Saved absolute geometry is authoritative: `layout:{version:1,buildings:[{corners:XY[4],ridge:XY[2],tone,rise}],lanes:XY[][],walls:XY[][],courts:XY[][]}` alongside existing id/kind/x/y/scale/rotation/seed/name. `settlementLayout` returns stored layout exactly, otherwise preserves the previous seeded3-kind output. Sculpting updates the rendered ground beneath it but never replans horizontal geometry. New clearings follow features rather than a circular plot; forest density remains untouched. Names are sanitized to bounded plain text, including pasted controls.
+
+### Persistence and budgets
+
+Schema8 imports1–7 and preserves legacy records. Prior schema versions cannot introduce layout records or the new Abbey/Castle kinds. `canonicalSettlement` deep-copies permitted fields; invalid shapes, controls, IDs, non-finite coordinates and oversized geometry reject before history/world mutation. Max64 records. Each layout caps120 buildings,12 lanes/8walls/8courts,128points per line/32 per court; building extent≤20 per axis and bboxarea≤256, rise≤12. `settlementWork` caps each explicit record at250000 and the project at8000000. Commit enforces the same shared cap as import. Use cached `settlementCache.mask` as planner occupancy keyed by immutable settlement records/N.
+
+### Preview lifecycle
+
+Paint samples union brush discs into one transient N² search mask; frame scheduling coalesces replanning. Mask boundary plus actual proposal is drawn separately in2D/3D. No preview pixels/records enter exports, autosave or history. End stroke keeps it; Place/Enter commits the reviewed non-dirty record with one snapshot. Cancel/Escape, tool/mode changes, valid imports and world creation discard it. Pan/orbit and2D/3D switches preserve it. Sea/scene changes invalidate and rebuild before commitment. Names handle Enter/Escape locally, preserving ordinary text input. Locks/hiding/diagnostics prevent commit; dirty/unreviewed proposals cannot commit. Cancelling queues redraw so no ghost remains.
+
+### Render and erase
+
+Committed roofs/lanes/courts/walls share the existing2D/3D/MapPNG composition. Heightmap stays actual bed-only. `settlementTouches` tests actual feature intersections for new records; legacy records retain circle hit behavior. Shift+Paint in settlement mode erases saved places, protected by the Settlements layer. Ground mode retains its target selector. No standalone Erase/Details/Drawing/settlement toolbar tool is added.
+
+### Evidence and limits
+
+Pure planner fixtures compare riverside and hillside Village lanes, all five forms, high Castle placement, partial dry masks, no-authority mutation, principal halls, canonical copying and adversarial work limits. DOM tests cover transient previews, exact commit/oneUndo/Redo, later sculpt preservation,3D placement, cancel/lock, sea invalidation, name-key handling and malformed imports. Browser fixture `docs/examples/river-and-hillside.world.json` has Bendhaven10 buildings beside the river and Ridgewell8 on the slope, both from42-block brushes; actual project is schema8 and terrain matches post-import Float32 bed exactly. Actual4096² MapPNG export verified. Pure256² planning medians5–11ms in this environment, with cold max~41ms; not a guaranteed FPS. Natural artwork scale is intentionally small; this release is not hand-painted sprite import, inhabitants, water-speed simulation, new clouds or erosion.
+
+Final v2.8 verification:175/175 Node tests passed, including the final name-control reload test and cached-occupancy path. Read-only whole-change review found no remaining release blocker after corrections. Actual128² Heightmap matched every saved Float32 bed pixel; actual4096² MapPNG and schema8 project with10/8-building Village layouts were inspected. Browser2D/Canvas3D and both themes were checked; realGPU performance is not established.

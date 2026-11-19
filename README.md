@@ -13,11 +13,12 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 - Start with Island, Archipelago, Continent, Atoll, Open ocean, or Flat grass. Each has a generated preview. Seed and relief live under Generation settings.
 - Sculpt elevation with Raise, Lower, Smooth, or Flatten. Raise/Lower start gently at 8% Strength; Smooth/Flatten retain 35%. Full strength remains available. The toolbox follows the active tool: footprint and size first, then Strength for sculpt tools; the paint material palette appears only with Paint. Three brush footprints cover Soft Round, Hard Round, and Coastline. Material textures supply the grain. Brush and material selections keep the current tool and survive tool changes. Coastline paints any selected material without changing height; use the explicit Land tool (C or M) to add or remove terrain. Strength controls sculpting power. Opacity applies only to Paint, Path, and surface Erase; surface paint opacity is capped within a single stroke and builds across separate strokes.
 - Paint eight procedural ground materials—Grass, Loam, Clay, Bedrock, Scree, Mud, Sand, and Snow—grouped by family. Their textures automatically respond to slope, shelter and nearby water. Forest paints a separate tree-density layer. Forest has its own density control and conditional layer/eraser; it keeps ground colors unchanged. Drawing and Details creation tools have been removed to keep the toolbox focused on terrain. Existing drawings and landmarks still load, render, export, and save.
+- In Paint, choose Settlements to brush a search area for Hamlet, Village, Town, Abbey or Castle. Inspect the terrain-shaped layout, then Place or Enter to commit it in one Undo. Cancel/Escape discards it. The controls stay in the left toolbox. [Settlement guide](docs/kb/settlements.md).
 - Hold Shift while clicking/dragging with Paint to erase. Paint’s Shift erase target defaults to Surface paint for ground materials and Forests for Forest; River water and saved-object targets appear when that content exists. Surface erasing uses brush opacity and reveals the natural terrain color without changing heights. Landmark/drawing erasing removes whole touched objects; undo restores them. Hidden and locked layers are protected.
 - Hide and lock Surface and Relief. Legacy Drawings and Landmarks layers appear only when a project contains that content. Relief visibility controls shading/contours, while elevation remains the world foundation. Hidden or locked layers cannot be edited. Water has its own toggle and sea-level control.
 - Toggle the main workspace between 2D Map and 3D Terrain. All editing tools work directly on the 3D terrain. Left-drag edits with the active tool; right-drag or Alt-drag orbits and tilts; middle-drag or the Pan tool moves the camera. Scroll zooms, Shift+scroll resizes the brush, and Reset view recenters. The Orbit toggle supports touch; selecting a tool returns to editing while staying in 3D. Switch to terrain, heightmap, or biome visualization.
 - Export a 1024×1024, 2048×2048, or 4096×4096 PNG of the current map view, including visible drawings and landmarks, or an 8-bit PNG heightmap at the selected world size. Map exports omit editor overlays such as grid and cursor.
-- Undo/redo retains 35 states, including stamps, layer settings, names, translucent paint, drawings, and world generation. Editable project files and local autosaves use schema v7 and accept v1–v6 projects. Older Forest paint remains color, without automatically adding trees.
+- Undo/redo retains 35 states, including stamps, layer settings, names, translucent paint, drawings, and world generation. Editable project files and local autosaves use schema v8 and accept v1–v7 projects. Older Forest paint remains color, without automatically adding trees.
 
 ## Shortcuts
 
@@ -103,7 +104,7 @@ Verified with 123 passing tests and actual browser Map/Heightmap exports. Real-G
 
 ## v2.5.1 — simpler sidebar and Space-drag pan
 
-The Settlements placement/editing panel has been removed from the right sidebar. Existing saved settlements retain their rendering, names, layers, erasing, undo and export support; schema 6 and imports1–6 remain compatible. No replacement settlement controls have been added.
+The Settlements placement/editing panel has been removed from the right sidebar. Existing saved settlements retain their rendering, names, layers, erasing, undo and export support; schema 6 and imports1–6 remain compatible. This is historical behavior: v2.8 adds terrain-shaped settlement brushes inside Paint, with the right placement panel still removed.
 
 Hold **Space + left mouse drag** to pan in 2D or 3D from any active tool. Releasing Space preserves the selected tool; the current pan gesture continues until mouse release. Text fields and open dialogs keep ordinary Space behavior. Losing window focus or hiding the page clears the held-key state. Middle-drag, Pan(H), and3D orbit controls remain available.
 
@@ -118,3 +119,7 @@ New World now offers a live preview of the selected terrain and detail, descript
 ## Earthen material study — awaiting art-direction feedback
 
 [Open the standalone swatch sheet](https://mopajazz.github.io/worldpainter-studio/studies/earthen/). Eight proposed procedural materials — Grass, Loam, Clay, Bedrock, Scree, Mud, Sand and Snow — appear on identical flat/relief terrain against parchment and midnight frames. Includes a mixed landscape, interface theme switch and downloadable comparison PNG. This is a visual prototype, not the editor palette or a physical erosion simulation. No app data, tools, forests or schema changes.
+
+## v2.8 — places belong to the landscape
+
+Paint → Settlements adds five terrain-aware brushes with actual-layout previews and explicit commitment. The riverbank/contour planner uses only suitable connected ground inside your painted search area. Saved geometry survives later sculpting, undo and import; placement does not alter elevation or forest density. Schema8 stores bounded building/lane/court/wall geometry and imports1–7. See the [guide](docs/kb/settlements.md) and [practice project](docs/examples/river-and-hillside.world.json).
