@@ -1,6 +1,6 @@
 # Landwright: your first living landscape
 
-This tutorial covers the current v2.8.1 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
+This tutorial covers the current v2.9 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
 
 ## Before your first stroke: start with low Strength
 
@@ -85,7 +85,7 @@ The effects do not enter project history or exports. See [Living World](kb/livin
 
 ## 8. Save something you can return to
 
-Use **Download project** in the header, or Ctrl/Cmd+S. Keep the `.world.json` file: it contains editable terrain, paint, forest density, river records, settlement records, and layer settings. Browser autosave is useful but tied to this browser and hosting origin.
+Use **Download project** in the header, or Ctrl/Cmd+S. Keep the `.world.json` file: it contains editable terrain, paint, forest density, river records and layer settings. Browser autosave is useful but tied to this browser and hosting origin.
 
 Open Export map, choose 1024, 2048 or 4096 pixels, then Map image for a square top-down PNG. This changes image resolution without changing terrain detail. Export Heightmap for the actual bed elevations at your selected map size. Neither export includes the cursor, route preview, editor UI, or Living World effects. Map export is not a screenshot of your 3D camera.
 
@@ -95,7 +95,6 @@ Open Export map, choose 1024, 2048 or 4096 pixels, then Map image for a square t
 - [Brush strength and painting](kb/brushes.md)
 - [Rivers, paths, and reflow](kb/routes.md)
 - [Forests and clearings](kb/forests.md)
-- [Terrain-shaped settlements](kb/settlements.md)
 - [Living World](kb/living-world.md)
 - [Saving, exporting, and troubleshooting](kb/projects.md)
 - [Engineering handoff](../handoff.md)
@@ -107,14 +106,3 @@ If you get lost, open Help & shortcuts in the application. Practice on a disposa
 Paint offers eight ground materials in compact family groups: Grass, Loam, Clay, Bedrock, Scree, Mud, Sand and Snow. Try Clay beside a river, Scree below a ridge, and Snow across a sheltered hollow. Their procedural textures respond automatically to the underlying slope, shelter and nearby water. This is a visual response; materials do not move cells or simulate erosion.
 
 Soft Round, Hard Round and Coastline control the edge of your stroke. The material supplies its texture, so Grain is no longer a separate footprint. D/E changes Opacity; successive strokes blend materials. Shift+Paint erases surface coverage and reveals the natural ground. Forest stays below the ground palette as a separate density layer. See [Earthen materials](kb/materials.md).
-
-## Build a place that fits the ground
-
-1. Select Paint → Settlements on the left and choose Village. Keep the ground you sculpted; Flatten is optional.
-2. Use W/S for search-brush size. Brush across a river bend, including the dry bench above it. Release and inspect the roofs and lane that fit.
-3. Paint more area if needed. The outline marks the search area; buildings stay away from unsuitable cells.
-4. Name it, then select Place settlement or press Enter. Cancel/Escape discards the preview without changing the map.
-5. Try another Village on a gentle hillside. Its lane should respond to the contour rather than copy the first village.
-6. Undo/Redo a placement, then inspect it in3D. Sculpting later preserves its chosen layout.
-
-Hamlet, Town, Abbey and Castle use the same workflow. A castle seeks a high usable shoulder; an abbey needs space for its main hall. Courts and walls require enough suitable ground. See the [settlement guide and practice map](kb/settlements.md).

@@ -1,6 +1,6 @@
 ---
 name: landwright-development
-description: Use when developing, debugging, reviewing, releasing, or documenting Landwright (worldpainter-studio), including terrain brushes, 2D/3D editing, paths, rivers, Living World atmosphere, Holler Maps assets, or future storytelling.
+description: Use when developing, debugging, reviewing, releasing, or documenting Landwright (worldpainter-studio), including terrain brushes, 2D/3D editing, paths, rivers, Living World atmosphere or future terrain behavior.
 ---
 
 # Landwright development
@@ -13,7 +13,7 @@ Repository: https://github.com/mopajazz/worldpainter-studio
 
 Live app: https://mopajazz.github.io/worldpainter-studio/
 
-Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.8.1/cache `2.8.1` integrates eight procedural earthen materials. Read handoff §0 and §§27–28 first; §25–26 cover materials/sculpt controls, §23 for New World/export and §19 for woodland. Schema **8**, imports **1–8**. Verify HEAD/status before editing.
+Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.9/cache `2.9.0` removes settlements and refocuses on terrain behavior. Read handoff §0 and §29 first; §25–26 cover materials/sculpt controls, §23 for New World/export and §19 for woodland. Schema **9**, imports **1–9**. Verify HEAD/status before editing.
 
 ## Find the contract
 
@@ -25,7 +25,6 @@ Discover the checkout and remote; cloud paths and remote aliases vary. This is s
 | Paths/rivers/reflow | `routes.mjs`, `editor.mjs`; §§3, 7, 15 |
 | 3D/performance | `terrain3d.mjs`, `gpu-terrain.mjs`; §6 |
 | Forest density/placement | `forests.mjs`, app composition/lifecycle; §§18–19 |
-| Saved settlements | `settlement-planner.mjs`, `settlements.mjs`, app composition; §27 (supersedes §§20–22) |
 | Living World | `living.mjs`, app lifecycle; §16 |
 | Saves/undo/export | `editor.mjs`, app state/composition; §§7–8 |
 | Verification/release | `tests/`, `package.json`; §9 |
@@ -54,10 +53,10 @@ Woodland coverage, canopy height and RGBA are derived, never saved. Keep picking
 - Assuming Holler originals are accessible: Windows paths/ChatGPT Library references are not downloaded assets. Locate files and tell the user they were found before integration.
 - Assuming inhabitants, day/night, or storytelling shipped. Revisit storytelling after terrain; do not add it implicitly.
 
-The user removed the right Settlements panel, then explicitly requested terrain-shaped brushes. Current creation lives in left Paint → Settlements; keep nine tools. See §27. Preserve saved settlement rendering/import/export/layers and erasing. Space + left-drag temporarily pans 2D/3D; retain tool selection and protect typing/dialogs. Cache fields by immutable records identity. Roofs and clearings are derived, never bed edits or forest-density deletion. Names are plain text. Schema8 keeps at most64 canonical records, importing legacy1–7 and preserving seeded geometry. Check cancel/import/undo and actual2D/3D/export behavior. No simulation or Holler-source integration is implied. Search masks and proposals stay transient; commit the exact reviewed layout once, never replan saved geometry. Cancel/tool changes must redraw; pan/orbit preserve the draft. Sea/terrain changes invalidate proposals. Validate name edits as well as initial plans. Use cached occupancy, feature-based erasing and shared8M geometry-work budget.
 
 Keep terrain grids 128/192/256 separate from MapPNG sizes 1024/2048/4096. Live previews must never mutate active terrain/history. Keep Cancel/Escape safe, creation atomic, backup editable, and Heightmap bed-only at N. Do not claim larger editable worlds, rectangular/retro formats or extra terrain detail from 4K image scaling.
 
 Eight ground materials exclude Forest4; coverage order is[1,2,3,5,6,7,8,9]. Preserve legacy paint RGB/alpha and original v1/v2 palette migration. Schema7 coverage is canonical Base64, empty for zero weights; validate before mutation. Three visible footprints; Grain retired. Ground texture is derived, uses raw bed/all-river context and never changes elevation. Share the ground raster across2D/3D/MapPNG; keep diagnostics and Heightmap clean. Active edits use N² then restore4N on release. Profile release rebuilds and Canvas hover; do not promise a fixedFPS.
 
-Settlement selection cards use original painted WebP artwork in `assets/settlements/`, not generated miniature roof diagrams. Keep all five cards equally sized, preserve labels/aria-pressed/focus visibility, and browser-check loaded images in both themes and narrow/wide sidebars. Card artwork illustrates archetypes; actual terrain preview is procedural geometry.
+
+Settlements are removed by explicit user instruction. Do not restore their menus, assets, modules, layers, placement, saved-building rendering or a stamp editor. Schema9 omits retired settlement data and legacy town symbols while importing the remaining content of older projects. See handoff§29; earlier settlement instructions are archived history. The next actionable goal is immediate believable water spreading into newly connected low ground when a channel is cut, while sculpting stays smooth. Do not claim a simulation ships before implementing and verifying it.

@@ -1,4 +1,4 @@
-import {MATERIAL_IDS} from './material-paint.mjs?v=2.8.1';
+import {MATERIAL_IDS} from './material-paint.mjs?v=2.9.0';
 
 export const EARTHEN_MATERIALS = [
   [1,'grass','Grass','Living ground',[105,125,72]],

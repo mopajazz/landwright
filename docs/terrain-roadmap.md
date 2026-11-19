@@ -1,4 +1,10 @@
-# Terrain workflow
+# Terrain behavior: next actionable goal
+
+**Make water spread into newly connected low ground when the user cuts a channel, with an immediate visual response that keeps sculpting smooth.**
+
+This is the next product focus, not a feature claimed in v2.9. Preserve the small toolset and current editing responsiveness while making the water response visible. Settlement/stamp editing and more decorative assets are outside this direction.
+
+## Existing terrain workflow
 
 River and Path now share a lightweight curve workflow (click to add points, drag to curve, double-click to finish, Escape to cancel). Keep controls to width and a few styles, with advanced behavior hidden. Support both 2D and 3D placement and undo.
 

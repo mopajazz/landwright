@@ -20,7 +20,7 @@ The terrain palette appears with Paint. Painting underwater is concealed by enab
 
 **D decreases Opacity by 5%; E increases it by 5%.** These keys work with Paint and Path, clamp to0–100%, and do not change tools or Strength. Typing in fields and open dialogs keeps ordinary keyboard behavior.
 
-There is no separate Erase tool. With Paint selected, hold Shift and click or drag. A ground material defaults the Shift target to Surface paint; Forest defaults it to Forests. The **Shift erase target** selector also offers existing river water, settlements and legacy drawings/landmarks. Selecting a target does not change the active tool; ordinary unmodified Paint still paints the selected material. Whole-object targets ignore Opacity, including at0%; surface/forest erasing uses Opacity.
+There is no separate Erase tool. With Paint selected, hold Shift and click or drag. A ground material defaults the Shift target to Surface paint; Forest defaults it to Forests. The **Shift erase target** selector also offers existing river water and legacy drawings/landmarks. Selecting a target does not change the active tool; ordinary unmodified Paint still paints the selected material. Whole-object targets ignore Opacity, including at0%; surface/forest erasing uses Opacity.
 
 Paint opacity accumulates across separate strokes. Repeated pointer samples inside one held stroke do not multiply coverage indefinitely. Shift+Paint reveals natural terrain color without changing heights. A hidden/locked Surface layer cannot be painted or erased. Forest density has separate Forests protection; Shift+Forest clears trees without changing ground color.
 
@@ -31,9 +31,5 @@ Flatten approaches Target height. D lowers / E raises the target by 1 block; Shi
 ## Why did my mountain jump so quickly?
 
 Undo, reduce Strength, and use smaller/shorter gestures. Low Strength is the first control to try; a smaller brush only reduces area. Check whether you held the pointer in one place or made many passes before releasing.
-
-## Erase settlements
-
-When places exist, Paint offers Settlements in Shift erase target. A Shift stroke removes whole touched places; Opacity does not fade buildings. Hidden or locked Settlements are protected. Undo restores removal. See [Settlements](settlements.md).
 
 Material texture is independent of footprint. Grain has been retired from the menu. See [Earthen materials](materials.md) for blending, terrain response and old-project compatibility.

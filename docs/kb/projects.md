@@ -2,13 +2,13 @@
 
 ## Keep an editable backup
 
-Use Download project or Ctrl/Cmd+S. The `.world.json` file contains terrain, paint, forest density, route geometry/levels, settlements, and layers. Import it to continue editing. Browser autosave is specific to this browser and hosting origin, has finite storage, and is not a cloud backup. The save badge distinguishes saving from a completed local save.
+Use Download project or Ctrl/Cmd+S. The `.world.json` file contains terrain, paint, forest density, route geometry/levels and layers. Import it to continue editing. Browser autosave is specific to this browser and hosting origin, has finite storage, and is not a cloud backup. The save badge distinguishes saving from a completed local save.
 
-New world replaces the active canvas. Download anything important first; session undo is useful but is not a substitute for a file. Supported grid sizes are Small 128², Medium 192², Large 256². Versions 1–7 import into v8; new saves include compact material coverage, forest density and explicit settlement layouts. Older app versions cannot read v8. Download a backup before editing an important older project. Old painted RGB colors and opacity are preserved; new material texture is applied as you repaint. Legacy dark-green Forest paint remains color until you paint new forest density deliberately.
+New world replaces the active canvas. Download anything important first; session undo is useful but is not a substitute for a file. Supported grid sizes are Small 128², Medium 192², Large 256². Versions 1–8 import into v9; new saves include compact material coverage, forest density and routes. Retired settlement records and old town symbols are omitted; terrain and other supported content remain. Older app versions cannot read v9. Download a backup before editing an important older project. Old painted RGB colors and opacity are preserved; new material texture is applied as you repaint. Legacy dark-green Forest paint remains color until you paint new forest density deliberately.
 
 ## Export types
 
-- Map image:1024², 2048², or 4096² top-down PNG of the selected visualization and visible content, including static forests and visible settlements with names.
+- Map image:1024², 2048², or 4096² top-down PNG of the selected visualization and visible content, including static forests and visible legacy artwork.
 - Heightmap:N² grayscale PNG of actual terrain, including the carved river bed, without water surfaces, trees, or buildings.
 - Project JSON: editable authoritative data, not an image.
 

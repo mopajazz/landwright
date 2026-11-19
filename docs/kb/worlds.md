@@ -20,4 +20,4 @@ These are square elevation grids, not screen sizes or image-export pixels. All c
 
 Open **Export map** and choose 1K(1024×1024),2K(2048×2048, default), or 4K square(4096×4096), then select Map image. The choice changes PNG dimensions only: it does not resample the editable world, alter terrain, change undo history or add geographic detail. Existing raster textures are scaled and vector labels/artwork render at output size. 4K square is not UHD landscape 3840×2160. Larger images need more memory and may take longer to encode.
 
-Heightmap remains an N×N grayscale export of saved bed heights, independent of the image selector. Project JSON remains editable schema 8; generation-preview settings and export resolution are not saved as project data. See [Projects](projects.md).
+Heightmap remains an N×N grayscale export of saved bed heights, independent of the image selector. Project JSON remains editable schema 9; generation-preview settings and export resolution are not saved as project data. See [Projects](projects.md).

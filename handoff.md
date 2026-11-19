@@ -1,22 +1,22 @@
 # Landwright — engineering and product handoff
 
-**Documentation date:** November 18, 2026 (America/New_York)<br>
-**Implementation baseline:** v2.8 terrain-shaped settlement brushes; see §27. Earthen materials are documented in §25. Previous release v2.6 was `d7ae907`.
-**Displayed release:** `v2.8.1`
-**Browser asset/module cache revision:** `2.8.1`<br>
-**Project schema written by the application:** `8`
+**Documentation date:** November 19, 2026 (America/New_York)<br>
+**Implementation baseline:** v2.9 removes the settlement subsystem; read §29 before any historical settlement material.
+**Displayed release:** `v2.9`
+**Browser asset/module cache revision:** `2.9.0`<br>
+**Project schema written by the application:** `9`
 
-Read **§0 first** for the current state. Sections 14–27 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
+Read **§0 and §29 first** for the current state. Sections 14–29 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
 
 ## 0. Current release — start here
 
 | Contract | Current state |
 | --- | --- |
-| Application release | **v2.8.1**, illustrated settlement card correction |
-| Verified deployment | [Pages run44451516984](https://github.com/mopajazz/worldpainter-studio/actions/runs/44451516984) succeeded for `c4d3428c69f024b9accf57d80c74a021d9e1cd23` (v2.8 runtime) |
+| Application release | **v2.9**, settlements removed; terrain behavior is the focus |
+| Verified deployment | v2.9 local checks complete; production deployment evidence is recorded at the end of §29 |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
-| Runtime | Static HTML/CSS/ES modules; cache `2.8.1`; no build or runtime packages |
-| Project format | Writes **8**, imports **1–8**; authoritative terrain, paint, forest density, routes, saved settlements and legacy content |
+| Runtime | Static HTML/CSS/ES modules; cache `2.9.0`; no build or runtime packages |
+| Project format | Writes **9**, imports **1–9**; authoritative terrain, paint, forest density, routes and supported legacy content; retired settlements/town symbols omitted |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan |
 | Erasing | **Shift + Paint** click/drag; Paint’s Shift erase target selects the eligible layer. No Erase tool or E tool shortcut |
 | Opacity | **D decreases / E increases by 5%**, Paint and Path; Flatten adjusts target by 1 (Shift ×10); preserve Strength/history |
@@ -25,8 +25,8 @@ Read **§0 first** for the current state. Sections 14–27 retain release histor
 | Terrain detail | Quick sketch/Small **128²**, Standard/Medium **192²**, Detailed/Large **256²** |
 | Map PNG | Independent **1024² / 2048² (default) / 4096²**; 4K square, not UHD landscape |
 | Heightmap | **N² actual bed elevations**; no water, canopy or roof relief |
-| Settlements | Paint → Settlements on left; five search-area brushes, actual preview, one Place/Undo. Right placement panel remains removed |
-| Verification | Current full application run: **175 passed, 0 failed** (`/tmp/places-release-tests.log`) |
+| Settlements | Entire subsystem removed: no menus, previews, layers, buildings, erasing targets or artwork. Legacy records/town symbols omitted on import |
+| Verification | Current full application run: **151 passed, 0 failed** (`/tmp/no-settlements-final.log`) |
 | Knowledge base | [New worlds/resolution](docs/kb/worlds.md), [tutorial](docs/tutorial.md), [KB index](docs/kb/index.md) |
 
 **Release evidence:** production browser showed v2.6, all six shape choices, the updated preview summary, all three export presets, and no application console errors. Local browser produced an actual 4096×4096 PNG; the 256×256 Heightmap matched every rounded saved bed pixel. Native Enter created a named flat 128 world; Undo restored the entire original project as parsed JSON. Dark/light and a 500px window were inspected; this does not establish real-phone touch behavior, full WCAG compliance, or GPU performance.
@@ -72,7 +72,7 @@ User decisions already implemented:
 - Coastline is a painting/sculpting footprint; **Land** is the explicit land addition/removal tool.
 - Forest Scatter was removed and replaced by Hard Round.
 - General Drawing and Details creation tools were removed completely from the UI, shortcuts, settings, and creation handlers.
-- Old drawings and landmarks must survive loading, rendering, export, and saving.
+- Old drawings and tree/mountain landmarks survive loading, rendering, export, and saving; town symbols are retired in v2.9.
 - Path and River are focused tools, not a reason to restore the general Drawing menu.
 - Storytelling is deferred until the terrain tools are complete.
 - Living World begins with optional visual water/atmosphere effects, behind one World Settings toggle; additional life must preserve the compact toolbar.
@@ -1018,3 +1018,17 @@ Replace that thumbnail generator with five original painted atlas illustrations 
 These images illustrate place archetypes in the selector, not exact on-map sprite stamps. Terrain-aware geometry, layouts, project schema8, placement/Undo and nine tools keep their v2.8 contract. Removed five startup planner/thumbnail-render calls. Art provenance is in `assets/settlements/README.md`. WebP encoding preserves original square composition; about3.4MiB total, loaded lazily.
 
 Full suite175/175 passes (`/tmp/settlement-cards-tests.log`). Browser checks confirmed all five images loaded, correct selected-kind handling, both themes, and identical63×93pixel buttons at180px sidebar width (image area square, name below). Wider sidebars scale cards consistently. Visual acceptance must inspect actual screenshots; passing geometry tests alone did not catch this art-direction failure.
+
+## 29. v2.9 — remove settlements; behavior before decoration
+
+**Current user decision supersedes all settlement instructions in §§20–22 and §§27–28. Do not restore settlement creation, a stamp editor or AI-art selection cards.** The user rejected both the settlement appearance and the direction/crowding it introduced.
+
+Actionable next goal: **Make water spread into newly connected low ground when the user cuts a channel, with an immediate visual response that keeps sculpting smooth.** This is a product direction; the removal release does not add a fluid or erosion simulation.
+
+Removal covers settlement modules/planner, generated artwork, Paint mode switch/type buttons/name/Place/Cancel/preview, geometry and canopy-clearance composition, labels, roofs, dedicated layer and erasing target, save/autosave/history fields, practice map and active tutorial/KB links. The legacy town landmark drawing/atlas entry is also removed. Nine toolbar tools, earthen materials, Forest density, paths/rivers, Living World, D/E Flatten target height and8% Raise/Lower defaults remain.
+
+Schema9 writes no `settlements` or `layers.settlements` field. Imports1–8 retain supported terrain/paint/colors/alpha/material coverage/forest/routes/legacy drawings/tree/mountain marks/layer controls, while ignoring retired settlement records/layers and omitting legacy town markers. Downloaded source project files are not rewritten; new saves contain the cleaned project. Settlement-specific tests retired with their modules; regression tests verify removal, clean imports and preservation of the remaining map data.
+
+Archived release history is retained below/above for engineering context, not as active feature specifications. Current source, §0 and this section are authoritative.
+
+Verification for v2.9: full Node suite **151 passed, 0 failed**. Local browser loaded the former two-village schema8 map with terrain and river intact, no settlement controls/layer, a ground-only Paint palette with Forest density and all nine tools. 2D and 3D remain available. Responsive water is a future goal, not a delivered simulation.
