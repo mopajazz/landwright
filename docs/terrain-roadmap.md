@@ -13,3 +13,7 @@ Path paints a continuous terrain-following trail, initially dirt, stone, and san
 River carves a channel with softened banks, adjustable width and optional depth. Rivers use their own local water surface with a non-rising source-to-mouth profile; ocean sea level is unchanged. This is an authored terrain tool, not fluid simulation. Uphill routes cut through raised terrain. Water can be hidden to inspect the carved bed. River-water erasing removes the water record and keeps the channel; undo restores it.
 
 Storytelling is a later phase, after terrain tools are complete. Revisit scope with the user then. Named river/path records may become useful anchors, but narrative UI, quests, timelines, and AI features are deferred.
+
+## Proposed implementation
+
+Read the [responsive water design](superpowers/specs/2026-11-19-responsive-water-design.md) and [staged implementation plan](superpowers/plans/2026-11-19-responsive-water.md). Planning only: worker-based finite-volume spreading, separate water rendering, schema10 proposal and measured responsiveness gates. The existing app has not acquired this behavior from the plan.
