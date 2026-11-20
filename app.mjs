@@ -1,20 +1,21 @@
-import {createBasinFill, MAX_WATER_DROPS} from './water-dropper.mjs?v=2.9.2-water.3';
-import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.9.2-water.3';
-import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.9.2-water.3';
-import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.9.2-water.3';
-import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.9.2-water.3';
-import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.9.2-water.3';
-import{generate,stroke}from'./terrain.mjs?v=2.9.2-water.3';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.9.2-water.3';
-import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.9.2-water.3';
-import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.9.2-water.3';
-import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.9.2-water.3';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.9.2-water.3';
-import{initUI}from'./ui.mjs?v=2.9.2-water.3';
-import{toolIcon}from'./icons.mjs?v=2.9.2-water.3';
-import{touchesShape}from'./eraser.mjs?v=2.9.2-water.3';
-import {createReactiveWater, writeOceanSurface} from './reactive-water.mjs?v=2.9.2-water.3';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.9.2-water.3';
+import {createMapDetail, packTerrainDetail} from './terrain-detail.mjs?v=2.9.2-detail.1';
+import {createBasinFill, MAX_WATER_DROPS} from './water-dropper.mjs?v=2.9.2-detail.1';
+import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.9.2-detail.1';
+import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.9.2-detail.1';
+import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.9.2-detail.1';
+import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.9.2-detail.1';
+import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.9.2-detail.1';
+import{generate,stroke}from'./terrain.mjs?v=2.9.2-detail.1';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers}from'./editor.mjs?v=2.9.2-detail.1';
+import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.9.2-detail.1';
+import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.9.2-detail.1';
+import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.9.2-detail.1';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,createFrameScheduler}from'./terrain3d.mjs?v=2.9.2-detail.1';
+import{initUI}from'./ui.mjs?v=2.9.2-detail.1';
+import{toolIcon}from'./icons.mjs?v=2.9.2-detail.1';
+import{touchesShape}from'./eraser.mjs?v=2.9.2-detail.1';
+import {createReactiveWater, writeOceanSurface} from './reactive-water.mjs?v=2.9.2-detail.1';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.9.2-detail.1';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface',routes=[],routeDraft=null,routeHover=null,riverWater=new Float32Array(N*N).fill(-1),surfaceHeights=heights,riverWaterDirty=true;
 document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Build a coast · Shift cuts channels from the ocean (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 $('rail-settings').innerHTML=toolIcon('settings');
@@ -63,6 +64,18 @@ function updateOcean(time) {
  if (oceanVisible) oceanContext.putImageData(oceanImage, 0, 0);
  return true;
 }
+let detailPixels, mapDetail, mapDetailCanvas, mapDetailFailed=false;
+function drawMapDetail(t,w,h){
+ if(view!=='terrain'||t.scale<=3||!detailPixels||!w||!h||mapDetailFailed)return;
+ if(!mapDetail){
+  mapDetailCanvas=document.createElement('canvas');
+  try{mapDetail=createMapDetail(mapDetailCanvas);}catch{}
+  if(!mapDetail){mapDetailFailed=true;return;}
+  mapDetailCanvas.addEventListener('webglcontextlost',()=>{mapDetailFailed=true;});
+ }
+ mapDetail.render(detailPixels,N,t,w,h,map.width,map.height,shade&&layers.elevation.visible);
+ ctx.drawImage(mapDetailCanvas,0,0,w,h);
+}
 const groundMap=document.createElement('canvas'),groundContext=groundMap.getContext('2d');groundMap.width=groundMap.height=N;
 const forestMap=document.createElement('canvas');forestMap.width=forestMap.height=1024;const forestContext=forestMap.getContext('2d');
 let livingLoop=null,livingScene=null,livingPrefs={enabled:true,clouds:true,waterMotion:true,vegetationMotion:true};const livingCanvas=$('living-overlay'),livingContext=livingCanvas.getContext('2d'),motionQuery=document.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -104,11 +117,13 @@ function updateSurface(){if(!surfaceDirty&&!riverWaterDirty)return;if(riverWater
   for(const {cell,level} of waterDrops)basinFill(heights,cell,level,riverWater);
  }
  baseSurface=waterSurface(heights,riverWater,oceanSurface());let habitat=forestHabitat.get(routes,N);woodland=buildWoodland({n:N,heights,forest,sea,riverWater:waterDrops.length&&layers.rivers.visible?riverWater:habitat.riverWater,paths:habitat.paths,shade:shade&&layers.elevation.visible});forestTrees=woodland.accents;if(visibleForest())baseSurface=woodlandSurface(baseSurface,woodland);ocean.setTerrain(heights,sea,water);oceanDirty=true;detailMask=view==='terrain'?new Float32Array(N*N).fill(1):visibleForest()?woodland.coverage:new Float32Array(N*N);surfaceDirty=false;}
-function flushTexture(){if(textureDirty){updateSurface();let foliage=renderWoodland(woodland,N*4,forestRasterCache);if(forestMap.width!==foliage.width)forestMap.width=forestMap.height=foliage.width;let image=forestContext.createImageData(foliage.width,foliage.height);image.data.set(foliage.data);forestContext.putImageData(image,0,0);texture();livingScene=buildLivingScene({n:N,heights,riverWater,sea,water,view,oceanCoverage:ocean.coverage,oceanTarget:ocean.connected,routes,riversVisible:layers.rivers.visible,trees:layers.forests.visible?forestTrees:[]});textureDirty=false;}}
+function flushTexture(){if(textureDirty){updateSurface();let foliage=renderWoodland(woodland,N*4,forestRasterCache);if(forestMap.width!==foliage.width)forestMap.width=forestMap.height=foliage.width;let image=forestContext.createImageData(foliage.width,foliage.height);image.data.set(foliage.data);forestContext.putImageData(image,0,0);texture();
+ detailPixels=view==='terrain'?packTerrainDetail(heights,visibleForest()?woodland.coverage:null,riverWater,water):null;
+ livingScene=buildLivingScene({n:N,heights,riverWater,sea,water,view,oceanCoverage:ocean.coverage,oceanTarget:ocean.connected,routes,riversVisible:layers.rivers.visible,trees:layers.forests.visible?forestTrees:[]});textureDirty=false;}}
 function visibleForest(){return layers.forests.visible&&view!=='height';}
 function sceneMarks(){return view==='height'||!layers.landmarks.visible?[]:marks.slice();}
 function transform(){let w=map.clientWidth,h=map.clientHeight;let scale=Math.max(.05,Math.min((w-70)/N,(h-135)/N))*zoom;return{scale,x:(w-N*scale)/2+pan.x,y:(h-N*scale)/2+pan.y-6}}
-function draw(){syncLiving();if(workspaceMode==='3d'){sceneDirty=true;scheduleFrame();return;}let w=map.clientWidth,h=map.clientHeight;ctx.clearRect(0,0,w,h);let t=transform();ctx.save();ctx.shadowColor='#0005';ctx.shadowBlur=36;ctx.drawImage(groundMap,t.x,t.y,N*t.scale,N*t.scale);ctx.restore();if(oceanVisible)ctx.drawImage(oceanMap,t.x,t.y,N*t.scale,N*t.scale);if(visibleForest())ctx.drawImage(forestMap,t.x,t.y,N*t.scale,N*t.scale);if(layers.shapes.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);ctx.beginPath();ctx.rect(0,0,N,N);ctx.clip();for(let shape of drawings)drawShape(ctx,shape);ctx.restore();}if(layers.landmarks.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);for(let m of marks)drawLandmark(ctx,m);ctx.restore();}ctx.strokeStyle='#84988045';ctx.strokeRect(t.x,t.y,N*t.scale,N*t.scale);if(grid){ctx.strokeStyle='#dae5c62a';ctx.lineWidth=.5;for(let i=0;i<=N;i+=16){ctx.beginPath();ctx.moveTo(t.x+i*t.scale,t.y);ctx.lineTo(t.x+i*t.scale,t.y+N*t.scale);ctx.stroke();ctx.beginPath();ctx.moveTo(t.x,t.y+i*t.scale);ctx.lineTo(t.x+N*t.scale,t.y+i*t.scale);ctx.stroke()}}drawRoutePreview(ctx,p=>({x:t.x+p.x*t.scale,y:t.y+p.y*t.scale}));$('zoomtext').textContent=Math.round(zoom*100)+'%'}
+function draw(){syncLiving();if(workspaceMode==='3d'){sceneDirty=true;scheduleFrame();return;}let w=map.clientWidth,h=map.clientHeight;ctx.clearRect(0,0,w,h);let t=transform();ctx.save();ctx.shadowColor='#0005';ctx.shadowBlur=36;ctx.drawImage(groundMap,t.x,t.y,N*t.scale,N*t.scale);ctx.restore();if(visibleForest())ctx.drawImage(forestMap,t.x,t.y,N*t.scale,N*t.scale);drawMapDetail(t,w,h);if(oceanVisible)ctx.drawImage(oceanMap,t.x,t.y,N*t.scale,N*t.scale);if(layers.shapes.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);ctx.beginPath();ctx.rect(0,0,N,N);ctx.clip();for(let shape of drawings)drawShape(ctx,shape);ctx.restore();}if(layers.landmarks.visible&&view!=='height'){ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.scale,t.scale);for(let m of marks)drawLandmark(ctx,m);ctx.restore();}ctx.strokeStyle='#84988045';ctx.strokeRect(t.x,t.y,N*t.scale,N*t.scale);if(grid){ctx.strokeStyle='#dae5c62a';ctx.lineWidth=.5;for(let i=0;i<=N;i+=16){ctx.beginPath();ctx.moveTo(t.x+i*t.scale,t.y);ctx.lineTo(t.x+i*t.scale,t.y+N*t.scale);ctx.stroke();ctx.beginPath();ctx.moveTo(t.x,t.y+i*t.scale);ctx.lineTo(t.x+N*t.scale,t.y+i*t.scale);ctx.stroke()}}drawRoutePreview(ctx,p=>({x:t.x+p.x*t.scale,y:t.y+p.y*t.scale}));$('zoomtext').textContent=Math.round(zoom*100)+'%'}
 function composeSurface(canvasFallback=false){
  composite.setTransform(1,0,0,1,0,0);
  composite.clearRect(0,0,1024,1024);
@@ -160,6 +175,7 @@ function renderFrame(time){
    if(changedScene){
     composeSurface();
     gpu.updateDecals(terrainDecals());
+    gpu.updateDetail(N,detailPixels);
    }
    gpu.update(surfaceHeights,changedScene?combined:null,sceneMarks());
    gpu.updateOcean(N,oceanVisible?oceanImage.data:null);
@@ -172,7 +188,7 @@ function renderFrame(time){
   sceneDirty=false;
  }
  mc.clearRect(0,0,w,h);
- if(gpu)gpu.draw(w,h,camera);
+ if(gpu)gpu.draw(w,h,camera,shade&&layers.elevation.visible);
  else{renderTerrain(mc,w,h,surfaceHeights,i=>[fallbackPixels[i*4],fallbackPixels[i*4+1],fallbackPixels[i*4+2]],sea,false,camera,orbitPointer?6:3,orbitPointer||view!=='terrain'&&!visibleForest()?null:{image:combined,mask:detailMask});if(layers.shapes.visible&&view!=='height'){const project=(x,y)=>projectTerrain(x,y,sampleTerrain(x,y,surfaceHeights,sea,false)+.2,w,h,camera);for(let shape of drawings)drawProjectedShape(mc,shape,project);}for(let m of sceneMarks().sort((a,b)=>{let depth=m=>((m.x-N/2)*Math.sin(camera.yaw)+(m.y-N/2)*Math.cos(camera.yaw))*Math.cos(camera.pitch)+(sampleTerrain(m.x,m.y,surfaceHeights,sea,false)-62)*.65*Math.sin(camera.pitch);return depth(a)-depth(b);})){let p=projectTerrain(m.x,m.y,sampleTerrain(m.x,m.y,surfaceHeights,sea,false),w,h,camera),scale=Math.max(.1,Math.min((w-50)/365,(h-100)/290))*camera.zoom;let size=m.size*64/44*scale,kind=ATLAS_TYPES.indexOf(m.type);mc.globalAlpha=m.opacity??1;mc.drawImage(landmarkAtlas,kind*64,0,64,64,p.x-size/2,p.y-size/2,size,size);mc.globalAlpha=1;}}
  draw3DBrush();drawRoutePreview(mc,p=>projectTerrain(p.x,p.y,sampleTerrain(p.x,p.y,surfaceHeights,sea,false)+.5,w,h,camera));
  let duration=performance.now()-started,delta=time-lastFrameTime;if(lastFrameTime&&delta>0&&delta<200&&(orbitPointer||down)){let fps=1000/delta;averageFps=averageFps?averageFps*.8+fps*.2:fps;}lastFrameTime=time;
