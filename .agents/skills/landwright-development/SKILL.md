@@ -42,6 +42,8 @@ Use queued window RAF in lifecycle tests; synchronous global RAF causes recursio
 
 Run `npm ci` when needed, `npm test`, relevant `node --check` commands, and `git diff --check`. Browser-check visual changes in both themes and 2D/3D; jsdom does not verify pixels/GPU performance. Release through existing Pages `main:/`; inspect the actual remote/configuration. Coordinate cache URLs for runtime releases; docs-only changes need no version bump. Report deployment evidence and limitations.
 
+Include a clickable link to the updated build in every release or preview handoff. Verify that the public URL serves the new build before labeling it live. If the update is still local, link to a runnable preview when available. If only the previous release is accessible, label that link as the current live build and state that the new version is pending.
+
 Update `docs/tutorial.md`, `docs/kb/`, README and handoff alongside features; refresh this handoff snapshot. Preserve: **start Raise/Lower at 5–10% Strength, short strokes, inspect, increase gradually**.
 
 Woodland coverage, canopy height and RGBA are derived, never saved. Keep picking/render geometry shared; rasterize on scheduled frames, not pointer events. Forest habitat masks cache by route-array identity: replace committed arrays immutably. Water/cliffs/path corridors hide trees while retaining density. Imports1–4 preserve old Forest color and start with empty density.
