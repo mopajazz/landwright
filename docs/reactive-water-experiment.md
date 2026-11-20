@@ -45,3 +45,7 @@ Select River, then Water Dropper in the tool settings. Choose a pool depth and c
 ### Close-zoom rendering
 
 In Terrain view, close zoom fades in world-aligned shader detail for stone, ground and canopy. Hill shading adds nearby ridge occlusion and directional lighting. WebGL 3D also adds distance haze, strongest at lower elevations. The effect is drawn at screen resolution and leaves saved elevations, brush coordinates, water levels and image exports as authored. Heightmap and Biome diagnostics keep their original rendering. Without WebGL, the editor keeps its Canvas terrain renderer.
+
+### Pouring water
+
+Select River, then the droplet icon. Click anywhere on the map to add water, or hold to keep pouring. The amount slider controls each dose. Water flows between neighboring cells according to differences in surface height. It pools in hollows, spills over low rims, and drains at the map edge. Shift-click removes the water at the clicked spot. Existing saved basin drops still load. Poured water is saved with the world and leaves the terrain bed intact.

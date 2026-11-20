@@ -1,4 +1,4 @@
-import{EARTHEN_MATERIALS}from'./earthen.mjs?v=2.9.2-detail.1';
+import{EARTHEN_MATERIALS}from'./earthen.mjs?v=2.9.2-pour.1';
 export const LEGACY_MATERIAL_COLORS=[[111,143,79],[193,173,127],[133,135,124],[53,94,67],[221,226,215],[137,112,79]];
 export const MATERIALS=Array.from({length:9},(_,i)=>{if(i===3)return['Forest','#355e43',[53,94,67]];let m=EARTHEN_MATERIALS.find(m=>m.id===i+1);return[m.name,m.hex,m.color];});
 export function noise(x,y){let v=Math.sin(x*127.1+y*311.7)*43758.5453;return v-Math.floor(v);}

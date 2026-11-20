@@ -1,6 +1,6 @@
-import {terrainDetailGLSL} from './terrain-detail.mjs?v=2.9.2-detail.1';
-import {sampleTerrain,terrainScale} from './terrain3d.mjs?v=2.9.2-detail.1';
-import {createLandmarkAtlas,ATLAS_TYPES} from './landmarks.mjs?v=2.9.2-detail.1';
+import {terrainDetailGLSL} from './terrain-detail.mjs?v=2.9.2-pour.1';
+import {sampleTerrain,terrainScale} from './terrain3d.mjs?v=2.9.2-pour.1';
+import {createLandmarkAtlas,ATLAS_TYPES} from './landmarks.mjs?v=2.9.2-pour.1';
 const vertex=`
 attribute vec3 a_position;
 attribute float a_height;
