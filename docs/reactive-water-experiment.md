@@ -41,3 +41,7 @@ This iteration estimates arrival times on the grid. It does not solve momentum o
 ### Water Dropper
 
 Select River, then Water Dropper in the tool settings. Choose a pool depth and click low ground. The pool fills four-neighbor cells below that level, measured from the bed at the clicked point. If a below-level path reaches the map edge, try a shallower setting. Shift-click the pool to remove it. A drop leaves the bed intact and can be undone. Saved projects store the drop location and level. Terrain and Map PNG show the pool, while Heightmap stays bed-only.
+
+### Close-zoom rendering
+
+In Terrain view, close zoom fades in world-aligned shader detail for stone, ground and canopy. Hill shading adds nearby ridge occlusion and directional lighting. WebGL 3D also adds distance haze, strongest at lower elevations. The effect is drawn at screen resolution and leaves saved elevations, brush coordinates, water levels and image exports as authored. Heightmap and Biome diagnostics keep their original rendering. Without WebGL, the editor keeps its Canvas terrain renderer.

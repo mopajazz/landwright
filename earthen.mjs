@@ -1,5 +1,5 @@
-import{rasterFrame}from'./raster-cache.mjs?v=2.9.2-water.3';
-import {MATERIAL_IDS} from './material-paint.mjs?v=2.9.2-water.3';
+import{rasterFrame}from'./raster-cache.mjs?v=2.9.2-detail.1';
+import {MATERIAL_IDS} from './material-paint.mjs?v=2.9.2-detail.1';
 
 export const EARTHEN_MATERIALS = [
   [1,'grass','Grass','Living ground',[105,125,72]],
