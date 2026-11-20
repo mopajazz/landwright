@@ -29,3 +29,11 @@ Each row compares the draft base with this revision using one scripted Lower str
 | 256² | WebGL | 283.4 | 300.0 | 2.7 |
 
 The 256² cached Open ocean raster had a median of 31.09 ms at the base revision and 33.91 ms with the opaque coverage mask in a separate Node benchmark. The browser timings varied by view and grid size. Hardware-accelerated frame pacing remains a release gate.
+
+### Depth and gravity iteration
+
+A shallow sill slows the advancing front. Travel time along each grid edge uses a bounded approximation of the shallow-water wave speed, which scales with the square root of depth. The shallower side of an edge controls the delay. Connected ocean water still settles at the configured sea level.
+
+At low sea levels, Shift + Land targets a shallow cut below sea level without flattening the cut to zero. Start a channel at the ocean and extend it toward the basin. A cut wholly inside dry land has no ocean source.
+
+This iteration estimates arrival times on the grid. It does not solve momentum or conserve water volume, and isolated excavations do not collect rainfall or groundwater.

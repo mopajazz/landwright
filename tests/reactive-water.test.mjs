@@ -150,3 +150,34 @@ test('an unrelated coastal removal does not restart a basin front', () => {
   }
   assert.equal(model.coverage[8*n+15],1);
 });
+
+test('a shallow sill slows ocean ingress compared with a deep channel', () => {
+  function makeChannel(bed) {
+    const n=16, heights=new Float32Array(n*n).fill(80);
+    heights[8*n]=40;
+    const model=createReactiveWater(n);
+    model.initialize(heights,62);
+    for(let x=1;x<=6;x++)heights[8*n+x]=bed;
+    heights[8*n+7]=40;
+    model.setTerrain(heights,62);
+    for(let i=0;i<8;i++)model.advance(1/30);
+    return model.coverage[8*n+7];
+  }
+  assert.ok(makeChannel(40)>makeChannel(61.9));
+});
+
+test('Land keeps a shallow sea cut above zero and exposes water from a connected shore', async () => {
+  const {coastStroke}=await import('../brushes.mjs');
+  const n=16, heights=new Float32Array(n*n).fill(50);
+  for(let y=0;y<n;y++)heights[y*n]=2;
+  const model=createReactiveWater(n);
+  model.initialize(heights,10);
+  coastStroke(heights,n,8,8,2,10,1,true);
+  assert.ok(heights[8*n+8]>0&&heights[8*n+8]<10);
+  model.setTerrain(heights,10);
+  assert.equal(model.connected[8*n+8],0);
+  for(let x=7;x>=1;x--)coastStroke(heights,n,x,8,2,10,1,true);
+  model.setTerrain(heights,10);
+  for(let i=0;i<60;i++)model.advance(1/30);
+  assert.equal(model.coverage[8*n+8],1);
+});

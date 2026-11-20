@@ -67,7 +67,7 @@ test('a held Lower stroke sends ocean coverage into the basin only through the c
   $('strength').value='100';
   $('size').value='12';
   stroke('pointerdown');
-  for(let i=0;i<24;i++)frame();
+  for(let i=0;i<120&&alpha(32,62)!==255;i++)frame();
   assert.equal(alpha(32,62),255);
   assert.equal(alpha(75,62),0);
 

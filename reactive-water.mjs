@@ -7,7 +7,7 @@ export function createReactiveWater(size, {cellsPerSecond = 24} = {}) {
   const connected = new Uint8Array(count);
   const nextConnected = new Uint8Array(count);
   const progress = new Float32Array(count);
-  const distance = new Int32Array(count);
+  const travelTime = new Float64Array(count);
   const arrival = new Float64Array(count).fill(Infinity);
   const queue = new Int32Array(count);
   const predecessor = new Int32Array(count);
@@ -71,32 +71,37 @@ export function createReactiveWater(size, {cellsPerSecond = 24} = {}) {
 
     // Start new routes at settled water and exposed boundaries. Adding a route
     // cannot invalidate an earlier arrival, so a widening cut keeps moving.
-    distance.fill(-1);
+    travelTime.fill(-1);
     tail = 0;
     for (let i = 0; i < count; i++) {
       if (nextConnected[i] && progress[i] >= .98) {
-        distance[i] = 0;
+        travelTime[i] = 0;
         candidatePredecessor[i] = -1;
         queue[tail++] = i;
       }
     }
     visitBoundary(i => {
-      if (nextConnected[i] && distance[i] < 0) {
-        distance[i] = 1;
+      if (nextConnected[i] && travelTime[i] < 0) {
+        travelTime[i] = 0;
         candidatePredecessor[i] = -1;
         queue[tail++] = i;
       }
     });
     spread((i, from) => {
-      if (nextConnected[i] && distance[i] < 0) {
-        distance[i] = distance[from] + 1;
+      if (nextConnected[i] && travelTime[i] < 0) {
+        // Long gravity-wave speed scales with the square root of depth.
+        // The shallower side of a grid edge limits propagation across it.
+        const depth = sea - Math.max(heights[from], heights[i]);
+        const relativeSpeed = Math.min(2, Math.max(.15, Math.sqrt(depth / 22)));
+        const edgeTime = progress[from] >= .98 ? 0 : 1 / (cellsPerSecond * relativeSpeed);
+        travelTime[i] = travelTime[from] + edgeTime;
         candidatePredecessor[i] = from;
         queue[tail++] = i;
       }
     });
     for (let i = 0; i < count; i++) {
       if (!nextConnected[i]) continue;
-      const candidate = time + Math.max(0, distance[i] - 1) / cellsPerSecond;
+      const candidate = time + travelTime[i];
       if (candidate < arrival[i]) {
         arrival[i] = candidate;
         predecessor[i] = candidatePredecessor[i];
