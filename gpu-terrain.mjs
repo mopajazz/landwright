@@ -1,5 +1,5 @@
-import {sampleTerrain,terrainScale} from './terrain3d.mjs?v=2.9.2-water.2';
-import {createLandmarkAtlas,ATLAS_TYPES} from './landmarks.mjs?v=2.9.2-water.2';
+import {sampleTerrain,terrainScale} from './terrain3d.mjs?v=2.9.2-water.3';
+import {createLandmarkAtlas,ATLAS_TYPES} from './landmarks.mjs?v=2.9.2-water.3';
 const vertex=`
 attribute vec3 a_position;
 attribute float a_height;

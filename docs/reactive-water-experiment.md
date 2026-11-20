@@ -37,3 +37,7 @@ A shallow sill slows the advancing front. Travel time along each grid edge uses 
 At low sea levels, Shift + Land targets a shallow cut below sea level without flattening the cut to zero. Start a channel at the ocean and extend it toward the basin. A cut wholly inside dry land has no ocean source.
 
 This iteration estimates arrival times on the grid. It does not solve momentum or conserve water volume, and isolated excavations do not collect rainfall or groundwater.
+
+### Water Dropper
+
+Select River, then Water Dropper in the tool settings. Choose a pool depth and click low ground. The pool fills four-neighbor cells below that level, measured from the bed at the clicked point. If a below-level path reaches the map edge, try a shallower setting. Shift-click the pool to remove it. A drop leaves the bed intact and can be undone. Saved projects store the drop location and level. Terrain and Map PNG show the pool, while Heightmap stays bed-only.
