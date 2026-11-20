@@ -27,7 +27,7 @@ Read **§0 and §§29–31 first** for the current state. Sections 14–29 retai
 | Heightmap | **N² actual bed elevations**; no water, canopy or roof relief |
 | Settlements | Entire subsystem removed: no menus, previews, layers, buildings, erasing targets or artwork. Legacy records/town symbols omitted on import |
 | Verification | Current full application run: **155 passed, 0 failed** (`/tmp/sharp-tests.log`) |
-| Knowledge base | [New worlds/resolution](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/kb/worlds.md), [tutorial](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/tutorial.md), [KB index](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/kb/index.md) |
+| Knowledge base | [New worlds/resolution](docs/kb/worlds.md), [tutorial](docs/tutorial.md), [KB index](docs/kb/index.md) |
 
 **Release evidence:** production browser showed v2.6, all six shape choices, the updated preview summary, all three export presets, and no application console errors. Local browser produced an actual 4096×4096 PNG; the 256×256 Heightmap matched every rounded saved bed pixel. Native Enter created a named flat 128 world; Undo restored the entire original project as parsed JSON. Dark/light and a 500px window were inspected; this does not establish real-phone touch behavior, full WCAG compliance, or GPU performance.
 
@@ -338,7 +338,7 @@ Semantic color tokens live in `theme.css`, loaded after `style.css`. Key pairs:
 | Accent foreground | `#182411` | `#ffffff` |
 | Focus | `#d5f5a3` | `#315d15` |
 
-Automated palette tests check normal text≥4.5:1 and essential tested control/focus pairs≥3:1. Recorded lowest ordinary UI text pairs: dark 5.03:1, light 4.98:1. See [contrast audit](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/contrast-audit.md) for scope and original measurements. Its Eraser-specific entry reflects the earlier special treatment; current toolbar Erase uses the common selected palette.
+Automated palette tests check normal text≥4.5:1 and essential tested control/focus pairs≥3:1. Recorded lowest ordinary UI text pairs: dark 5.03:1, light 4.98:1. See [contrast audit](docs/contrast-audit.md) for scope and original measurements. Its Eraser-specific entry reflects the earlier special treatment; current toolbar Erase uses the common selected palette.
 
 This is not a full WCAG conformance claim. Canvas alternatives, non-mouse authoring, screen-reader workflows, focus behavior, and general usability still need broader assessment. Disabled controls, terrain artwork, decorative separators, and preview colors are outside the palette-pair test. Live visual checks covered both themes, the narrow 180px expanded sidebar, and the collapsed rail.
 
@@ -758,7 +758,7 @@ v2.2 verification: **106 tests passed, 0 failed**. Tutorial/KB local links and s
 
 ## 17. Reusable development skill and next session
 
-The repository-scoped skill is [landwright-development](https://github.com/mopajazz/worldpainter-studio/blob/main/.agents/skills/landwright-development/SKILL.md). It applies to Landwright feature work, regressions, releases, onboarding/tutorial/KB updates, and Holler Maps or storytelling planning. Its `references/handoff.md` is a portable snapshot of this document, not a separate specification. When updating this handoff, refresh that snapshot in the same change; its skill link is rebased to `../SKILL.md`, and its contrast-audit link uses the bundled `references/docs/contrast-audit.md`. Refresh that audit copy if its source changes. In an active checkout, source/tests and this root handoff take precedence over an older installed skill snapshot.
+The repository-scoped skill is [landwright-development](.agents/skills/landwright-development/SKILL.md). It applies to Landwright feature work, regressions, releases, onboarding/tutorial/KB updates, and Holler Maps or storytelling planning. Its `references/handoff.md` is a portable snapshot of this document, not a separate specification. When updating this handoff, refresh that snapshot in the same change; its skill link is rebased to `../SKILL.md`, and its contrast-audit link uses the bundled `references/docs/contrast-audit.md`. Refresh that audit copy if its source changes. In an active checkout, source/tests and this root handoff take precedence over an older installed skill snapshot.
 
 To install elsewhere, copy the entire `landwright-development` directory into that runtime's supported skills directory (commonly `~/.agents/skills/`); retain `SKILL.md` and `references/handoff.md`. A skill file in this repository does not mean it is installed into every ChatGPT session or published to the plugin catalog. The portable `.skill` archive is a ZIP of that directory; extract it into the supported skills directory.
 
@@ -797,7 +797,7 @@ v2.3 verification: **118 tests passed, 0 failed**. Syntax and diff checks passed
 
 - v2.4 replaces the rejected cartoon pine/round-canopy stamps with terrain-integrated woodland. The release uses cache revision `2.4.0` and schema 5; imports 1–5 remain supported. Inspect actual Git/Pages status before quoting a release commit or deployment result.
 - The user approved connected textured canopy masses, irregular edges, muted greens, clearings and soft shadows following relief, then explicitly requested release. Preserve the existing painting, opacity, Forests layer/erasing, undo/redo and ten-tool interface.
-- Approved concept: [woodland art direction](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/design/README.md) and [reference image](https://github.com/mopajazz/worldpainter-studio/blob/main/docs/design/woodland-direction.png). It is generated concept art, **not** a screenshot or an asset pasted over the map. Actual rendering is procedural and is not a pixel-for-pixel reproduction.
+- Approved concept: [woodland art direction](docs/design/README.md) and [reference image](docs/design/woodland-direction.png). It is generated concept art, **not** a screenshot or an asset pasted over the map. Actual rendering is procedural and is not a pixel-for-pixel reproduction.
 - Previous release was `e56269b` (v2.3). No schema migration beyond the existing v5 density contract is needed. Do not restore generated tree stamps or import guessed Holler assets.
 
 ### Implementation map
@@ -1052,3 +1052,10 @@ Verification: full Node suite155/155 passes (`/tmp/sharp-tests.log`). Tests comp
 Local browser acceptance: sculpted the existing128² river/hillside map, restored it with Undo and switched to Canvas3D. No application-origin errors were observed; extension metadata errors are unrelated. The automated held-gesture test verifies raster sizes; browser visual checks do not establish a GPU frame rate.
 
 Release attempt: runtime commit `ae40db854d3e37e704e37770e3864a493e0940f6`; Pages run44587451759 built successfully but GitHub returned HTTP500 creating the deployment. A failed-job retry remained queued with no jobs. This is hosting evidence, not a test failure; verify a subsequent successful deployment and live v2.9.2 before claiming release.
+
+
+## 32. Draft experiment — sea-connected water
+
+PR #4 adds the visual response described in §29. The ocean reaches below-sea-level cells through four-neighbor routes from the map perimeter. Enclosed basins start dry, and a new cut can flood while the user is sculpting. The compact ocean raster and derived surface are shared by 2D and WebGL/Canvas 3D. Ground and woodland retain their existing terrain resolution. Authored river levels, bed heights, project schema 9 and the nine-tool editor are preserved.
+
+Project open, Undo/Redo, reduced motion and Map PNG export use settled water. Heightmap view and its PNG show bed elevation. Hidden tabs pause the advance. Living World or Water motion off settles the coastline. This draft approximates ocean coverage visually and keeps all transient data out of project saves. See [experiment notes](docs/reactive-water-experiment.md). Verify frame pacing on representative hardware before marking the PR ready.

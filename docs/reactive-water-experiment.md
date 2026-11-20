@@ -1,0 +1,31 @@
+# Sea-connected reactive water
+
+Cut a channel below sea level between a coast and an isolated low basin. Water starts advancing while the stroke is in progress. A cell can receive ocean water through its four direct neighbors. Two low cells that only touch at a corner do not share a connection. Enclosed low ground, including an enclosed atoll center, begins dry. Authored rivers retain their own water level where it is higher than the ocean surface.
+
+## Editing and rendering
+
+- Terrain view advances the front with Living World and Water motion enabled. Turning off either effect, using reduced motion, or switching to Biomes settles the coast immediately. Hidden tabs pause the front. Heightmap view and the Heightmap PNG show bed elevations. Turning Water off hides ocean and river surfaces.
+- New, imported, and history-restored maps derive settled water directly from the current terrain. No flood coverage, timing, or derived geometry is written to project schema 9. Map PNG exports use the settled topology, even while the editor shows a moving front.
+- The raster has one RGBA sample per terrain cell. In WebGL, the dynamic ocean texture and elevation buffer update independently of the cached material texture. The 2D view draws the ocean between ground and forest. Canvas 3D composites the current ocean raster with cached textures and uses the same derived geometry.
+- The model recomputes connectivity when cells cross sea level. A route that remains open keeps its scheduled arrival times through other terrain edits. Fully covered seabed skips procedural shading until water can recede from that cell. Raising ground above sea level clears that cell instantly. Cutting off a basin recedes its coverage.
+
+## Verification
+
+Run `npm ci` followed by `npm test`. For visual verification, use a map with ocean at one edge and a flat-bottomed interior basin behind a narrow ridge. Lower the ridge below sea level with the brush held down. Check the dry, advancing, and settled stages in Terrain view, then check Undo, Redo, reloading, Water off, reduced motion, and both PNG exports.
+
+This branch remains a draft pending verification of sculpting frame pacing on representative hardware.
+
+### Chromium software-rendering sample
+
+Each row compares the draft base with this revision using one scripted Lower stroke in a 1280 × 900 viewport. The sample used headless Chromium with SwiftShader. The sculpt column is p95 time between edit renders. The water column is p95 main-thread time per animation callback that publishes coverage without rebuilding the ground raster. Values are milliseconds.
+
+| Grid | View | Sculpt before | Sculpt after | Water callback |
+| --- | --- | ---: | ---: | ---: |
+| 128² | 2D | 183.4 | 133.3 | 2.1 |
+| 128² | WebGL | 200.0 | 200.0 | 1.3 |
+| 192² | 2D | 149.9 | 216.7 | 1.6 |
+| 192² | WebGL | 216.7 | 250.0 | 1.6 |
+| 256² | 2D | 183.3 | 183.3 | 5.6 |
+| 256² | WebGL | 283.4 | 300.0 | 2.7 |
+
+The 256² cached Open ocean raster had a median of 31.09 ms at the base revision and 33.91 ms with the opaque coverage mask in a separate Node benchmark. The browser timings varied by view and grid size. Hardware-accelerated frame pacing remains a release gate.

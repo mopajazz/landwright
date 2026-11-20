@@ -73,3 +73,16 @@ test('cached full-resolution terrain stays identical to a fresh render across lo
   assert.equal(check().data,buffer,'local edits retain the high-resolution buffer');
   s.weights.fill(0,120*8,121*8);s.paintAlpha[120]=0;check();s.sea=95;check();s.water=false;check();s.view='height';check();s.view='terrain';check();
 });
+
+test('cached earthen ground is restored when opaque ocean coverage recedes',()=>{
+  const s=scene();
+  s.heights.fill(25);
+  const oceanOpaque=new Uint8Array(s.n*s.n).fill(1), cache={};
+  const pixel=(data,index)=>Array.from(data.slice(index,index+4));
+  const center=(32*64+32)*4;
+  assert.deepEqual(pixel(renderEarthen({...s,cache,oceanOpaque}).data,center),[125,125,125,255]);
+  oceanOpaque[8*s.n+8]=0;
+  const updated=renderEarthen({...s,cache,oceanOpaque}).data;
+  assert.notDeepEqual(pixel(updated,center),[125,125,125,255]);
+  assert.deepEqual(updated,renderEarthen({...s,oceanOpaque}).data);
+});

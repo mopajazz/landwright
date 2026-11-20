@@ -1,5 +1,5 @@
-import{applyMaterialCoverage}from'./material-paint.mjs?v=2.9.2';
-import{MATERIALS,blendPaint}from'./brushes.mjs?v=2.9.2';
+import{applyMaterialCoverage}from'./material-paint.mjs?v=2.9.2-water.1';
+import{MATERIALS,blendPaint}from'./brushes.mjs?v=2.9.2-water.1';
 export const ROUTE_WORK_LIMIT=8000000,PROJECT_WORK_LIMIT=32000000;
 export function routeWork(r){let samples=1;for(let i=1;i<r.points.length;i++)samples+=Math.max(1,Math.ceil(Math.hypot(r.points[i].x-r.points[i-1].x,r.points[i].y-r.points[i-1].y)*2));return samples*(Math.ceil(r.width*1.5)+3)**2;}
 const finite=(v,a,b)=>typeof v==='number'&&Number.isFinite(v)&&v>=a&&v<=b;

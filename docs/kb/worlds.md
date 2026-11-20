@@ -1,6 +1,6 @@
 # Starting worlds and export resolution
 
-Open **New world**. Give the world a name, choose one of six starting terrains and inspect the large preview. Shape, terrain detail, seed and relief update the preview without touching the current map. Island, Archipelago, Continent and Atoll generate land; Open ocean begins underwater and Flat grass is entirely level at height 80. Generation settings contains a repeatable seed and relief; relief is disabled for level starts.
+Open **New world**. Give the world a name, choose one of six starting terrains and inspect the large preview. Shape, terrain detail, seed and relief update the preview without touching the current map. Island, Archipelago, Continent and Atoll generate land; Open ocean begins underwater and Flat grass is entirely level at height 80. An enclosed Atoll basin starts dry in the reactive-water draft. A channel below sea level lets ocean water reach the basin. Generation settings contains a repeatable seed and relief; relief is disabled for level starts.
 
 ## Terrain detail
 
