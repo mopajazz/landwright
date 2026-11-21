@@ -1,6 +1,6 @@
 # Landwright: your first living landscape
 
-This tutorial covers the current v2.9 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/worldpainter-studio/) or browse the [knowledge base](kb/index.md).
+This tutorial covers the current v2.9 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/landwright/) or browse the [knowledge base](kb/index.md).
 
 ## Before your first stroke: start with low Strength
 
