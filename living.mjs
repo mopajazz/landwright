@@ -28,7 +28,7 @@ export function drawLiving(c,w,h,s,project,time,prefs){c.clearRect(0,0,w,h);if(!
 // ---------------------------------------------------------------------------
 // Clouds: soft cumulus sprites painted once per cloud and cached, then drawn
 // with a ground-projected shadow. Visual only; never touches scene data.
-const CLOUD_COUNT=6,CLOUD_ALTITUDE=185,SUN={x:.5,y:.38};
+const CLOUD_COUNT=6,CLOUD_ALTITUDE=235,SUN={x:.5,y:.38};
 const seeded=seed=>()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
 const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
 // Deterministic cloud positions in map cells. Clouds drift east with a slight

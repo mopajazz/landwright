@@ -1,6 +1,6 @@
-import{rasterFrame}from'./raster-cache.mjs?v=2.9.4';
-import{pathField,riverField}from'./routes.mjs?v=2.9.4';
-import{brushWeight}from'./brushes.mjs?v=2.9.4';
+import{rasterFrame}from'./raster-cache.mjs?v=2.10.0';
+import{pathField,riverField}from'./routes.mjs?v=2.10.0';
+import{brushWeight}from'./brushes.mjs?v=2.10.0';
 // Authoritative density is independent of surface paint. A gesture blends once
 // against its starting field, so event frequency cannot amplify opacity.
 export function forestStroke(field,n,cx,cy,r,{preset='soft',opacity=1,density=.65,erase=false,initial,coverage}={}){

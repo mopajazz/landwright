@@ -1,6 +1,6 @@
-import {terrainDetailGLSL} from './terrain-detail.mjs?v=2.9.4';
-import {sampleTerrain,terrainScale} from './terrain3d.mjs?v=2.9.4';
-import {createLandmarkAtlas,ATLAS_TYPES} from './landmarks.mjs?v=2.9.4';
+import {terrainDetailGLSL} from './terrain-detail.mjs?v=2.10.0';
+import {sampleTerrain,terrainScale,verticalScale} from './terrain3d.mjs?v=2.10.0';
+import {createLandmarkAtlas,ATLAS_TYPES} from './landmarks.mjs?v=2.10.0';
 const vertex=`
 attribute vec3 a_position;
 attribute float a_height;
@@ -12,6 +12,7 @@ uniform vec2 u_pan;
 uniform vec2 u_angle;
 uniform float u_scale;
 uniform float u_center;
+uniform float u_vscale;
 uniform float u_sprite;
 uniform vec4 u_walk;
 uniform float u_walkPitch;
@@ -21,7 +22,7 @@ varying float v_depth;
 void main(){
  float c=cos(u_angle.x),s=sin(u_angle.x),sp=sin(u_angle.y),cp=cos(u_angle.y);
  vec2 p=a_position.xy-vec2(u_center);float rx=p.x*c-p.y*s,ry=p.x*s+p.y*c;
- float elevation=(a_position.z+a_height-62.0)*0.65;
+ float elevation=(a_position.z+a_height-62.0)*u_vscale;
  vec2 screen=vec2(u_size.x*.5+rx*u_scale,u_size.y*.57+(ry*sp-elevation*cp)*u_scale)+u_pan+a_offset*u_scale;
  float depth=ry*cp+elevation*sp+u_sprite*2.0;
  gl_Position=vec4(screen.x/u_size.x*2.0-1.0,1.0-screen.y/u_size.y*2.0,-depth/1024.0,1.0);
@@ -29,7 +30,7 @@ void main(){
   vec2 delta=a_position.xy-u_walk.xy;
   float forward=dot(delta,vec2(c,s));
   float side=dot(delta,vec2(-s,c));
-  float up=(a_position.z+a_height)*0.65-u_walk.z;
+  float up=(a_position.z+a_height)*u_vscale-u_walk.z;
   float tiltSin=sin(u_walkPitch),tiltCos=cos(u_walkPitch);
   float distance=forward*tiltCos+up*tiltSin;
   float vertical=up*tiltCos-forward*tiltSin;
@@ -87,7 +88,7 @@ export function createGPUTerrain(canvas){
  function shader(type,source){let s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){let e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e);}return s;}
  const program=gl.createProgram(),vs=shader(gl.VERTEX_SHADER,vertex),fs=shader(gl.FRAGMENT_SHADER,fragment);gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);gl.deleteShader(vs);gl.deleteShader(fs);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);
  const attrs=['position','uv','offset','alpha','height'].map(name=>gl.getAttribLocation(program,'a_'+name));
- const uniforms=Object.fromEntries(['size','pan','angle','scale','sprite','texture','center','ocean','showOcean','decals','showDecals','detail','cells','detailAmount','lighting','walk','walkPitch'].map(name=>[name,gl.getUniformLocation(program,'u_'+name)]));
+ const uniforms=Object.fromEntries(['size','pan','angle','scale','sprite','texture','center','ocean','showOcean','decals','showDecals','detail','cells','detailAmount','lighting','walk','walkPitch','vscale'].map(name=>[name,gl.getUniformLocation(program,'u_'+name)]));
  const terrain=gl.createBuffer(),elevations=gl.createBuffer(),indices=gl.createBuffer(),sprites=gl.createBuffer();
  const uintIndices=gl.getExtension('OES_element_index_uint');
  let n=0,indexCount=0,indexType,surfaceSize=0,decalsSize=0,detailSize=0;
@@ -165,9 +166,9 @@ export function createGPUTerrain(canvas){
    gl.uniform1f(uniforms.cells,n);
    gl.uniform1f(uniforms.detailAmount,detailEnabled?Math.min(1,Math.max(0,(scale-2.8)/3)):0);
    gl.uniform1f(uniforms.lighting,shade?1:0);
-   gl.uniform1f(uniforms.center,n/2);gl.uniform2f(uniforms.size,w,h);gl.uniform2f(uniforms.pan,camera.panX||0,camera.panY||0);gl.uniform2f(uniforms.angle,walk?.yaw??camera.yaw,camera.pitch);gl.uniform1f(uniforms.scale,terrainScale(w,h,camera));gl.uniform1i(uniforms.texture,0);gl.uniform1i(uniforms.ocean,1);gl.uniform1i(uniforms.decals,2);gl.uniform1f(uniforms.showDecals,showDecals?1:0);gl.uniform1f(uniforms.showOcean,showOcean?1:0);gl.uniform1f(uniforms.sprite,0);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,surface);bind(terrain);gl.bindBuffer(gl.ARRAY_BUFFER,elevations);gl.enableVertexAttribArray(attrs[4]);gl.vertexAttribPointer(attrs[4],1,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indices);gl.drawElements(gl.TRIANGLES,indexCount,indexType,0);
+   gl.uniform1f(uniforms.center,n/2);gl.uniform1f(uniforms.vscale,verticalScale(n));gl.uniform2f(uniforms.size,w,h);gl.uniform2f(uniforms.pan,camera.panX||0,camera.panY||0);gl.uniform2f(uniforms.angle,walk?.yaw??camera.yaw,camera.pitch);gl.uniform1f(uniforms.scale,terrainScale(w,h,camera));gl.uniform1i(uniforms.texture,0);gl.uniform1i(uniforms.ocean,1);gl.uniform1i(uniforms.decals,2);gl.uniform1f(uniforms.showDecals,showDecals?1:0);gl.uniform1f(uniforms.showOcean,showOcean?1:0);gl.uniform1f(uniforms.sprite,0);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,surface);bind(terrain);gl.bindBuffer(gl.ARRAY_BUFFER,elevations);gl.enableVertexAttribArray(attrs[4]);gl.vertexAttribPointer(attrs[4],1,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indices);gl.drawElements(gl.TRIANGLES,indexCount,indexType,0);
    if(marks.length&&!walk){
-    if(camera.yaw!==lastYaw||camera.pitch!==lastPitch){let c=Math.cos(camera.yaw),s=Math.sin(camera.yaw),cp=Math.cos(camera.pitch),sp=Math.sin(camera.pitch);for(let item of marks)item.depth=((item.m.x-n/2)*s+(item.m.y-n/2)*c)*cp+(item.z-62)*.65*sp;marks.sort((a,b)=>a.depth-b.depth);let offset=0;for(let {m,z} of marks){let kind=ATLAS_TYPES.indexOf(m.type),half=m.size*32/44;for(let [x,y] of [[-1,-1],[1,-1],[1,1],[-1,-1],[1,1],[-1,1]]){spriteData.set([m.x,m.y,z+1,(kind+(x+1)/2)/ATLAS_TYPES.length,(y+1)/2,x*half,y*half,m.opacity??1],offset);offset+=8;}}gl.bindBuffer(gl.ARRAY_BUFFER,sprites);gl.bufferData(gl.ARRAY_BUFFER,spriteData,gl.DYNAMIC_DRAW);lastYaw=camera.yaw;lastPitch=camera.pitch;}
+    if(camera.yaw!==lastYaw||camera.pitch!==lastPitch){let c=Math.cos(camera.yaw),s=Math.sin(camera.yaw),cp=Math.cos(camera.pitch),sp=Math.sin(camera.pitch);for(let item of marks)item.depth=((item.m.x-n/2)*s+(item.m.y-n/2)*c)*cp+(item.z-62)*verticalScale(n)*sp;marks.sort((a,b)=>a.depth-b.depth);let offset=0;for(let {m,z} of marks){let kind=ATLAS_TYPES.indexOf(m.type),half=m.size*32/44;for(let [x,y] of [[-1,-1],[1,-1],[1,1],[-1,-1],[1,1],[-1,1]]){spriteData.set([m.x,m.y,z+1,(kind+(x+1)/2)/ATLAS_TYPES.length,(y+1)/2,x*half,y*half,m.opacity??1],offset);offset+=8;}}gl.bindBuffer(gl.ARRAY_BUFFER,sprites);gl.bufferData(gl.ARRAY_BUFFER,spriteData,gl.DYNAMIC_DRAW);lastYaw=camera.yaw;lastPitch=camera.pitch;}
     gl.uniform1f(uniforms.sprite,1);gl.uniform1f(uniforms.showOcean,0);gl.uniform1f(uniforms.showDecals,0);gl.disableVertexAttribArray(attrs[4]);gl.bindTexture(gl.TEXTURE_2D,atlas);bind(sprites);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);gl.drawArrays(gl.TRIANGLES,0,marks.length*6);gl.depthMask(true);
    }
   },
