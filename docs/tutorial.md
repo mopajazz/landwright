@@ -50,12 +50,12 @@ There are no points to place and nothing to finish: each drag is one stroke and 
 
 ## 5. Carve a river
 
-1. Choose **River (V)**. *Carve per stroke* sets how much one stroke cuts (default 1.5 blocks); *Water* sets how much water it releases (default 60%).
-2. Drag from high ground toward the sea. The ground under the brush is lowered, water runs down the land as you draw, and moving water deepens the channel and carries sediment, which settles where the flow slows: fans, deltas, marshy flats.
+1. Choose **River (V)**. *Carve per stroke* sets how much one stroke cuts (default 1.5 blocks, D/E to change); *Water* sets how much water it releases (default 60%); *Meander* bends the channel from side to side of your stroke (default 40%).
+2. Drag from high ground toward the sea. The channel is graded downhill along your stroke so the water stays in it. The ground under the brush is lowered, water runs down the land as you draw, and moving water deepens the channel and carries sediment, which settles where the flow slows: fans, deltas, marshy flats.
 3. Release. The start of your stroke becomes a **spring** that keeps the river flowing. Where the water cannot reach the sea it fills hollows into lakes.
 4. Go over a river again to cut deeper. Hold **Shift** while dragging to dry an area: it removes springs and standing water under the brush.
 
-Gravity has the final say: water follows the land, not your exact line, so carve the course you want and the river finds its way. Erosion only happens while you are drawing; afterwards the water flows but does not keep cutting.
+If you draw uphill, the channel cuts through the rise up to a limit; beyond that, gravity has the final say and the water pools or finds another way. Erosion only happens while you are drawing; afterwards the water flows but does not keep cutting.
 
 In the sea-connected water draft, a low basin stays dry until you open a channel from the ocean. Start with short Lower strokes at 1–3 blocks per stroke. With **Living World → Water motion** enabled in Terrain view, you can see the advance during sculpting. Turning motion off shows the settled water immediately.
 

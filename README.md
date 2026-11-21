@@ -31,8 +31,8 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 | Right drag or Alt + drag in 3D | Orbit and tilt |
 | R / L / Q / F | Raise / lower / smooth / flatten |
 | B or P / C or M / H | Paint / land / pan |
-| D / E | Flatten target −/+1 block; Paint/Path Opacity −/+5% |
-| Shift + D / E | Flatten target −/+10 blocks |
+| D / E | Smaller/bigger: Height per stroke (Raise/Lower, 0.5 blocks), Strength (Smooth, 5%), Carve per stroke (River, 0.25 blocks), Opacity (Paint/Path, 5%), Flatten target (1 block) |
+| Shift + D / E | Four steps at once; Flatten target 10 blocks |
 | J / V | Path / river |
 | Enter or double-click / Escape | Finish route / cancel preview |
 | Shift + Raise/Lower or Land | Reverse elevation direction / remove land |

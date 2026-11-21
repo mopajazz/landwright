@@ -13,8 +13,27 @@ const EROSION=.06,MAX_CUT=.05,FAST=.04,SETTLE=.5,WET=.02;
 export function wandDab(heights,water,n,cx,cy,r,{depth=WAND_DEFAULTS.depth,flow=WAND_DEFAULTS.water,stroke,floor,ceiling,preset='soft'}){
  heightStroke(heights,n,cx,cy,r,{dir:-1,budget:depth,pre:stroke.pre,reach:stroke.reach,floor,ceiling,preset});
  const x=Math.round(cx),y=Math.round(cy);if(x<0||y<0||x>=n||y>=n)return;
+ gradeChannel(heights,n,x,y,r,stroke,{floor,limit:Math.max(6,depth*4)});
  // water scales with brush area so wide strokes are not starved
  water[y*n+x]+=flow/100*.35*Math.max(1,r*.5);
+}
+
+// Keep the drawn channel running downhill along the stroke: each new point's
+// bed is held a little below the previous one, cutting through rises (at most
+// `limit` below the ground there before the stroke), so the water follows the
+// line you drew instead of spilling over the lower bank. Cuts are feathered
+// across the channel so the sides stay smooth.
+const GRADE_DROP=.08;
+function gradeChannel(heights,n,x,y,r,stroke,{floor=0,limit=6}){
+ const c=y*n+x,inner=Math.max(1.5,r*.55);
+ // grade only as the stroke moves on; holding still must not dig a pit
+ if(stroke.lastCell!==undefined&&Math.hypot(x-stroke.lastCell%n,y-Math.floor(stroke.lastCell/n))<1)return;
+ if(stroke.lastBed!==undefined){
+  const target=Math.max(floor,stroke.pre[c]-limit,stroke.lastBed-GRADE_DROP);
+  if(heights[c]>target)for(let yy=Math.max(0,Math.floor(y-inner));yy<=Math.min(n-1,Math.ceil(y+inner));yy++)for(let xx=Math.max(0,Math.floor(x-inner));xx<=Math.min(n-1,Math.ceil(x+inner));xx++){
+   const d=Math.hypot(xx-x,yy-y)/inner;if(d>1)continue;const i=yy*n+xx,goal=target+(heights[c]-target)*d*d;if(heights[i]>goal)heights[i]=Math.max(floor,goal);}
+ }
+ stroke.lastBed=heights[c];stroke.lastCell=c;
 }
 
 // One erosion step while the stroke is held. Water moving downhill lowers its
@@ -67,3 +86,15 @@ export function dryArea(water,springs,n,cx,cy,r){const r2=r*r;for(let y=Math.max
 // Add a spring at the start of a finished stroke, replacing any spring within
 // two cells, and keep at most MAX_SPRINGS.
 export function addSpring(springs,cell,rate,n){if(rate<=0)return springs;const x=cell%n,y=Math.floor(cell/n);const kept=springs.filter(s=>((s.cell%n)-x)**2+(Math.floor(s.cell/n)-y)**2>4);kept.push({cell,rate});return kept.slice(-MAX_SPRINGS);}
+
+// Meander: swing the carving point to either side of the drawn stroke along a
+// smooth two-frequency wave, so even a straight drag makes winding bends.
+// `state` keeps the stroke's smoothed direction and arc length.
+export function meanderPoint(state,p,r,amount,n){
+ if(state.prev){const dx=p.x-state.prev.x,dy=p.y-state.prev.y,len=Math.hypot(dx,dy);
+  if(len>1e-6){state.arc+=len;const ux=dx/len,uy=dy/len;if(!state.dir)state.dir={x:ux,y:uy};else{const mx=state.dir.x*.85+ux*.15,my=state.dir.y*.85+uy*.15,ml=Math.hypot(mx,my)||1;state.dir={x:mx/ml,y:my/ml};}}}
+ state.prev={x:p.x,y:p.y};
+ if(!(amount>0)||!state.dir)return {x:p.x,y:p.y};
+ const full=amount*Math.max(5,r*2.5),wavelength=Math.max(28,r*12,full*8),amp=full*Math.min(1,state.arc/(wavelength*.5)),a=state.arc/wavelength*Math.PI*2+state.phase;
+ const off=amp*(Math.sin(a)+.35*Math.sin(a*2.3+1.7))/1.35;
+ return {x:Math.max(0,Math.min(n-1,p.x-state.dir.y*off)),y:Math.max(0,Math.min(n-1,p.y+state.dir.x*off))};}
