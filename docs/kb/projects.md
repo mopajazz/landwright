@@ -4,7 +4,7 @@
 
 Use Download project or Ctrl/Cmd+S. The `.world.json` file contains terrain, paint, forest density, route geometry/levels and layers. Import it to continue editing. Browser autosave is specific to this browser and hosting origin, has finite storage, and is not a cloud backup. The save badge distinguishes saving from a completed local save.
 
-New world replaces the active canvas. Download anything important first; session undo is useful but is not a substitute for a file. Supported grid sizes are Small 128², Medium 192², Large 256². Versions 1–8 import into v9; new saves include compact material coverage, forest density and routes. Retired settlement records and old town symbols are omitted; terrain and other supported content remain. Older app versions cannot read v9. Download a backup before editing an important older project. Old painted RGB colors and opacity are preserved; new material texture is applied as you repaint. Legacy dark-green Forest paint remains color until you paint new forest density deliberately.
+New world replaces the active canvas. Download anything important first; session undo is useful but is not a substitute for a file. Supported grid sizes are 128², 192², 256², and experimental 512². Versions 1–8 import into v9; new saves include compact material coverage, forest density and routes. Retired settlement records and old town symbols are omitted; terrain and other supported content remain. Older app versions cannot read v9. Download a backup before editing an important older project. Old painted RGB colors and opacity are preserved; new material texture is applied as you repaint. Legacy dark-green Forest paint remains color until you paint new forest density deliberately.
 
 ## Export types
 

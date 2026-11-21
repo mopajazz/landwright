@@ -9,3 +9,16 @@ test('local raster invalidation stays bounded, unchanged frames skip pixels, and
  const same=rasterFrame(cache,128,512,[field]);assert.equal(same.bounds.x1,0);
  assert.notEqual(rasterFrame(cache,192,768,[new Float32Array(192*192)]).data,first.data);
 });
+
+test('compatible frames retain backing storage for canvas writes and comparison fields',()=>{
+ const allocations=[],cache={allocate(size){const data=new Uint8ClampedArray(size*size*4);allocations.push(data);return data;}};
+ const field=new Float32Array(16);
+ const first=rasterFrame(cache,4,16,[field]),previous=cache.fields[0];
+ field[5]=1;
+ const next=rasterFrame(cache,4,16,[field]);
+ assert.equal(first.data,allocations[0]);
+ assert.equal(next.data,first.data);
+ assert.equal(cache.fields[0],previous);
+ assert.equal(previous[5],1);
+ assert.equal(allocations.length,1);
+});

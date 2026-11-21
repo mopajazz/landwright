@@ -9,8 +9,9 @@ Open **New world**. Give the world a name, choose one of six starting terrains a
 | Quick sketch · Small |128×128|16,384|Lightest workload, quick ideas|
 | Standard · Medium |192×192|36,864|Balance of detail and speed|
 | Detailed · Large |256×256|65,536|Finer edits, four times Quick sketch’s samples|
+| Experimental |512×512|262,144|Finer edits with a higher frame time and memory cost|
 
-These are square elevation grids, not screen sizes or image-export pixels. All can be edited in 2D or 3D and exported at any offered image resolution. More terrain samples increase terrain detail and processing/memory costs. There are no 512/1024 editable grids, rectangular worlds, device-resolution maps or retro rendering mode in this release.
+Every size supports 2D and 3D editing and the same image export options. At 512 × 512, material paint can exceed browser autosave storage. Use **Save project** to download the editable JSON if the save badge reports a storage limit. See the [512 terrain experiment](../terrain-resolution-512.md) for profiling results.
 
 ## Keep the current world
 

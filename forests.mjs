@@ -1,6 +1,6 @@
-import{rasterFrame}from'./raster-cache.mjs?v=2.9.2-pour.1';
-import{pathField,riverField}from'./routes.mjs?v=2.9.2-pour.1';
-import{brushWeight}from'./brushes.mjs?v=2.9.2-pour.1';
+import{rasterFrame}from'./raster-cache.mjs?v=2.9.2-walk.1';
+import{pathField,riverField}from'./routes.mjs?v=2.9.2-walk.1';
+import{brushWeight}from'./brushes.mjs?v=2.9.2-walk.1';
 // Authoritative density is independent of surface paint. A gesture blends once
 // against its starting field, so event frequency cannot amplify opacity.
 export function forestStroke(field,n,cx,cy,r,{preset='soft',opacity=1,density=.65,erase=false,initial,coverage}={}){
@@ -34,12 +34,14 @@ export function buildWoodland({n,heights,forest,sea,riverWater,paths,shade=true}
 }
 function sample(a,n,x,y){x=clamp(x,0,n-1);y=clamp(y,0,n-1);let ix=Math.floor(x),iy=Math.floor(y),u=x-ix,v=y-iy,j=iy*n+ix,k=Math.min(n-1,iy+1)*n+ix,r=ix<n-1?1:0;return(a[j]*(1-u)+a[j+r]*u)*(1-v)+(a[k]*(1-u)+a[k+r]*u)*v;}
 export function renderWoodland(woodland,width=woodland.n*4,cache){
- const {n,coverage,allowed,light}=woodland,{data,bounds:dirty}=rasterFrame(cache,n,width,[coverage,allowed,light]);if(!coverage.some(v=>v>0)){data.fill(0);return{width,height:width,data};}let pattern=foliagePattern(n,width),scale=n/width;
+ const {n,coverage,allowed,light}=woodland,{data,bounds:dirty}=rasterFrame(cache,n,width,[coverage,allowed,light]);
  for(let y=dirty.y0;y<dirty.y1;y++)data.fill(0,(y*width+dirty.x0)*4,(y*width+dirty.x1)*4);
+ if(dirty.x0===dirty.x1||!coverage.some(v=>v>0))return{width,height:width,data,bounds:dirty};
+ let pattern=foliagePattern(n,width),scale=n/width;
  const b=woodland.bounds,x0=Math.max(dirty.x0,Math.floor((b.minX-2)/scale)),x1=Math.min(dirty.x1,Math.ceil((b.maxX+3)/scale)),y0=Math.max(dirty.y0,Math.floor((b.minY-2)/scale)),y1=Math.min(dirty.y1,Math.ceil((b.maxY+3)/scale));
  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){let wx=(x+.5)*scale-.5,wy=(y+.5)*scale-.5,ix=Math.round(clamp(wx,0,n-1)),iy=Math.round(clamp(wy,0,n-1));if(!allowed[iy*n+ix])continue;let c=sample(coverage,n,wx,wy),shadow=sample(coverage,n,wx-.65,wy-.65)*.17*(1-c),alpha=c*.97+shadow;if(alpha<.002)continue;let i=y*width+x,t=pattern.tone[i]*sample(light,n,wx,wy),v=pattern.tint[i],j=i*4;
   // Muted moss/olive variation and contact shade, without outlines or trunks.
   data[j]=((60+v*40)*t*c*.97+24*shadow)/alpha;data[j+1]=((87+v*37)*t*c*.97+40*shadow)/alpha;data[j+2]=((39+v*18)*t*c*.97+23*shadow)/alpha;data[j+3]=alpha*255;
- }return{width,height:width,data};
+ }return{width,height:width,data,bounds:dirty};
 }
 export function woodlandSurface(ground,woodland){if(!woodland.height.some(v=>v>0))return ground;return Float32Array.from(ground,(h,i)=>Math.min(255,h+woodland.height[i]));}

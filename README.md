@@ -59,7 +59,7 @@ Collapse the toolbox to an icon rail, drag its edge to resize it, or use arrow k
 
 UI palette contrast checks and their scope are documented in [the contrast audit](docs/contrast-audit.md).
 
-New world includes a **Flat grass** preset: a completely level grass field at elevation 80. Select **Small (128 × 128)**, **Medium (192 × 192)**, or **Large (256 × 256)** before creation. Size is retained in project files and undo history; existing projects open at their original 256 × 256 size.
+New world includes a **Flat grass** preset: a completely level grass field at elevation 80. Select **Small (128 × 128)**, **Medium (192 × 192)**, **Large (256 × 256)**, or **Experimental (512 × 512)** before creation. Project files and undo history retain the world size. Older projects without a size open at 256 × 256.
 
 The toolbox is grouped by function: **Terrain** (Raise, Lower, Smooth, Flatten, River, Land), **Surface** (Path, Paint), and **Navigate** (Pan). Group separators remain visible in the collapsed rail. Icons share a 24-unit grid, 1.9-unit stroke, and 28px display size: peak/add, excavated basin/remove, sanding block, spirit level, shoreline, brush and hand. Labels, shortcut hints, accessible names, and a selected-edge marker supplement the silhouettes.
 
@@ -112,7 +112,7 @@ D/E decreases/increases Paint or Path Opacity in5% steps. The dedicated Erase to
 
 ## v2.6 — a clearer beginning and larger exports
 
-New World now offers a live preview of the selected terrain and detail, descriptive shape choices, clearer Quick sketch/Standard/Detailed labels, a responsive layout, and a current-project backup action. Terrain grids remain128/192/256 square; generation remains undoable. Map image exports offer 1024, 2048 (default), and 4096 square PNGs independently of terrain detail. Heightmap and project formats are unchanged. See [New worlds and resolution](docs/kb/worlds.md).
+New World now offers a live preview of the selected terrain and detail, descriptive shape choices, clearer Quick sketch/Standard/Detailed labels, a responsive layout, and a current-project backup action. At that release, terrain grids were 128, 192, and 256 squares, and generation was undoable. Map image exports offer 1024, 2048 (default), and 4096 square PNGs independently of terrain detail. Heightmap and project formats are unchanged. See [New worlds and resolution](docs/kb/worlds.md).
 
 ## Earthen material study — awaiting art-direction feedback
 
@@ -127,3 +127,5 @@ Settlement tools, menus, artwork and saved-place rendering have been removed. Ol
 A low basin stays dry until a channel below sea level connects it to ocean water at the edge of the map. In Terrain view, use the Lower or Land tool to open a channel and watch seawater spread while you sculpt. The River tool's authored water keeps its local level above the ocean.
 
 Turn off Living World or Water motion for an immediate settled result. Reduced motion and Biomes also use the settled result. Water off and Heightmap view reveal the bed. Undo, redo, reopening, and Map PNG export show the settled coastline for the terrain in use. The Heightmap PNG contains bed elevations.
+
+**Walk mode** lets you explore the terrain at eye level in WebGL. Under River, **Fill / drain basin** adds or removes still water in an enclosed basin as an undoable edit. See the [tutorial](docs/tutorial.md).

@@ -13,7 +13,7 @@ export function encodeMaterialCoverage(weights) {
 }
 
 export function decodeMaterialCoverage(encoded, n) {
-  if (typeof encoded !== 'string' || !Number.isInteger(n) || n < 1 || n > 256) invalid();
+  if (typeof encoded !== 'string' || !Number.isInteger(n) || n < 1 || n > 512) invalid();
   const size = n * n * 8;
   if (!encoded) return new Uint8Array(size);
   if (encoded.length !== 4 * Math.ceil(size / 3) || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) invalid();

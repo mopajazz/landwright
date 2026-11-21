@@ -1059,3 +1059,7 @@ Release attempt: runtime commit `ae40db854d3e37e704e37770e3864a493e0940f6`; Page
 PR #4 adds the visual response described in §29. The ocean reaches below-sea-level cells through four-neighbor routes from the map perimeter. Enclosed basins start dry, and a new cut can flood while the user is sculpting. The compact ocean raster and derived surface are shared by 2D and WebGL/Canvas 3D. Ground and woodland retain their existing terrain resolution. Authored river levels, bed heights, project schema 9 and the nine-tool editor are preserved.
 
 Project open, Undo/Redo, reduced motion and Map PNG export use settled water. Heightmap view and its PNG show bed elevation. Hidden tabs pause the advance. Living World or Water motion off settles the coastline. This draft approximates ocean coverage visually and keeps all transient data out of project saves. See [experiment notes](docs/reactive-water-experiment.md). Verify frame pacing on representative hardware before marking the PR ready.
+
+## Walk and basin fill
+
+Walk is a transient WebGL camera state. Movement uses the existing heightfield, and Esc restores the previous workspace. It has no project field, editing, or export effect. Under River, basin fill stores a bounded, validated `waterDrops` record and drain removes the fills covering the clicked cell. Both use the existing undo path and schema 9.

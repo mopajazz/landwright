@@ -52,7 +52,7 @@ test('toolbox collapse keeps tools available and exposes a settings flyout',asyn
 test('toolbox resize supports pointer and keyboard with persisted bounds',()=>{let handle=$('sidebar-resizer');handle.setPointerCapture=()=>{};handle.onpointerdown(new w.MouseEvent('pointerdown',{clientX:228,button:0}));handle.onpointermove(new w.MouseEvent('pointermove',{clientX:600,button:0}));handle.onpointerup();assert.equal(handle.getAttribute('aria-valuenow'),'360');handle.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Home'}));assert.equal(handle.getAttribute('aria-valuenow'),'180');handle.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight'}));assert.equal(handle.getAttribute('aria-valuenow'),'190');assert.equal(JSON.parse(w.localStorage.getItem('landwright-ui')).sidebarWidth,190);});
 test('light and dark preferences persist without modifying project data',async()=>{let before=await state();$('theme-toggle').click();assert.equal(doc.documentElement.dataset.theme,'light');assert.equal(JSON.parse(w.localStorage.getItem('landwright-ui')).theme,'light');$('theme-toggle').click();assert.equal(doc.documentElement.dataset.theme,'dark');assert.deepEqual(await state(),before);});
 test('Flatten UI protects map edges by default and allows explicitly unlocking them',async()=>{clickTool('flatten');$('strength').value='100';$('target').value='120';$('opacity').value='100';assert.equal($('preserve-edges').checked,true);const scale=Math.min((1024-70)/256,(768-135)/256),x=(1024-256*scale)/2+2*scale,y=(768-256*scale)/2-6+128*scale;let before=await state();for(let j=0;j<10;j++){pointer('pointerdown',x,y);pointer('pointerup',x,y);}let after=await state();for(let i=0;i<256;i++){assert.equal(after.heights[i],before.heights[i]);assert.equal(after.heights[i*256],before.heights[i*256]);assert.equal(after.heights[i*256+255],before.heights[i*256+255]);assert.equal(after.heights[255*256+i],before.heights[255*256+i]);}$('preserve-edges').checked=false;pointer('pointerdown',x,y);pointer('pointerup',x,y);assert.ok((await state()).heights[128*256]>after.heights[128*256]);$('preserve-edges').checked=true;});
-test('new flat worlds use selected grid sizes and undo restores previous size',async()=>{const before=await state();assert.ok($('world-size'));for(let n of[128,192,256]){$('new').click();$('world-size').value=String(n);doc.querySelector('[data-shape="flat"]').click();$('newdialog').close('generate');let s=await state();assert.equal(s.size,n);assert.equal(s.heights.length,n*n);assert.ok(s.heights.every(h=>h===80));assert.ok(s.paint.every(p=>p===0));assert.equal($('map-dimensions').textContent,`${n} × ${n}`);$('undo').click();assert.deepEqual(await state(),before);}});
+test('new flat worlds use selected grid sizes and undo restores previous size',async()=>{const before=await state();assert.ok($('world-size'));for(let n of[128,192,256,512]){$('new').click();$('world-size').value=String(n);doc.querySelector('[data-shape="flat"]').click();$('newdialog').close('generate');let s=await state();assert.equal(s.size,n);assert.equal(s.heights.length,n*n);assert.ok(s.heights.every(h=>h===80));assert.ok(s.paint.every(p=>p===0));assert.equal($('map-dimensions').textContent,`${n} × ${n}`);$('undo').click();assert.deepEqual(await state(),before);}});
 test('small project save/import preserves size and edits after 3D reset',async()=>{$('new').click();$('world-size').value='128';doc.querySelector('[data-shape="flat"]').click();$('newdialog').close('generate');const saved=await state();$('new').click();$('world-size').value='256';$('newdialog').close('generate');Object.defineProperty($('file'),'files',{configurable:true,value:[{name:'small.json',size:100,text:async()=>JSON.stringify(saved)}]});await $('file').onchange();assert.deepEqual(await state(),saved);$('mode3d').click();$('orbit-reset').click();clickTool('raise');let c={yaw:-.65,pitch:.65,zoom:1,size:128},p=projectTerrain(64,64,80,224,165,c);for(let type of['pointerdown','pointerup'])$('preview')['on'+type](new w.MouseEvent(type,{clientX:p.x,clientY:p.y,button:0,bubbles:true}));assert.ok((await state()).heights.some(h=>h>80));$('mode2d').click();});
 test('Coastline and Sand combine without switching tools or altering elevation',async()=>{$('new').click();$('world-size').value='256';doc.querySelector('[data-shape="flat"]').click();$('newdialog').close('generate');clickTool('paint');doc.querySelector('[data-brush="coast"]').click();assert.equal(doc.querySelector('[data-tool="paint"]').getAttribute('aria-pressed'),'true');doc.querySelector('[data-material="2"]').click();assert.equal(doc.querySelector('[data-brush="coast"]').getAttribute('aria-pressed'),'true');const before=await state();pointer('pointerdown');pointer('pointerup');let after=await state();assert.deepEqual(after.heights,before.heights);assert.ok(after.paint.some(x=>x===2));assert.equal(after.marks.length,0);clickTool('raise');clickTool('paint');assert.equal(doc.querySelector('[data-brush="coast"]').getAttribute('aria-pressed'),'true');});
 test('brushes and materials never select another tool; brush menus stay visible',()=>{assert.equal(doc.querySelector('[data-brush="forest"]'),null);assert.ok(doc.querySelector('[data-brush="hard"]'));for(let tool of['raise','paint','pan']){clickTool(tool);for(let brush of['soft','coast','hard','grain']){let b=doc.querySelector(`[data-brush="${brush}"]`);if(!b.disabled)b.click();assert.equal(doc.querySelector(`[data-tool="${tool}"]`).getAttribute('aria-pressed'),'true');}doc.querySelector('[data-material="2"]').click();assert.equal(doc.querySelector(`[data-tool="${tool}"]`).getAttribute('aria-pressed'),'true');assert.equal($('brush-settings').hidden,false);assert.equal($('palette-section').hidden,tool!=='paint');assert.equal($('brush-controls').hidden,false);}});
@@ -122,4 +122,43 @@ test('holding a paint stroke retains full-resolution ground and woodland canvase
  assert.ok(rasters.length>=2);for(const raster of rasters)assert.equal(raster.width,128*4);
  pointer('pointermove',520,382);for(const raster of rasters)assert.equal(raster.width,128*4);
  pointer('pointerup');for(const raster of rasters)assert.equal(raster.width,128*4);
+});
+
+test('basin fill and drain are separate undoable water edits with an unchanged bed',async()=>{
+ const n=128,center=64*n+64;
+ const heights=Array(n*n).fill(90);
+ for(let y=60;y<=68;y++)for(let x=60;x<=68;x++)heights[y*n+x]=70;
+ const fixture={version:1,size:n,heights,paint:Array(n*n).fill(0),sea:62};
+ Object.defineProperty($('file'),'files',{configurable:true,value:[{name:'basin.json',size:100,text:async()=>JSON.stringify(fixture)}]});
+ await $('file').onchange();
+ $('mode2d').click();
+ $('fit').click();
+ clickTool('river');
+ $('basin-fill').click();
+ $('river-depth').value='4';
+ pointer('pointerdown',512,378);
+ pointer('pointerup',512,378);
+ const filled=await state();
+ assert.deepEqual(filled.waterDrops,[{cell:center,level:74}]);
+ assert.deepEqual(filled.heights,heights);
+ assert.deepEqual(filled.routes,[]);
+ shiftErase=true;
+ pointer('pointerdown',512,378);
+ pointer('pointerup',512,378);
+ shiftErase=false;
+ assert.equal((await state()).waterDrops,undefined);
+ $('undo').click();
+ assert.deepEqual((await state()).waterDrops,filled.waterDrops);
+ $('undo').click();
+ assert.equal((await state()).waterDrops,undefined);
+});
+
+test('Walk without WebGL restores the original workspace and leaves the project intact',async()=>{
+ $('mode2d').click();
+ const before=await state();
+ $('walk').click();
+ assert.equal($('walk').getAttribute('aria-pressed'),'false');
+ assert.equal($('walk-controls').hidden,true);
+ assert.equal($('map').hidden,false);
+ assert.deepEqual(await state(),before);
 });

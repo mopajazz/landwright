@@ -1,15 +1,16 @@
-import {MAX_WATER_DROPS} from './water-dropper.mjs?v=2.9.2-pour.1';
-import{validateMaterialCoverage}from'./material-paint.mjs?v=2.9.2-pour.1';
-import{validRoute,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.9.2-pour.1';
-import {LEGACY_MATERIAL_COLORS} from './brushes.mjs?v=2.9.2-pour.1';
-import {validShape} from './shapes.mjs?v=2.9.2-pour.1';
+import {MAX_WATER_DROPS} from './water-dropper.mjs?v=2.9.2-walk.1';
+import{validateMaterialCoverage}from'./material-paint.mjs?v=2.9.2-walk.1';
+import{validRoute,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.9.2-walk.1';
+import {LEGACY_MATERIAL_COLORS} from './brushes.mjs?v=2.9.2-walk.1';
+import {validShape} from './shapes.mjs?v=2.9.2-walk.1';
+export const isWorldSize = size => [128, 192, 256, 512].includes(size);
 export const defaultLayers=()=>({surface:{visible:true,locked:false},landmarks:{visible:true,locked:false},shapes:{visible:true,locked:false},elevation:{visible:true,locked:false},rivers:{visible:true,locked:false},forests:{visible:true,locked:false}});
 export function brushDelta(e){if(typeof e.deltaY==='number')return e.shiftKey?(e.deltaY<0?1:e.deltaY>0?-1:0):0;let key=e.key?.toLowerCase();return key==='w'?(e.shiftKey?10:1):key==='s'?-(e.shiftKey?10:1):0;}
 export const resizeBrush=(size,delta)=>Math.max(4,Math.min(120,size+delta));
 export function normalizeProject(s,n){
  const explicitSize=n!==undefined;n=n??s?.size??256;
  const bad=()=>{throw Error('Invalid project')},finite=(v,lo,hi)=>typeof v==='number'&&Number.isFinite(v)&&v>=lo&&v<=hi;
- if(!explicitSize&&![128,192,256].includes(n))bad();
+ if(!explicitSize&&!isWorldSize(n))bad();
  if(!s||![1,2,3,4,5,6,7,8,9].includes(s.version)||!Array.isArray(s.heights)||s.heights.length!==n*n||!s.heights.every(v=>finite(v,0,255))||!Array.isArray(s.paint)||s.paint.length!==n*n||!s.paint.every(v=>Number.isInteger(v)&&v>=0&&v<=(s.version>=7?9:6))||!finite(s.sea,10,150))bad();
  let forest=s.version>=5?s.forest:Array(n*n).fill(0);if(!Array.isArray(forest)||forest.length!==n*n||!forest.every(v=>finite(v,0,1)))bad();
  let marks=s.marks??[],shapes=s.shapes??[];

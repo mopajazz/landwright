@@ -25,3 +25,7 @@ Water off reveals the bed. Hiding River water hides local river water while reta
 ## Limits and saving
 
 Current v5 projects retain river levels (v4 imports remain compatible),, taper metadata, and sampled route geometry. Paths and rivers share a 64-route limit,32,768 sampled points, and a bounded raster-work budget. Very long/wide/complex routes may need shortening. Save/download the editable project before substantial changes.
+
+## Fill or drain an enclosed basin
+
+Select **River → Fill / drain basin**. **Fill depth** sets the requested water surface above the clicked bed. Click a low spot enclosed at that level. If water would reach the map edge, choose a smaller depth or a more enclosed spot. Shift-click inside a filled basin to remove its fill. Each action can be undone, and project files preserve filled basins. River channels and poured water retain their own controls.

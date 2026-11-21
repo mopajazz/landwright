@@ -109,14 +109,15 @@ export function createMapDetail(canvas) {
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
   gl.uniform1i(location('u_detail'),0);
-  let previousPixels, previousView='';
+  let previousPixels, textureSize=0, previousView='';
   return {
     render(pixels,n,t,w,h,width,height,shade) {
       const key=[t.x,t.y,t.scale,w,h,width,height,shade].join('/');
       if(previousPixels===pixels&&key===previousView)return;
       if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}
       if(previousPixels!==pixels){
-        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,n,n,0,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+        if(textureSize===n)gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,n,n,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+        else{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,n,n,0,gl.RGBA,gl.UNSIGNED_BYTE,pixels);textureSize=n;}
         previousPixels=pixels;
       }
       previousView=key;

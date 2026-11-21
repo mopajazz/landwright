@@ -27,6 +27,8 @@ Other starts include Island, Archipelago, Continent, Atoll, and Open ocean. Gene
 
 Switch to **3D Terrain** to inspect your slopes. Right-drag or Alt-drag orbits; hold Space and left-drag to pan from any tool, or middle-drag; the wheel zooms. All terrain tools work in 3D as well as 2D.
 
+Choose **Walk** to explore at eye level. Move with W/A/S/D and use the arrow keys to look, or click the terrain to enable mouse look. Press Esc or choose **Exit walk** to return to your previous view. Walk requires WebGL.
+
 If you need a level area, **Flatten (F)** approaches its target height. Press D/E to lower/raise that target by 1 block, or Shift+D/E by 10. These keys adjust the target, not Strength. Preserve map edges is on by default so flattening does not move the outer rim in 3D. Only turn it off when you want to reshape the border itself.
 
 ## 3. Paint a shoreline or rocky ridge
@@ -63,6 +65,8 @@ In the sea-connected water draft, a low basin stays dry until you open a channel
 Use Water off/on to inspect the bed. The River water layer hides local river water without undoing the channel. Paint → Shift erase target → River water, then Shift-click/drag, removes whole touched water routes and leaves their channels; undo restores the water record.
 
 **Reflow rivers:** after sculpting near a river, World Settings offers an undoable reflow action. It recalculates from the current bed and recuts channels beneath the updated levels. **Repeated use can deepen the bed.** Use undo if the result is stronger than intended. Relief and River water must be visible and unlocked.
+
+To add still water, choose **River → Fill / drain basin**. Set **Fill depth**, click an enclosed low spot, and Shift-click inside the fill to drain it. Each action can be undone.
 
 ## 6. Plant a forest and make a clearing
 

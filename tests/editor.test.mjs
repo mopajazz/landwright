@@ -12,3 +12,21 @@ test('schema7 migrates every original palette RGB without guessing texture ident
 
 
 test('retired settlement data is omitted while old maps retain terrain paint forests and rivers',()=>{const n=128,s=model.normalizeProject({version:2,size:n,heights:Array(n*n).fill(80),paint:Array(n*n).fill(0),sea:62});const old={...s,version:8,settlements:[{id:'old-village',kind:'village',x:64,y:64,scale:1,rotation:0,seed:42,name:'Old Village'}],marks:[{type:'town',x:30,y:30,size:9,opacity:1},{type:'tree',x:50,y:50,size:9,opacity:1}],layers:{...s.layers,settlements:{visible:true,locked:false}}};const clean=model.normalizeProject(old);assert.equal(clean.version,9);assert.equal(Object.hasOwn(clean,'settlements'),false);assert.equal(Object.hasOwn(clean.layers,'settlements'),false);assert.deepEqual(clean.marks,[old.marks[1]]);for(const field of['heights','paint','paintColors','paintAlpha','forest','routes','surfaceMaterials'])assert.deepEqual(clean[field],s[field]);assert.deepEqual(model.normalizeProject(JSON.parse(JSON.stringify(clean))),clean);});
+
+test('512-square projects round-trip through schema 9 without losing the last cell',async()=>{
+ const size=512,cells=size*size;
+ const heights=Array(cells).fill(80),paint=Array(cells).fill(0);
+ heights[cells-1]=123;
+ const project=model.normalizeProject({version:1,size,heights,paint,sea:62});
+ const {encodeMaterialCoverage,decodeMaterialCoverage}=await import('../material-paint.mjs');
+ const weights=new Uint8Array(cells*8);
+ weights[weights.length-1]=255;
+ project.paintAlpha[cells-1]=1;
+ project.surfaceMaterials=encodeMaterialCoverage(weights);
+ const restored=model.normalizeProject(JSON.parse(JSON.stringify(project)));
+ assert.equal(decodeMaterialCoverage(restored.surfaceMaterials,size).at(-1),255);
+ assert.equal(restored.version,9);
+ assert.equal(restored.size,size);
+ assert.equal(restored.heights[cells-1],123);
+ assert.equal(restored.paintColors.length,cells*3);
+});
