@@ -2,8 +2,8 @@
 
 **Documentation date:** November 19, 2026 (America/New_York)<br>
 **Implementation baseline:** v2.9 removes the settlement subsystem; Grain restored in §30; read §29 before any historical settlement material.
-**Displayed release:** `v2.9.2`
-**Browser asset/module cache revision:** `2.9.2`<br>
+**Displayed release:** `v2.9.3`
+**Browser asset/module cache revision:** `2.9.3`<br>
 **Project schema written by the application:** `9`
 
 Read **§0 and §§29–31 first** for the current state. Sections 14–29 retain release history and pending visual studies; later decisions supersede earlier ones. In particular, §20’s settlement creation interface was removed in §21, the ten-tool toolbar was reduced to nine in §22, and §23 replaces fixed 1536-pixel exports. Source and tests remain authoritative; do not restore removed features from historical notes.
@@ -12,10 +12,10 @@ Read **§0 and §§29–31 first** for the current state. Sections 14–29 retai
 
 | Contract | Current state |
 | --- | --- |
-| Application release | **v2.9.2**, settlements removed; terrain behavior is the focus |
+| Application release | **v2.9.3** (fluffy cloud renderer on top of v2.9.2 + Walk/512/basin fill), settlements removed; terrain behavior is the focus |
 | Verified deployment | [Pages run44583324840](https://github.com/mopajazz/worldpainter-studio/actions/runs/44583324840) succeeded for `ed7776dd7374f8062468a75b0db244eaf4ba3864` (v2.9 runtime) |
 | Live app | https://mopajazz.github.io/worldpainter-studio/ |
-| Runtime | Static HTML/CSS/ES modules; cache `2.9.2`; no build or runtime packages |
+| Runtime | Static HTML/CSS/ES modules; cache `2.9.3`; no build or runtime packages |
 | Project format | Writes **9**, imports **1–9**; authoritative terrain, paint, forest density, routes and supported legacy content; retired settlements/town symbols omitted |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan |
 | Erasing | **Shift + Paint** click/drag; Paint’s Shift erase target selects the eligible layer. No Erase tool or E tool shortcut |
@@ -745,7 +745,21 @@ Additional coverage includes taper save/load and old v4 compatibility, source/mo
 
 Historical v2.2 release scope; §18 supersedes its vegetation scope and preference fields for v2.3.
 
-`living.mjs` renders a separate `living-overlay` Canvas, with a capped 30Hz effect loop rather than continuously re-rendering terrain. Water shimmer samples visible wet cells; route streaks follow source-to-mouth point order; four drifting clouds add stylized projected soft shadows. This is visual atmosphere, not water/lighting/civilization simulation. No vegetation, population, day/night, or storytelling is delivered here.
+`living.mjs` renders a separate `living-overlay` Canvas, with a capped 30Hz effect loop rather than continuously re-rendering terrain. Water shimmer samples visible wet cells; route streaks follow source-to-mouth point order.
+
+**Clouds (v2.9.3).** Six cumulus clouds, deterministic by index (`cloudField(n,time)`). Each is painted once into a cached 640×400 sprite and then drawn with `drawImage`; nothing is redrawn per puff per frame. The cloud is built from:
+- a flat base row of puffs, one or two towers, and shoulder puffs;
+- an opaque body pass first, so overlapping puffs leave no seams;
+- source-atop shading: a cool underside, crescent creases under each puff, and an upper-left sun highlight;
+- a feathered flat base.
+
+A second sprite gives the soft shadow. Shadows draw first, affine-mapped onto the ground plane from the projected cell axes, so they foreshorten in 3D. They are offset down-right from the sun direction. Bodies draw afterwards as billboards, far to near.
+
+In 2D the shadow offset alone conveys height. In 3D bodies float at absolute elevation 185: `livingProject`'s fourth argument, `absolute`, bypasses the terrain sample, so clouds do not ride over peaks.
+
+Clouds drift east-southeast and fade with a smoothstep, measured against the 0..n−1 map edges. They are fully transparent at least 0.35r outside the map, so the modulo wrap is never visible (tested).
+
+Without an offscreen canvas or gradient support (Node, jsdom stubs), the sprites resolve to null and clouds are skipped. Clouds stay excluded from project data, history and PNG export, and follow the existing pause rules. This is visual atmosphere, not water/lighting/civilization simulation. No vegetation, population, day/night, or storytelling is delivered here.
 
 World Settings offers one Living World toggle (default on) and an expandable choice of Water motion and Clouds & soft shadows. Its browser-local `landwright-living` preferences are `{enabled,clouds,waterMotion}` Booleans; no v4 field, history entry, terrain edit, paint change, reflow, or exported effect is introduced. `syncLiving` pauses/stops animation during pointer edits, pan/orbit, route drafts, hidden documents, reduced-motion preference, diagnostic views, and disabled effects. Resuming after ordinary 2D pointer release is explicitly synchronized and regression-tested with queued animation frames. The overlay has no pointer events and does not alter picking. It is stylized screen compositing, not a depth-buffered physically accurate lighting pass.
 

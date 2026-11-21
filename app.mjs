@@ -1,23 +1,23 @@
-import {createCanvasRaster} from './raster-cache.mjs?v=2.9.2-walk.1';
-import {createMapDetail, packTerrainDetail} from './terrain-detail.mjs?v=2.9.2-walk.1';
-import {startWalk,moveWalk} from './walk.mjs?v=2.9.2-walk.1';
-import {createBasinFill, createPouredWater,MAX_WATER_DROPS} from './water-dropper.mjs?v=2.9.2-walk.1';
-import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.9.2-walk.1';
-import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.9.2-walk.1';
-import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.9.2-walk.1';
-import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.9.2-walk.1';
-import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.9.2-walk.1';
-import{generate,stroke}from'./terrain.mjs?v=2.9.2-walk.1';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers,isWorldSize}from'./editor.mjs?v=2.9.2-walk.1';
-import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.9.2-walk.1';
-import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.9.2-walk.1';
-import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.9.2-walk.1';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,terrainScale,createFrameScheduler}from'./terrain3d.mjs?v=2.9.2-walk.1';
-import{initUI}from'./ui.mjs?v=2.9.2-walk.1';
-import{toolIcon}from'./icons.mjs?v=2.9.2-walk.1';
-import{touchesShape}from'./eraser.mjs?v=2.9.2-walk.1';
-import {createReactiveWater, writeOceanSurface} from './reactive-water.mjs?v=2.9.2-walk.1';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.9.2-walk.1';
+import {createCanvasRaster} from './raster-cache.mjs?v=2.9.3';
+import {createMapDetail, packTerrainDetail} from './terrain-detail.mjs?v=2.9.3';
+import {startWalk,moveWalk} from './walk.mjs?v=2.9.3';
+import {createBasinFill, createPouredWater,MAX_WATER_DROPS} from './water-dropper.mjs?v=2.9.3';
+import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.9.3';
+import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.9.3';
+import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.9.3';
+import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.9.3';
+import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.9.3';
+import{generate,stroke}from'./terrain.mjs?v=2.9.3';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers,isWorldSize}from'./editor.mjs?v=2.9.3';
+import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.9.3';
+import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.9.3';
+import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.9.3';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,terrainScale,createFrameScheduler}from'./terrain3d.mjs?v=2.9.3';
+import{initUI}from'./ui.mjs?v=2.9.3';
+import{toolIcon}from'./icons.mjs?v=2.9.3';
+import{touchesShape}from'./eraser.mjs?v=2.9.3';
+import {createReactiveWater, writeOceanSurface} from './reactive-water.mjs?v=2.9.3';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.9.3';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=generate(N,42),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface',routes=[],routeDraft=null,routeHover=null,riverWater=new Float32Array(N*N).fill(-1),surfaceHeights=heights,riverWaterDirty=true;
 document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Build a coast · Shift cuts channels from the ocean (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 $('rail-settings').innerHTML=toolIcon('settings');
@@ -595,8 +595,8 @@ glCanvas.addEventListener('webglcontextlost',e=>{e.preventDefault();gpu=null;gpu
 glCanvas.addEventListener('webglcontextrestored',()=>{gpu=null;gpuFailed=false;uploadedSurfaceLayout=undefined;rendererOceanReady=false;sceneDirty=true;preview();});
 $('forest-density').oninput=()=>{$('forest-densityout').value=$('forest-density').value+'%';};
 function syncLiving(){const editing=down||!!orbitPointer||!!routeDraft,reduced=!!motionQuery?.matches,hidden=!!document.hidden,diagnostic=view!=='terrain'||walking(),enabled=livingPrefs.enabled&&!diagnostic&&(livingPrefs.clouds||(livingPrefs.waterMotion&&water)||(livingPrefs.vegetationMotion&&layers.forests.visible&&forestTrees.length>0));livingLoop?.setState({enabled,editing,hidden,reduced});$('living-toggle').setAttribute('aria-pressed',String(livingPrefs.enabled));$('living-toggle').classList.toggle('on',livingPrefs.enabled);$('living-options').hidden=!livingPrefs.enabled;$('living-clouds').checked=livingPrefs.clouds;$('living-water').checked=livingPrefs.waterMotion;$('living-vegetation').checked=livingPrefs.vegetationMotion;$('living-status').textContent=!livingPrefs.enabled?'Off':reduced?'Paused: reduced motion':hidden?'Paused: tab hidden':editing?'Paused while editing':diagnostic?'Paused in this view':!enabled?'Choose an effect':!livingLoop?'Animation unavailable':'Living World active';}
-function livingProject(x,y,elevation=0){if(workspaceMode==='2d'){let t=transform();return{x:t.x+x*t.scale,y:t.y+(y-elevation*.4)*t.scale};}return projectTerrain(x,y,sampleTerrain(x,y,surfaceHeights,sea,false)+elevation,mini.clientWidth,mini.clientHeight,camera);}
-const animationWindow=document.defaultView;if(typeof animationWindow?.requestAnimationFrame==='function')livingLoop=createLivingLoop({request:animationWindow.requestAnimationFrame.bind(animationWindow),cancel:animationWindow.cancelAnimationFrame.bind(animationWindow),draw:time=>drawLiving(livingContext,workspaceMode==='3d'?mini.clientWidth:map.clientWidth,workspaceMode==='3d'?mini.clientHeight:map.clientHeight,livingScene?{...livingScene,mode:workspaceMode}:null,(x,y,z)=>livingProject(x,y,z),time,livingPrefs),clear:()=>livingContext.clearRect(0,0,livingCanvas.width,livingCanvas.height)});
+function livingProject(x,y,elevation=0,absolute=false){if(workspaceMode==='2d'){let t=transform();return{x:t.x+x*t.scale,y:t.y+(y-elevation*.4)*t.scale};}return projectTerrain(x,y,absolute?elevation:sampleTerrain(x,y,surfaceHeights,sea,false)+elevation,mini.clientWidth,mini.clientHeight,camera);}
+const animationWindow=document.defaultView;if(typeof animationWindow?.requestAnimationFrame==='function')livingLoop=createLivingLoop({request:animationWindow.requestAnimationFrame.bind(animationWindow),cancel:animationWindow.cancelAnimationFrame.bind(animationWindow),draw:time=>drawLiving(livingContext,workspaceMode==='3d'?mini.clientWidth:map.clientWidth,workspaceMode==='3d'?mini.clientHeight:map.clientHeight,livingScene?{...livingScene,mode:workspaceMode}:null,(x,y,z,abs)=>livingProject(x,y,z,abs),time,livingPrefs),clear:()=>livingContext.clearRect(0,0,livingCanvas.width,livingCanvas.height)});
 function saveLiving(){try{localStorage.setItem('landwright-living',JSON.stringify(livingPrefs));}catch{}syncLiving();scheduleFrame();}
 $('living-vegetation').onchange=()=>{livingPrefs.vegetationMotion=$('living-vegetation').checked;saveLiving();};
 $('living-toggle').onclick=()=>{livingPrefs.enabled=!livingPrefs.enabled;saveLiving();};$('living-clouds').onchange=()=>{livingPrefs.clouds=$('living-clouds').checked;saveLiving();};$('living-water').onchange=()=>{livingPrefs.waterMotion=$('living-water').checked;saveLiving();};function syncMotionPreferences(){syncLiving();oceanLastFrame=lastFlowFrame=null;scheduleFrame();}

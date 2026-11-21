@@ -1,4 +1,4 @@
-import {sampleTerrain} from './terrain3d.mjs?v=2.9.2-walk.1';
+import {sampleTerrain} from './terrain3d.mjs?v=2.9.3';
 
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 export function startWalk(heights,surface){
