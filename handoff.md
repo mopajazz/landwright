@@ -13,8 +13,8 @@ Read **§0 and §§29–31 first** for the current state. Sections 14–29 retai
 | Contract | Current state |
 | --- | --- |
 | Application release | **v2.9.3** (fluffy cloud renderer on top of v2.9.2 + Walk/512/basin fill), settlements removed; terrain behavior is the focus |
-| Verified deployment | [Pages run44583324840](https://github.com/mopajazz/worldpainter-studio/actions/runs/44583324840) succeeded for `ed7776dd7374f8062468a75b0db244eaf4ba3864` (v2.9 runtime) |
-| Live app | https://mopajazz.github.io/worldpainter-studio/ |
+| Verified deployment | [Pages run44583324840](https://github.com/mopajazz/landwright/actions/runs/44583324840) succeeded for `ed7776dd7374f8062468a75b0db244eaf4ba3864` (v2.9 runtime) |
+| Live app | https://mopajazz.github.io/landwright/ |
 | Runtime | Static HTML/CSS/ES modules; cache `2.9.3`; no build or runtime packages |
 | Project format | Writes **9**, imports **1–9**; authoritative terrain, paint, forest density, routes and supported legacy content; retired settlements/town symbols omitted |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan |
@@ -40,8 +40,8 @@ Read **§0 and §§29–31 first** for the current state. Sections 14–29 retai
 | Item | Value |
 | --- | --- |
 | Product name | **Landwright** |
-| Repository | https://github.com/mopajazz/worldpainter-studio |
-| Live application | https://mopajazz.github.io/worldpainter-studio/ |
+| Repository | https://github.com/mopajazz/landwright |
+| Live application | https://mopajazz.github.io/landwright/ |
 | Branch | `main` |
 | Repository-relative entry point | `index.html` |
 | Current execution checkout | `/workspace/work/worldpainter-github` |
@@ -49,7 +49,7 @@ Read **§0 and §§29–31 first** for the current state. Sections 14–29 retai
 | Hosting | GitHub Pages, branch `main`, directory `/` |
 | Hosting configuration observed | Pages `build_type: legacy`; GitHub-managed Pages build/deployment |
 
-The checkout path and remote alias are environment-specific conveniences, not product requirements. The repository and Pages URL retain `worldpainter-studio`; the product was renamed without renaming the repository or moving the hosting origin.
+The checkout path and remote alias are environment-specific conveniences, not product requirements. The repository was renamed from `worldpainter-studio` to `landwright` on or before November 21, 2026. GitHub redirects old repository and git URLs, but the old Pages address (`mopajazz.github.io/worldpainter-studio/`) now returns 404; share the new address. Browser autosaves are keyed to the `mopajazz.github.io` origin, so they survive the path change; the product was renamed without renaming the repository or moving the hosting origin.
 
 The user requested GitHub hosting because their workplace firewall blocked the earlier hosting site. Continue deploying this application to the existing GitHub Pages site unless the user changes that instruction.
 
@@ -533,8 +533,8 @@ Map export is not a screenshot of the 3D orbit. It omits grid, cursor, route dra
 Use a current Node.js runtime with ES modules, built-in test runner, and `structuredClone`; the environment used Node 24. The package currently declares no explicit engine floor. Keep dependencies locked through `package-lock.json`.
 
 ```bash
-git clone https://github.com/mopajazz/worldpainter-studio.git
-cd worldpainter-studio
+git clone https://github.com/mopajazz/landwright.git
+cd landwright
 npm ci
 npm test
 python3 -m http.server 8000
@@ -619,8 +619,8 @@ Example for the current checkout (use your actual remote name in another clone):
 git add <reviewed-files>
 git commit -m "Describe the concrete change"
 git push github HEAD:main
-gh run list --repo mopajazz/worldpainter-studio --limit 3
-gh run watch <run-id> --repo mopajazz/worldpainter-studio --exit-status
+gh run list --repo mopajazz/landwright --limit 3
+gh run watch <run-id> --repo mopajazz/landwright --exit-status
 ```
 
 Verify the exact release is deployed, then reload the live page and exercise the changed flow. A successful push alone is not deployment verification. If authorization/network/tool availability changes in a new environment, resolve that access normally; do not store tokens in project files.

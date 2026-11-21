@@ -1,6 +1,6 @@
 ---
 name: landwright-development
-description: Use when developing, debugging, reviewing, releasing, or documenting Landwright (worldpainter-studio), including terrain brushes, 2D/3D editing, paths, rivers, Living World atmosphere or future terrain behavior.
+description: Use when developing, debugging, reviewing, releasing, or documenting Landwright (repository mopajazz/landwright, formerly worldpainter-studio), including terrain brushes, 2D/3D editing, paths, rivers, Living World atmosphere or future terrain behavior.
 ---
 
 # Landwright development
@@ -9,9 +9,9 @@ Preserve a minimalist cartographic editor with complexity behind a small interfa
 
 ## Locate and orient
 
-Repository: https://github.com/mopajazz/worldpainter-studio
+Repository: https://github.com/mopajazz/landwright
 
-Live app: https://mopajazz.github.io/worldpainter-studio/
+Live app: https://mopajazz.github.io/landwright/
 
 Discover the checkout and remote; cloud paths and remote aliases vary. This is static HTML/CSS/ES modules, without a build step or runtime npm dependencies. `jsdom` is test-only. Baseline: v2.9.2/cache `2.9.2` removes settlements and refocuses on terrain behavior. Read handoff §0 and §29 first; §25–26 cover materials/sculpt controls, §23 for New World/export and §19 for woodland. Schema **9**, imports **1–9**. Verify HEAD/status before editing.
 

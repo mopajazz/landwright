@@ -2,7 +2,7 @@
 
 A minimalist, dependency-free browser map builder, inspired by WorldPainter's terrain workflow, WorldBox's approachable world creation, and Inkarnate's mapmaking controls. All code and landmark artwork are independently implemented.
 
-**Live app:** https://mopajazz.github.io/worldpainter-studio/
+**Live app:** https://mopajazz.github.io/landwright/
 
 **Complete product and engineering handoff:** [handoff.md](handoff.md)
 
@@ -116,7 +116,7 @@ New World now offers a live preview of the selected terrain and detail, descript
 
 ## Earthen material study — awaiting art-direction feedback
 
-[Open the standalone swatch sheet](https://mopajazz.github.io/worldpainter-studio/studies/earthen/). Eight proposed procedural materials — Grass, Loam, Clay, Bedrock, Scree, Mud, Sand and Snow — appear on identical flat/relief terrain against parchment and midnight frames. Includes a mixed landscape, interface theme switch and downloadable comparison PNG. This is a visual prototype, not the editor palette or a physical erosion simulation. No app data, tools, forests or schema changes.
+[Open the standalone swatch sheet](https://mopajazz.github.io/landwright/studies/earthen/). Eight proposed procedural materials — Grass, Loam, Clay, Bedrock, Scree, Mud, Sand and Snow — appear on identical flat/relief terrain against parchment and midnight frames. Includes a mixed landscape, interface theme switch and downloadable comparison PNG. This is a visual prototype, not the editor palette or a physical erosion simulation. No app data, tools, forests or schema changes.
 
 ## v2.9 — terrain first
 
