@@ -1,4 +1,8 @@
-# Terrain behavior: next actionable goal
+# Terrain behavior roadmap
+
+> **Status, November 21, 2026:** the goal below was delivered: sea-connected reactive water, basin fill/drain and pour water (see [handoff §4.5](../handoff.md#45-water)). No next terrain goal has been agreed yet; candidates are listed in [handoff §12](../handoff.md#12-parked-and-deferred-topics). The text below is kept for context.
+
+## Original goal
 
 **Make water spread into newly connected low ground when the user cuts a channel, with an immediate visual response that keeps sculpting smooth.**
 
