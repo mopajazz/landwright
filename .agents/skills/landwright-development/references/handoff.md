@@ -1,7 +1,7 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 21, 2026 (America/New_York)<br>
-**Displayed release:** `v2.9.3` · **Cache revision:** `2.9.3` · **Project schema written:** `9`<br>
+**Displayed release:** `v2.9.4` · **Cache revision:** `2.9.4` · **Project schema written:** `9`<br>
 **Repository:** https://github.com/mopajazz/landwright · **Live app:** https://mopajazz.github.io/landwright/
 
 This document describes **the app as it is now**. It is edited in place whenever behavior changes; it is not appended to. Release-by-release engineering notes (why decisions were made, measurements, rejected directions) live in [docs/release-history.md](https://github.com/mopajazz/landwright/blob/main/docs/release-history.md). Source and tests are authoritative where this document and the code disagree; fix the document when that happens.
@@ -10,8 +10,8 @@ This document describes **the app as it is now**. It is edited in place whenever
 
 | Contract | Current state |
 | --- | --- |
-| Release | **v2.9.3**: v2.9.2 plus 512 terrain, Walk, basin fill and pour water (`d1d9526`), plus the cumulus cloud renderer (PR `fluffy-clouds`). |
-| Live deployment | Last verified live on November 21, 2026: `d1d9526`, cache `2.9.2-walk.1`. After merging, confirm the Pages run for the exact merge commit and that the live footer reads v2.9.3. |
+| Release | **v2.9.4**: organic water shimmer (wave crests and sun glints) on top of v2.9.3 (cumulus clouds, handoff rewrite, merged as `9b43bdb`). |
+| Live deployment | Last verified live on November 21, 2026: v2.9.3 (`9b43bdb`, cache `2.9.3`). After merging v2.9.4, confirm the Pages run for the exact merge commit and that the live footer reads v2.9.4. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
 | Project format | Writes **9**, imports **1–9**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan. |
@@ -22,7 +22,7 @@ This document describes **the app as it is now**. It is edited in place whenever
 | Water | Sea-connected reactive ocean, authored river channels, basin fill/drain, and poured water that flows and pools. |
 | Look | Eight earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
 | Exports | Map PNG 1024² / 2048² (default) / 4096². Heightmap PNG at N² with bed elevations only. Editable project JSON. |
-| Tests | `npm test`: **183 passed, 0 failed** on this branch (November 21, 2026). |
+| Tests | `npm test`: **185 passed, 0 failed** (November 21, 2026). |
 | Settlements | **Parked.** Removed in v2.9; the user may want them back in a different form (§12). |
 
 **Preserve:** beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep nine tools. Never save derived water, canopy or texture geometry into bed heights or project files.
@@ -211,7 +211,10 @@ Work estimate: `(1 + Σ max(1, ceil(segmentLength × 2))) × (ceil(width × 1.5)
 
 One World Settings toggle (default on), with *Water motion*, *Clouds & soft shadows* and *Canopy breeze* options stored in browser preferences only. Everything draws on a separate `living-overlay` canvas in a capped 30 Hz loop (`living.mjs`). It pauses while editing, orbiting/panning, during route drafts, in diagnostic views and Walk, on hidden tabs and under reduced motion. It is excluded from project data, undo history and PNG exports.
 
-- **Water motion:** shimmer strokes on wet cells, streaks following river direction, and the advancing ocean front.
+- **Water motion (v2.9.4):** wave crests, sun glints, streaks following river direction, and the advancing ocean front.
+  - *Crests* are tapered, slightly curved lenses (thickness in screen pixels, so they stay legible at any zoom). They sit on a jittered lattice (step ≈ n/40), thinned by low-frequency patch noise so they cluster, with orientation from a second, broader noise field plus per-crest jitter. Each fades in, drifts about one cell along the swell (south, slightly east) and fades out on its own 5–10 s cycle, so nothing pulses in unison or pops.
+  - *Glints* are brief, flat sparkles on their own 2–5 s cycles.
+  - At most 260 crests and 140 glints, chosen by a per-mark rank so they spread evenly over the map (the old cap filled the top rows first). Each mark is re-checked against the current wet mask every frame, so marks follow the moving ocean front. JS cost is about 0.1 ms per frame.
 - **Canopy breeze:** up to 256 subtle moving foliage glints.
 - **Clouds (v2.9.3):** six deterministic cumulus clouds (`cloudField(n, time)`). Each is painted once into a cached 640×400 sprite: a flat base row of puffs, one or two towers and shoulder puffs; an opaque body pass so overlaps never seam; then a cool underside, crescent creases and upper-left sun highlights; a feathered base. A second sprite gives the shadow, affine-mapped onto the ground plane so it foreshortens in 3D. In 3D, bodies float at absolute elevation 185 (`livingProject(x, y, z, absolute)`) instead of riding over peaks. Clouds drift east-south-east and fade at the 0..n−1 map edges, fully transparent at least 0.35r outside, so the wrap is never visible (tested). Without an offscreen canvas (Node/jsdom), clouds are skipped.
 
@@ -371,7 +374,7 @@ Open `http://localhost:8000/` (serve over HTTP; do not open the file directly). 
 
 ### Tests
 
-183 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
+185 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
 
 - `interactions.test.mjs` compares whole project states. A failing `deepEqual` on large arrays can exhaust memory and kill the process instead of printing a diff; run the file alone with `node --test --test-reporter=spec tests/interactions.test.mjs` to find the test.
 - Living World tests need queued animation frames: bind the loop to `document.defaultView.requestAnimationFrame`, not a synchronous stub (see `living-interactions.test.mjs`).
@@ -395,7 +398,7 @@ Also run `node --check` on changed modules and `git diff --check`.
 
 GitHub Pages builds `main:/` automatically (legacy build; no workflow file). Before merging a release PR:
 
-- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.9.3`. Update the footer version when appropriate. Documentation-only changes need no bump.
+- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.9.4`. Update the footer version when appropriate. Documentation-only changes need no bump.
 - Check help text, tutorial and KB against the implemented controls.
 
 After merging, find the Pages run for the exact merge commit, wait for success, then load the live site and confirm the footer and the changed flow. A push is not a deployment. To roll back, revert the faulty commits through a PR and verify Pages again; note any schema implications for files saved by the newer version.
@@ -421,7 +424,6 @@ Limitations (facts, not promises):
 
 Open UI items from reviews (not yet assigned):
 
-- Water-motion shimmer is a regular grid of short dashes that reads as graph paper; it needs an organic pattern.
 - Brush controls (Size, Strength) sit below the footprint presets and fall below the fold at 900px height; consider putting controls first.
 - Export dialog cards are buttons but look like information panels; add a download affordance.
 - Paint's footer hint mentions W/S but not D/E.
@@ -435,7 +437,7 @@ Process items:
 - Add a GitHub Actions workflow that runs `npm test` on pull requests.
 - Close the stale draft PR for settlement brushes (#3), superseded by v2.9.
 
-Regression-tested behaviors to protect: zero paint opacity never disables sculpting; no preset-driven tool switching; per-stroke opacity caps; Flatten perimeter protection; coalesced frames and no per-pointer rasterization; real 3D picking at the water/canopy surface; safe route-draft cancellation; no route→sculpt fallthrough; middle-pan ordering; delayed erase-target reconciliation; clouds invisible before wrapping.
+Regression-tested behaviors to protect: zero paint opacity never disables sculpting; no preset-driven tool switching; per-stroke opacity caps; Flatten perimeter protection; coalesced frames and no per-pointer rasterization; real 3D picking at the water/canopy surface; safe route-draft cancellation; no route→sculpt fallthrough; middle-pan ordering; delayed erase-target reconciliation; clouds invisible before wrapping; water marks jittered, evenly spread and fully faded at cycle ends.
 
 ## 12. Parked and deferred topics
 
@@ -445,4 +447,4 @@ Regression-tested behaviors to protect: zero paint opacity never disables sculpt
 
 **Storytelling — deferred** until the terrain tools are complete. Nothing is implemented or specified. Before building, revisit audience, structure, location linking, authoring, export and persistence with the user. Do not add narrative UI, AI services or accounts as an assumed next step.
 
-**Next work.** No next feature is agreed. Candidates on record: reduce CPU cost of brush edits so 512 can leave experimental ([docs/terrain-resolution-512.md](https://github.com/mopajazz/landwright/blob/main/docs/terrain-resolution-512.md)); restyle water shimmer; the open UI items in §11; a CI workflow. Ask the user before starting any of them.
+**Next work.** No next feature is agreed. Candidates on record: reduce CPU cost of brush edits so 512 can leave experimental ([docs/terrain-resolution-512.md](https://github.com/mopajazz/landwright/blob/main/docs/terrain-resolution-512.md)); the open UI items in §11; a CI workflow. Ask the user before starting any of them.

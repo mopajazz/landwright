@@ -1,8 +1,8 @@
-import {MAX_WATER_DROPS} from './water-dropper.mjs?v=2.9.3';
-import{validateMaterialCoverage}from'./material-paint.mjs?v=2.9.3';
-import{validRoute,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.9.3';
-import {LEGACY_MATERIAL_COLORS} from './brushes.mjs?v=2.9.3';
-import {validShape} from './shapes.mjs?v=2.9.3';
+import {MAX_WATER_DROPS} from './water-dropper.mjs?v=2.9.4';
+import{validateMaterialCoverage}from'./material-paint.mjs?v=2.9.4';
+import{validRoute,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.9.4';
+import {LEGACY_MATERIAL_COLORS} from './brushes.mjs?v=2.9.4';
+import {validShape} from './shapes.mjs?v=2.9.4';
 export const isWorldSize = size => [128, 192, 256, 512].includes(size);
 export const defaultLayers=()=>({surface:{visible:true,locked:false},landmarks:{visible:true,locked:false},shapes:{visible:true,locked:false},elevation:{visible:true,locked:false},rivers:{visible:true,locked:false},forests:{visible:true,locked:false}});
 export function brushDelta(e){if(typeof e.deltaY==='number')return e.shiftKey?(e.deltaY<0?1:e.deltaY>0?-1:0):0;let key=e.key?.toLowerCase();return key==='w'?(e.shiftKey?10:1):key==='s'?-(e.shiftKey?10:1):0;}

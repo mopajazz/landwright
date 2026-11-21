@@ -359,3 +359,13 @@ Project open, Undo/Redo, reduced motion and Map PNG export use settled water. He
 ## 33. Walk mode, 512 terrain and basin fill (d1d9526)
 
 Walk is a transient WebGL camera state. Movement uses the existing heightfield, and Esc restores the previous workspace. It has no project field, editing, or export effect. Under River, basin fill stores a bounded, validated `waterDrops` record and drain removes the fills covering the clicked cell. Both use the existing undo path and schema 9.
+
+## 34. v2.9.3 — cumulus clouds and handoff rewrite (9b43bdb)
+
+Clouds were rebuilt as cached cumulus sprites with ground-mapped shadows (see handoff §4.8). The previous renderer drew three overlapping 16%-opacity ellipses per cloud, which left visible seams; its polygon shadows were clamped at the border, and clouds popped when they wrapped. Art direction went through five rounds: too smooth (one blob), cotton balls (crisp puff edges with individual highlights), towers with a dip ("cat ears"), then merged heads with stronger shadows, then lower and larger in 3D. The handoff was rewritten as a current-state document and this file was split out. The repository was renamed to `landwright`; the old Pages path returns 404.
+
+## 35. v2.9.4 — organic water shimmer
+
+The old shimmer drew a 2-cell horizontal line at every cell of a regular n/32 lattice where both neighbors were wet, pulsing with one shared frequency. It read as graph paper. A 384-stroke cap also took the first rows, so marks bunched at the top of large maps.
+
+Replacement (see handoff §4.8): jittered lattice thinned by patch noise; tapered curved crests with per-crest angle, length, period and drift; sparse brief glints; caps applied after a per-mark rank so coverage is even. First pass bowed crests upward and read as seagulls; the bend was reduced and turned to bow forward with the swell. Glints were made flatter and briefer after reading as dots in 3D. Measured JS draw cost about 0.1 ms per frame at 256² and 512² (Node, stub context); scene build 2–6 ms. Two tests cover grid-free placement, even quadrant coverage, varied orientation and length, no marks on dry land, full fade at cycle ends, and the per-frame projection budget.
