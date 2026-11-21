@@ -1,7 +1,7 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 21, 2026 (America/New_York)<br>
-**Displayed release:** `v2.10.1` · **Cache revision:** `2.10.1` · **Project schema written:** `9`<br>
+**Displayed release:** `v2.11` · **Cache revision:** `2.11.0` · **Project schema written:** `9`<br>
 **Repository:** https://github.com/mopajazz/landwright · **Live app:** https://mopajazz.github.io/landwright/
 
 This document describes **the app as it is now**. It is edited in place whenever behavior changes; it is not appended to. Release-by-release engineering notes (why decisions were made, measurements, rejected directions) live in [docs/release-history.md](https://github.com/mopajazz/landwright/blob/main/docs/release-history.md). Source and tests are authoritative where this document and the code disagree; fix the document when that happens.
@@ -10,8 +10,8 @@ This document describes **the app as it is now**. It is edited in place whenever
 
 | Contract | Current state |
 | --- | --- |
-| Release | **v2.10.1**: Walk starts hovering over lowland facing inland, with Space to fly up and Shift to descend; on top of v2.10 (height baseline). |
-| Live deployment | Last verified live on November 21, 2026: v2.10 (`cfb3e07`, Pages run 44864449640). After merging v2.10.1, confirm the Pages run for the exact merge commit and the live footer. |
+| Release | **v2.11**: River and Path are freehand brushes. The river wand carves, releases water and erodes while you draw; strokes leave springs. On top of v2.10.1 (Walk, height baseline). |
+| Live deployment | Last verified live on November 21, 2026: v2.10.1 (`f49e56c`, Pages run 44865236565). After merging v2.11, confirm the Pages run for the exact merge commit and the live footer. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
 | Project format | Writes **9**, imports **1–9**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan. |
@@ -20,10 +20,10 @@ This document describes **the app as it is now**. It is edited in place whenever
 | Navigation | Space + left-drag or middle-drag pans (2D/3D). Right/Alt-drag orbits in 3D. **Walk** gives an eye-level WebGL view with Space/Shift to fly up/down. |
 | Terrain sizes | 128², 192², 256² (default), and **experimental 512²**. |
 | Height | Hard limits 0–255. Each world has a working range, *Seabed floor* (default 20) to *Highest peak* (default 190), that Raise, Lower and Flatten never pass. 3D draws every size with the same proportions. |
-| Water | Sea-connected reactive ocean, authored river channels, basin fill/drain, and poured water that flows and pools. |
+| Water | Sea-connected reactive ocean; **river wand** strokes and their saved **springs** feeding the flowing-water simulation; pour water; basin fill/drain; and rivers from older maps (fixed levels, Reflow). |
 | Look | Eight earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
 | Exports | Map PNG 1024² / 2048² (default) / 4096². Heightmap PNG at N² with bed elevations only. Editable project JSON. |
-| Tests | `npm test`: **195 passed, 0 failed** (November 21, 2026). |
+| Tests | `npm test`: **192 passed, 0 failed** (November 21, 2026). |
 | Settlements | **Parked.** Removed in v2.9; the user may want them back in a different form (§12). |
 
 **Preserve:** beginner guidance must prominently say to start Raise/Lower at **1–3 blocks per stroke**, use short strokes, inspect, and build up gradually. Keep nine tools. Never save derived water, canopy or texture geometry into bed heights or project files.
@@ -67,7 +67,7 @@ Decisions in force:
 - Coastline is a footprint; **Land** is the explicit add/remove-land tool.
 - The terrain *decides*: woodland grows only where terrain allows, ground texture responds to slope, wetness and light, and ocean water follows connectivity. This "paint intent, terrain decides" model is what the user likes most, especially the woodland.
 - Each project is a single world. Do not add "Overworld" or other world-hierarchy labels.
-- Path and River are focused route tools, not a reason to restore a general Drawing menu.
+- Path and River are **freehand brushes** (v2.11). No points, no draft bar, no Finish: "we can be trusted to draw roads on our own". River is a god-sim wand: you see it carve and the water find its way. Carving and erosion happen **only while drawing**. Neither is a reason to restore a general Drawing menu.
 - Living World effects are optional visual atmosphere, behind one World Settings toggle.
 - Maintain the tutorial and knowledge base with every user-visible change.
 
@@ -109,9 +109,9 @@ New world opens a modal: world name (required, up to 80 characters, default `Unt
 | Terrain | Lower | `lower` | L | Decrease elevation locally |
 | Terrain | Smooth | `smooth` | Q | Move toward a local 5×5 mean |
 | Terrain | Flatten | `flatten` | F | Converge toward a target height |
-| Terrain | River | `river` | V | River channels, pour water, fill/drain basins (§4.5) |
+| Terrain | River | `river` | V | River wand: carve, release water and erode while drawing; also pour water and fill/drain basins (§4.5) |
 | Terrain | Land | `land` | C, M | Add land; Shift removes land |
-| Surface | Path | `path` | J | Route that paints a material trail |
+| Surface | Path | `path` | J | Brush that paints a track in the path surface and clears trees (§4.6) |
 | Surface | Paint | `paint` | P, B | Paint ground material or forest density; Shift erases |
 | Navigate | Pan | `pan` | H | Pan the map/camera |
 
@@ -180,31 +180,28 @@ Paint shows a grouped palette of eight ground materials plus a separate **Forest
 Four kinds of water coexist. Hiding or disabling Water shows the bed; the Heightmap view and PNG always show bed elevations only.
 
 1. **Ocean (`reactive-water.mjs`).** Cells below sea level are wet only if a four-neighbor path below sea level reaches the map edge; enclosed basins start dry. When a cut connects a basin, water advances while you sculpt, with depth-sensitive speed (a shallow sill slows it). The front animates only in Terrain view with Living World and Water motion on; otherwise it settles immediately. Coverage is derived, never saved. Shift + Land makes a shallow below-sea cut. This estimates arrival times on a grid; it does not conserve volume or simulate momentum.
-2. **River channels** (River, default mode). Click/drag a route, then finish. The water profile is sampled source-to-mouth and never rises: `level = max(0, min(previousLevel, ground − 0.5))`. The channel is carved with softened banks; local river water exists inside the channel. Options: width 2–32 (default 8), channel depth 1–16 (default 4), **Taper** (default on: the source starts at 25% width), **Meander** 0–100% (default 25%, deterministic, endpoints pinned). **Reflow rivers** in World Settings resamples every profile against current terrain as one undoable action (repeated reflow can deepen beds).
+2. **River wand** (River, default mode; `river-wand.mjs`). A brush. Each dab lowers the bed under the brush with the same per-stroke budget as Lower (*Carve per stroke*, 0.25–4, default 1.5 blocks; respects the floor and slope limit) and adds water at the center (*Water*, 0–100%, default 60%). While the stroke is held: every simulation tick feeds a little water along the whole trail (`feedTrail`), and `erodeStep` lets water moving downhill (surface drop > 0.04) cut its bed by up to 0.05 per step in proportion to depth × drop, carrying the material to the lowest neighbor; carried sediment settles where the flow slows, at dead ends, and in the sea up to 0.2 below sea level (deltas). On release, remaining sediment settles in place (`settleSediment`, same sea rule) and the **first cell of the stroke becomes a spring** `{cell, rate}` (rate = Water %, max 64, a new spring replaces any within 2 cells). Springs feed the poured-water simulation every tick, so rivers keep flowing; `drainToSea` removes water over open sea (ocean coverage) and the map edge drains too, so flows reach a steady state and closed hollows fill into lakes. **Shift + drag** dries an area (`dryArea`: springs and water under the brush; the channel stays). No erosion happens outside a held stroke. One stroke is one undo step (bed, water and springs).
+   - Because a spring keeps the simulation moving, the terrain is re-rendered only for visible water changes (more than 24 cells changing wet/dry or by more than 0.15), otherwise at most every 1.5 s. Measured: an idle map with a spring holds 60 fps (median and p95 16.7 ms); without this throttle p95 was ~83 ms.
+   - **Rivers from older maps** (route records drawn with the pre-v2.11 point tool) still load and draw: a sampled non-rising profile `level = max(0, min(previousLevel, ground − 0.5))`, carved channel, local water. **Reflow rivers** in World Settings resamples them against current terrain as one undoable action (repeated reflow can deepen beds).
 3. **Fill / drain basin** (River → *Fill / drain basin*). Click a low spot to fill an enclosed basin to *Fill depth* above the clicked bed; Shift-click inside to drain. Up to 32 fills, stored as `{cell, level}`. A fill that would reach the map edge is refused.
-4. **Pour water** (River → droplet icon). Click or hold to add water; *Pour amount* sets each dose. Water flows by surface-height difference, pools, spills over rims and drains at the map edge. Shift-click removes water at that spot. Saved as sorted `[cell, amount]` pairs.
+4. **Pour water** (River → droplet icon). Click or hold to add water; *Pour amount* sets each dose. Water flows by surface-height difference, pools, spills over rims, drains at the map edge and (since v2.11) into the open sea. Shift-click removes water at that spot. Saved as sorted `[cell, amount]` pairs; the river wand and springs use the same field.
 
-Fills and pours leave the bed intact, are undoable, and are saved. River routes, fills and pours are authored approximations, not hydrology.
+Fills and pours leave the bed intact; the river wand changes the bed only while drawing. All are undoable and saved. This is a grid approximation for play, not hydrology: no momentum, sediment capacity is not physical, and flow does not conserve volume against evaporation.
 
-### 4.6 Routes (Path and River channels)
+### 4.6 Path, and route records from older maps
 
-1. Select Path (J) or River (V).
-2. Click points or drag a curve. The preview shows a ribbon in the path material or river blue, a dashed centerline and handles. The footer hint says "W/S route width".
-3. Finish with Enter, double-click or the on-map **Finish route** button. Escape or Cancel discards; changing tool or 2D/3D cancels.
+**Path (J)** is a brush. It paints the chosen surface (Loam default, Bedrock, Sand) into the paint arrays and material coverage with the brush footprint and Opacity (D/E), capped per stroke like Paint, and multiplies forest density under the track by (1 − weight), so roads clear trees. It never changes heights and creates no route record. One drag is one undo step.
 
-An unfinished route never changes project data. A committed route is one undo group; a single point or a route under one map unit cannot commit. Route tools never fall through to sculpting; middle-drag pans instead of adding points.
+**Route records** (`routes`) are no longer created; they exist in maps made before v2.11, when Path and River placed points and finished a route. They still load, validate, render (river local water, path paint already baked), count toward limits, keep trees off old path corridors (`pathField`), and old rivers keep Reflow. `isRouteTool()` now returns false, so the old drafting code in `app.mjs` (draft state, preview ribbon, Finish/Cancel bar, Enter/double-click finishing, taper and meander controls) is unreachable; it is kept only until a deliberate cleanup (§11).
 
-Path paints a feathered trail into the paint arrays without changing heights. Its sampled record is kept (and still counts toward limits) even if its paint is later erased.
-
-| Limit | Value |
+| Limit (imported routes) | Value |
 | --- | ---: |
-| Draft control points | 512 |
 | Sampled points per route | 2–4,096 |
 | Routes per project | 64 |
 | Total route points | 32,768 |
 | Raster work per route / project | 8,000,000 / 32,000,000 |
 
-Work estimate: `(1 + Σ max(1, ceil(segmentLength × 2))) × (ceil(width × 1.5) + 3)²`. Keep the work-budget checks in `validRoute`, normalization and commit; point limits alone once allowed billions of raster operations.
+Work estimate: `(1 + Σ max(1, ceil(segmentLength × 2))) × (ceil(width × 1.5) + 3)²`. Keep the work-budget checks in `validRoute` and normalization; point limits alone once allowed billions of raster operations from imported files.
 
 ### 4.7 Views, layers and Walk
 
@@ -271,6 +268,7 @@ Semantic color tokens live in `theme.css`, loaded after `style.css`:
 | `routes.mjs` | Curve sampling, validation and work budget, path/channel rasterization, river field |
 | `reactive-water.mjs` | Sea-connected ocean coverage and advancing front |
 | `water-dropper.mjs` | Basin fill/drain and poured-water simulation |
+| `river-wand.mjs` | River wand: carving dab, trail feeding, erosion and sediment, springs, drying, sea drain |
 | `raster-cache.mjs` | Retained RGBA rasters with dirty-rectangle rerendering |
 | `terrain-detail.mjs` | Close-zoom detail data and GLSL |
 | `terrain3d.mjs` | Projection, Canvas 3D fallback, sampling, full-grid picking, frame scheduler |
@@ -334,6 +332,7 @@ type ProjectV9 = {
   routes: (PathRoute | RiverRoute)[];
   waterDrops?: { cell: number; level: number }[];   // ≤ 32
   pouredWater?: [cell: number, amount: number][];   // sorted by cell; amount 1e-5..1e8
+  springs?: [cell: number, rate: number][];         // ≤ 64; rate 0 < r ≤ 100 (Water %)
   marks: LegacyLandmark[];           // tree | mountain
   shapes: LegacyShape[];
   layers: Record<'surface'|'landmarks'|'shapes'|'elevation'|'rivers'|'forests',
@@ -441,12 +440,15 @@ Open UI items from reviews (not yet assigned):
 - The toggle dot, layer icons and selected-tool ring are outside the contrast tests.
 
 
+- **Settled rivers can look thin and broken.** At steady flow a spring's river is narrow, and where the water film is very shallow it breaks into dashes. Candidates: a minimum drawn width along flowing cells, or a lower visibility threshold for moving water.
+- **Dead route-drafting code** in `app.mjs` (see §4.6) can be removed in a cleanup PR, keeping legacy route loading, rendering and Reflow.
+
 Process items:
 
 - Add a GitHub Actions workflow that runs `npm test` on pull requests.
 - Close the stale draft PR for settlement brushes (#3), superseded by v2.9.
 
-Regression-tested behaviors to protect: Raise/Lower never exceed their per-stroke budget or the height range and never create slopes past `maxSlope`; 3D proportions are size-independent; Walk starts on lowland, hovers, and never flies below eye height or above its ceiling; zero paint opacity never disables sculpting; no preset-driven tool switching; per-stroke opacity caps; Flatten perimeter protection; coalesced frames and no per-pointer rasterization; real 3D picking at the water/canopy surface; safe route-draft cancellation; no route→sculpt fallthrough; middle-pan ordering; delayed erase-target reconciliation; clouds invisible before wrapping; water marks jittered, evenly spread and fully faded at cycle ends.
+Regression-tested behaviors to protect: the river wand's carving is bounded per stroke, erosion happens only while drawing, deltas stay below sea level, the sea drains water, one stroke undoes in one step, and Relief locks block it; Path never changes heights and clears trees; Raise/Lower never exceed their per-stroke budget or the height range and never create slopes past `maxSlope`; 3D proportions are size-independent; Walk starts on lowland, hovers, and never flies below eye height or above its ceiling; zero paint opacity never disables sculpting; no preset-driven tool switching; per-stroke opacity caps; Flatten perimeter protection; coalesced frames and no per-pointer rasterization; real 3D picking at the water/canopy surface; safe route-draft cancellation; no route→sculpt fallthrough; middle-pan ordering; delayed erase-target reconciliation; clouds invisible before wrapping; water marks jittered, evenly spread and fully faded at cycle ends.
 
 ## 12. Parked and deferred topics
 

@@ -1,31 +1,29 @@
-# Paths, rivers, taper, and reflow
+# Rivers and paths
 
-Choose Path(J) or River(V). Click points or drag; Enter/double-click/Finish route commits one undo group. Escape/Cancel discards a draft. Changing tools or 2D/3D mode cancels it. Middle-drag pans without adding route points. W/S adjusts width(2–32 blocks).
+## River: draw it and watch it carve
 
-## Path
+Choose **River (V)**. It is a brush, like Raise or Lower: W/S changes its size and the footprint presets apply.
 
-Choose Dirt, Stone, or Sand and set Opacity. Path paints terrain without changing heights. Surface erasing removes the visible trail. Finished control points cannot yet be moved individually. Sampled records remain saved even if paint is later erased and count toward route limits.
+- **Carve per stroke** (0.25–4 blocks, default 1.5) is how much one stroke cuts under the center of the brush. Holding still cannot cut more; go over the river again to deepen it.
+- **Water** (0–100%, default 60%) is how much water the stroke releases. At 0% it only carves.
 
-## River
+While you drag, the trail stays wet, water runs downhill, and moving water erodes its bed and carries sediment. Sediment settles where the flow slows: at the foot of slopes, on flats, and where the river meets the sea (just below sea level). Erosion only happens while you draw.
 
-Start upstream. Set Width and Channel depth(1–16). Taper defaults on: the source starts at 25% of the configured width and widens toward the mouth, with a small raster minimum so tiny streams remain visible. Old v4 rivers without taper metadata remain uniform.
+When you release, the **start of the stroke becomes a spring**. Springs keep feeding water, so the river keeps flowing; the sea and the map edge drain it, and water that cannot escape fills hollows into lakes. Springs are saved with the map (up to 64).
 
-Meander(0–100%, default 25%) displaces the centerline smoothly and deterministically while preserving both endpoints. At 100%, displacement is bounded by half the configured width. It is baked into saved geometry; it is not continuously random motion.
+**Shift + drag** with River dries an area: it removes springs and standing water under the brush. The carved channel stays.
 
-Water can exist above sea level. River profiles do not rise downstream; uphill ground is cut through. This is not a fluid simulation. Junctions and watersheds are not solved automatically.
+Gravity decides the final course: water follows the land, not your exact line. The carving respects the world's Seabed floor, and a hidden or locked Relief layer blocks it. Each stroke is one undo step.
 
-## Reflow safely
+## Other water modes
 
-World Settings→Reflow rivers appears when rivers exist. It samples the current terrain, recalculates local water profiles, and recuts channels in one undoable action. **Repeated reflow can deepen the already carved bed.** Undo restores both prior terrain and levels. Relief and River water must be visible and unlocked. Sculpting does not trigger automatic reflow.
+- **Droplet:** pour water without carving. Click, or hold to keep pouring; Shift-click removes water at that spot.
+- **Fill / drain basin:** fill an enclosed hollow to a chosen depth; Shift-click inside it to drain.
 
-## Visibility and erasing
+## Path: lay a track
 
-Water off reveals the bed. Hiding River water hides local river water while retaining the channel. Paint → Shift erase target → River water, then Shift-click/drag, removes whole touched water routes but retains the carved terrain; undo restores them. To roll back both bed and water from creation, undo that river commit.
+Choose **Path (J)**, pick Loam, Bedrock or Sand, and drag. Paths paint the surface with the brush footprint and Opacity (D/E), clear trees under the track, and never change heights. Shift-erase it with Paint like any surface paint.
 
-## Limits and saving
+## Older maps
 
-Current v5 projects retain river levels (v4 imports remain compatible),, taper metadata, and sampled route geometry. Paths and rivers share a 64-route limit,32,768 sampled points, and a bounded raster-work budget. Very long/wide/complex routes may need shortening. Save/download the editable project before substantial changes.
-
-## Fill or drain an enclosed basin
-
-Select **River → Fill / drain basin**. **Fill depth** sets the requested water surface above the clicked bed. Click a low spot enclosed at that level. If water would reach the map edge, choose a smaller depth or a more enclosed spot. Shift-click inside a filled basin to remove its fill. Each action can be undone, and project files preserve filled basins. River channels and poured water retain their own controls.
+Maps made before v2.11 may contain rivers and paths drawn with the previous point-by-point tool. They still load and draw. Their river water has fixed levels; **World Settings → Reflow rivers** recalculates those levels from the current terrain and recuts the channel (repeating it can deepen the bed). Their saved path corridors still keep trees away. Paint → Shift erase target → River water removes an old river's water and keeps its channel.

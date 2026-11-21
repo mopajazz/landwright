@@ -379,3 +379,13 @@ Changes, approved by the user after a side-by-side of today's 3D against half th
 ## 37. v2.10.1 — Walk start and flying
 
 Walk used to start at the dry cell nearest the map center, which on generated islands is the summit, facing the center, so the first frame was the face of the peak: a dark wall. It now starts over lowland (lowest quarter of dry, gentle ground, nearest the land's centroid) facing inland. A first attempt at eye height still filled the view with the rising slope, so Walk now arrives hovering 14 blocks up. The user asked for Space to fly and Shift to descend: holding neither hovers, descending to eye height lands and resumes ground-following. Two tests cover the start position and flying, and the original ground-following test now lands first.
+
+## 38. v2.11 — the river wand and freehand paths
+
+The user wanted the *act* of drawing a river: "a micro anti-matter wand… the river carving, delta-swilling, swamp-ass brushing hydration station". The previous River was a pen tool (click points, a draft bar with a point count, Finish). Decisions: carving only while drawing; remove click points and Finish for both River and Path ("we can be trusted to draw roads on our own").
+
+Built on the existing poured-water simulation (flow by surface-height difference every 90 ms). First playable version: a stroke carved 0.75 blocks and released water at the cursor. In the browser this was underwhelming: the groove was invisible through hill shading, and the water ran to the sea and vanished, leaving only a short streak and a few drops. Added: water along the whole held trail, a spring at the stroke's start so rivers keep flowing, Shift to dry, carve default 1.5, and a sea drain (poured water previously piled invisibly on the seabed). A test caught end-of-stroke sediment building islands above sea level; it now caps at 0.2 below sea level.
+
+Performance: a spring keeps the simulation moving, and every tick re-rendered terrain (p95 frame 83 ms, ~2.2 s of long tasks per 2 s). A first threshold on depth change did not help, because the spring cell itself changes every tick. Redraw now happens only when more than 24 cells change visibly, otherwise every 1.5 s: an idle map with a spring holds 60 fps.
+
+Tests: twelve route-drafting interaction tests were removed; added a legacy-route fixture (older maps still load and Reflow), river wand and Path brush interaction tests, and `river-wand.test.mjs` (bounded carving, Water 0%, erosion deepens beyond the brush cut, deltas below sea level, floor, sea drain). 192 pass. Known: settled rivers can look thin and dashed; old drafting code remains unreachable pending cleanup.
