@@ -8,7 +8,7 @@ Preferences are local to this browser under `landwright-living`. They are not te
 
 ## What it does
 
-- Ocean and visible river water receive gentle shimmer strokes.
+- Ocean and visible river water show soft wave crests that drift and fade, and occasional sun glints.
 - River streaks travel in sampled source-to-mouth order. They are visual indicators, not moving water volumes.
 - Canopy breeze adds subtle foliage glints at up to 256 woodland locations per frame. Static woodland is separate saved map data; see [Forests](forests.md).
 - A small number of clouds drift over the landscape with low-opacity shadows.

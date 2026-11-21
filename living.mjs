@@ -2,10 +2,22 @@
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const hash=i=>{let v=Math.sin(i*127.1+19.19)*43758.5453;return v-Math.floor(v);};
 export function isWet(s,x,y){if(!s.water||s.view!=='terrain'||x<0||y<0||x>s.n-1||y>s.n-1)return false;let i=Math.round(y)*s.n+Math.round(x);return (s.oceanCoverage ? s.oceanCoverage[i]>.95 : s.heights[i]<s.sea)||(s.riversVisible&&s.riverWater[i]>s.heights[i]+.01);}
-export function buildLivingScene(scene){let waves=[],target=scene.oceanTarget?{...scene,oceanCoverage:scene.oceanTarget}:scene,step=Math.max(2,Math.ceil(scene.n/32));for(let y=1;y<scene.n-1;y+=step)for(let x=1;x<scene.n-1;x+=step){let i=y*scene.n+x;if(isWet(target,x-1,y)&&isWet(target,x+1,y)&&hash(i)>.25)waves.push({x,y,phase:hash(i+11)*Math.PI*2});}return{...scene,waves:waves.slice(0,384),rivers:scene.riversVisible?scene.routes.filter(r=>r.type==='river'):[]};}
+// Smooth value noise in 0..1, used to cluster water marks into patches.
+function valueNoise(x,y,seed){let xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy),h=(a,b)=>hash(a*157.3+b*311.9+seed);return (h(xi,yi)*(1-u)+h(xi+1,yi)*u)*(1-v)+(h(xi,yi+1)*(1-u)+h(xi+1,yi+1)*u)*v;}
+const SWELL={x:.2,y:.98};// direction crests travel (south, slightly east)
+const MAX_CRESTS=260,MAX_GLINTS=140;
+// Water marks are placed on a jittered lattice, thinned by patch noise and
+// subsampled evenly across the map, so they never read as a grid.
+export function buildLivingScene(scene){let target=scene.oceanTarget?{...scene,oceanCoverage:scene.oceanTarget}:scene,n=scene.n,step=Math.max(2,Math.round(n/40)),crests=[],glints=[];
+ for(let gy=0;gy<n;gy+=step)for(let gx=0;gx<n;gx+=step){let id=gy*n+gx,x=gx+hash(id+3)*step,y=gy+hash(id+7)*step;if(!isWet(target,x,y))continue;
+  let patch=valueNoise(x/(step*4.5),y/(step*4.5),11);
+  if(patch>.42&&hash(id+13)<.35+patch*.6){let angle=(valueNoise(x/(step*9),y/(step*9),29)-.5)*.7+(hash(id+17)-.5)*.35,len=step*(.55+hash(id+19)*.9)*(.7+patch*.6);crests.push({x,y,len,dx:Math.cos(angle),dy:Math.sin(angle),bend:.025+hash(id+23)*.05,period:5+hash(id+29)*5,offset:hash(id+31)*10,peak:.1+hash(id+37)*.15,rank:hash(id+41)});}
+  if(hash(id+43)<.22)glints.push({x:x+hash(id+47)*step*.5,y:y+hash(id+53)*step*.5,period:2.2+hash(id+59)*2.6,offset:hash(id+61)*5,size:.7+hash(id+67)*.7,rank:hash(id+71)});}
+ const even=(list,max)=>list.length<=max?list:list.sort((a,b)=>a.rank-b.rank).slice(0,max);
+ return{...scene,crests:even(crests,MAX_CRESTS),glints:even(glints,MAX_GLINTS),rivers:scene.riversVisible?scene.routes.filter(r=>r.type==='river'):[]};}
 export function createLivingLoop({request=globalThis.requestAnimationFrame,cancel=globalThis.cancelAnimationFrame,draw,clear,now=()=>performance.now()}){let state={enabled:false,editing:false,hidden:false,reduced:false},pending=null,last=null,elapsed=0;const running=()=>state.enabled&&!state.editing&&!state.hidden&&!state.reduced;function frame(stamp){pending=null;if(!running())return;let t=Number.isFinite(stamp)?stamp:now();if(last===null)last=t-34;if(t-last>=1000/30){elapsed+=Math.min(100,Math.max(0,t-last))/1000;last=t;draw(elapsed);}if(running())pending=request(frame);}return{setState(next){state={...state,...next};if(running()){if(pending===null)pending=request(frame);}else{if(pending!==null)cancel(pending);pending=null;last=null;clear();}},get active(){return running();}};}
 export function drawLiving(c,w,h,s,project,time,prefs){c.clearRect(0,0,w,h);if(!s||s.view!=='terrain')return;c.save();c.lineCap='round';
- if(prefs.waterMotion&&s.water){c.strokeStyle='#d8f4ec';c.lineWidth=1;for(let p of s.waves){if(!isWet(s,p.x-1,p.y)||!isWet(s,p.x+1,p.y))continue;let phase=time*.9+p.phase,alpha=.08+.16*(.5+.5*Math.sin(phase));c.globalAlpha=alpha;let a=project(p.x-1,p.y),b=project(p.x+1,p.y+.15*Math.sin(phase));c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();}
+ if(prefs.waterMotion&&s.water){drawWaterMarks(c,s,project,time);c.strokeStyle='#d8f4ec';c.lineWidth=1;
   // Route points are ordered source→mouth. Each particle advances in that direction.
   let per=Math.max(1,Math.min(8,Math.floor(128/Math.max(1,s.rivers.length))));for(let r of s.rivers)for(let j=0;j<per;j++){let t=(time*.035+j/per)%1,index=t*(r.points.length-1),k=Math.floor(index),a=r.points[k],b=r.points[Math.min(k+1,r.points.length-1)],u=index-k,x=a.x+(b.x-a.x)*u,y=a.y+(b.y-a.y)*u,dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;if(!isWet(s,x,y)||!isWet(s,x+dx/len,y+dy/len))continue;let p=project(x,y),q=project(x+dx/len,y+dy/len);c.globalAlpha=.35;c.lineWidth=1.4;c.beginPath();c.moveTo(p.x,p.y);c.lineTo(q.x,q.y);c.stroke();}
  }
@@ -60,3 +72,20 @@ function drawClouds(c,s,project,time){if(!s.n)return;let field=cloudField(s.n,ti
  for(let it of items){let{k,sprite,ground,ax,ay}=it,w=k.r*2.4*k.breathe,scale=w/sprite.W;c.save();c.globalAlpha=.42*k.alpha;c.transform((ax.x-ground.x)/k.r*scale,(ax.y-ground.y)/k.r*scale,(ay.x-ground.x)/k.r*scale,(ay.y-ground.y)/k.r*scale,ground.x,ground.y);c.drawImage(sprite.shade,-sprite.W/2,-sprite.base*.92,sprite.W,sprite.H);c.restore();}
  // Bodies as billboards, far to near.
  items.sort((a,b)=>a.top.y-b.top.y);for(let it of items){let{k,sprite,top,px}=it,w=px*(s.mode==='3d'?3.1:2.4)*k.breathe,h=w*sprite.H/sprite.W;c.save();c.globalAlpha=.92*k.alpha;c.drawImage(sprite.body,top.x-w/2,top.y-h*sprite.base/sprite.H,w,h);c.restore();}}
+
+// Wave crests: tapered, slightly curved lenses that fade in, drift along the
+// swell and fade out on their own cycle. Glints: brief sparkles.
+function drawWaterMarks(c,s,project,time){
+ c.fillStyle='#e4f3ef';
+ for(let k of s.crests||[]){let u=((time+k.offset)/k.period)%1,alpha=k.peak*Math.sin(Math.PI*u)**2;if(alpha<.01)continue;
+  let drift=(u-.5)*1.1,cx=k.x+SWELL.x*drift,cy=k.y+SWELL.y*drift,hx=k.dx*k.len/2,hy=k.dy*k.len/2;
+  if(!isWet(s,cx-hx,cy-hy)||!isWet(s,cx+hx,cy+hy)||!isWet(s,cx,cy))continue;
+  let a=project(cx-hx,cy-hy),b=project(cx+hx,cy+hy),m=project(cx+SWELL.x*k.len*k.bend,cy+SWELL.y*k.len*k.bend);
+  let ex=b.x-a.x,ey=b.y-a.y,el=Math.hypot(ex,ey);if(!(el>.5))continue;
+  // Thickness in screen pixels so crests stay legible at every zoom.
+  let t=Math.min(2.2,.9+el*.035),nx=-ey/el*t,ny=ex/el*t,qx=2*m.x-(a.x+b.x)/2,qy=2*m.y-(a.y+b.y)/2;
+  c.globalAlpha=alpha;c.beginPath();c.moveTo(a.x,a.y);c.quadraticCurveTo(qx,qy,b.x,b.y);c.quadraticCurveTo(qx+nx,qy+ny,a.x,a.y);c.fill();}
+ c.fillStyle='#fbfffd';
+ for(let g of s.glints||[]){let u=((time+g.offset)/g.period)%1,alpha=.5*Math.max(0,Math.sin(Math.PI*2*u))**14;if(alpha<.02||!isWet(s,g.x,g.y))continue;
+  let p=project(g.x,g.y);c.globalAlpha=alpha;c.beginPath();c.ellipse(p.x,p.y,g.size*1.5,g.size*.42,0,0,Math.PI*2);c.fill();}
+ c.globalAlpha=1;}

@@ -9,3 +9,18 @@ test('clouds drift deterministically, fade out before wrapping, and stay inside 
  for(let t=0;t<4000;t+=7)for(let k of l.cloudField(256,t)){let out=Math.max(-k.x,k.x-255,-k.y,k.y-255);if(out>=k.r*.35)assert.equal(k.alpha,0,`cloud ${k.seed} visible near the wrap at t=${t}`);}
  let later=l.cloudField(256,40);assert.ok(later.some((k,i)=>Math.abs(k.x-a[i].x)>1),'clouds drift over time');});
 test('cloud drawing degrades safely without an offscreen canvas and never mutates the scene',()=>{let h=new Float32Array(128*128).fill(80),s={n:128,heights:h,riverWater:new Float32Array(h.length).fill(-1),water:false,sea:62,view:'terrain',routes:[],riversVisible:false,mode:'3d',waves:[],rivers:[]},before=h.slice(),c=new Proxy({},{get:()=>()=>{}});l.drawLiving(c,800,600,s,(x,y,z,abs)=>({x:x*3,y:y*3-(abs?z:0)}),5,{clouds:true});assert.deepEqual(h,before);});
+test('water marks are jittered, patchy and spread over the whole map instead of forming a grid',()=>{let n=256,h=new Float32Array(n*n).fill(30),scene={n,heights:h,riverWater:new Float32Array(n*n).fill(-1),water:true,sea:62,view:'terrain',routes:[],riversVisible:true},a=l.buildLivingScene(scene),b=l.buildLivingScene(scene);
+ assert.deepEqual(a.crests,b.crests,'deterministic');assert.ok(a.crests.length>40&&a.crests.length<=260);assert.ok(a.glints.length>20&&a.glints.length<=140);
+ // Not on a lattice: fractional offsets within the sampling step vary widely.
+ let step=Math.round(n/40),offsets=new Set(a.crests.map(c=>Math.round((c.x%step)*4)));assert.ok(offsets.size>=step*2,'crest x positions are not aligned to a grid');
+ // Even coverage: every quadrant of an all-water map gets marks (the old cap filled the top rows first).
+ let quad=[0,0,0,0];for(let c of a.crests)quad[(c.x>=n/2?1:0)+(c.y>=n/2?2:0)]++;assert.ok(quad.every(q=>q>=a.crests.length*.12),`quadrants ${quad}`);
+ // Varied orientation and length.
+ let angles=a.crests.map(c=>Math.atan2(c.dy,c.dx)),lens=a.crests.map(c=>c.len);assert.ok(Math.max(...angles)-Math.min(...angles)>.4);assert.ok(Math.max(...lens)>Math.min(...lens)*1.6);
+ // Dry land gets nothing.
+ let dry=l.buildLivingScene({...scene,heights:new Float32Array(n*n).fill(90)});assert.equal(dry.crests.length+dry.glints.length,0);});
+test('each crest fades fully in and out, so marks never pop, and drawing stays within budget',()=>{let n=128,h=new Float32Array(n*n).fill(30),s=l.buildLivingScene({n,heights:h,riverWater:new Float32Array(n*n).fill(-1),water:true,sea:62,view:'terrain',routes:[],riversVisible:true,mode:'2d'});
+ let alphas=[],c=new Proxy({},{get:(o,k)=>k in o?o[k]:()=>{},set:(o,k,v)=>{if(k==='globalAlpha')alphas.push(v);o[k]=v;return true;}});
+ let calls=0;for(let t of[0,1.7,3.3,7.9]){l.drawLiving(c,800,600,s,(x,y)=>{calls++;return{x:x*3,y:y*3};},t,{waterMotion:true});}
+ assert.ok(calls/4<1100,'bounded projection work per frame');assert.ok(alphas.every(a=>a>=0&&a<=1));
+ for(let k of s.crests.slice(0,20)){let edge=k.peak*Math.sin(Math.PI*((k.period*.999)/k.period))**2;assert.ok(edge<.01,'crest alpha reaches ~0 at the end of its cycle');}});
