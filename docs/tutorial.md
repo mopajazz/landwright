@@ -1,6 +1,6 @@
 # Landwright: your first living landscape
 
-This tutorial covers the current v2.10 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/landwright/) or browse the [knowledge base](kb/index.md).
+This tutorial covers the current v2.11 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/landwright/) or browse the [knowledge base](kb/index.md).
 
 ## Before your first stroke: start small
 
@@ -40,33 +40,30 @@ If you need a level area, **Flatten (F)** approaches its target height. Press D/
 
 Tool, material, and footprint are separate choices. Choosing Sand does not select Paint for you, and Coastline does not secretly become a land-raising tool. Use **Land (C or M)** to add land; hold Shift with Land to remove it. Forest is different from the ground materials: it paints tree density without recoloring the ground.
 
-## 4. Place a path
+## 4. Lay a path
 
-1. Choose **Path (J)**.
-2. In its settings, choose Loam, Bedrock, or Sand, and set Width. W/S adjusts route width while this tool is active.
-3. Click two or more points or drag a curve. The ribbon is only a preview.
-4. Press Enter, double-click, or use Finish route to commit.
-5. Escape cancels an unfinished route without changing the map.
+1. Choose **Path (J)** and pick its surface: Loam, Bedrock or Sand.
+2. Set the brush Size with W/S and the Opacity with D/E.
+3. Drag across the map. The track paints the surface and keeps trees off it; it never changes heights.
 
-Path changes surface paint, not elevation. It uses Opacity. A completed path is one undo step; individual points cannot yet be repositioned afterward.
+There are no points to place and nothing to finish: each drag is one stroke and one undo step.
 
 ## 5. Carve a river
 
-1. Choose **River (V)**.
-2. Start with a modest Width and Channel depth.
-3. Taper is enabled by default. The river begins narrow and widens toward its mouth.
-4. Meander defaults to 25%. It adds a deterministic curve while keeping the first and last points exact. Set it to 0% for the route you placed without extra meander.
-5. Place points **from upstream toward downstream**, then finish.
+1. Choose **River (V)**. *Carve per stroke* sets how much one stroke cuts (default 1.5 blocks, D/E to change); *Water* sets how much water it releases (default 60%); *Meander* bends the channel from side to side of your stroke (default 40%).
+2. Drag from high ground toward the sea. The channel is graded downhill along your stroke so the water stays in it. The ground under the brush is lowered, water runs down the land as you draw, and moving water deepens the channel and carries sediment, which settles where the flow slows: fans, deltas, marshy flats.
+3. Release. The start of your stroke becomes a **spring** that keeps the river flowing. Where the water cannot reach the sea it fills hollows into lakes.
+4. Go over a river again to cut deeper. Hold **Shift** while dragging to dry an area: it removes springs and standing water under the brush.
 
-River water has its own local levels and can exist above the ocean. The river cuts through rising terrain to maintain a non-rising profile; this is an authored terrain tool, not a fluid simulation.
+If you draw uphill, the channel cuts through the rise up to a limit; beyond that, gravity has the final say and the water pools or finds another way. Erosion only happens while you are drawing; afterwards the water flows but does not keep cutting.
 
 In the sea-connected water draft, a low basin stays dry until you open a channel from the ocean. Start with short Lower strokes at 1–3 blocks per stroke. With **Living World → Water motion** enabled in Terrain view, you can see the advance during sculpting. Turning motion off shows the settled water immediately.
 
-Use Water off/on to inspect the bed. The River water layer hides local river water without undoing the channel. Paint → Shift erase target → River water, then Shift-click/drag, removes whole touched water routes and leaves their channels; undo restores the water record.
+Use Water off/on to inspect the bed. The River water layer hides river water without undoing the channel.
 
-**Reflow rivers:** after sculpting near a river, World Settings offers an undoable reflow action. It recalculates from the current bed and recuts channels beneath the updated levels. **Repeated use can deepen the bed.** Use undo if the result is stronger than intended. Relief and River water must be visible and unlocked.
+**Older maps** may contain rivers drawn with the previous point-by-point tool. They still load and draw. **Reflow rivers** in World Settings applies to them: It recalculates from the current bed and recuts channels beneath the updated levels. **Repeated use can deepen the bed.** Use undo if the result is stronger than intended. Relief and River water must be visible and unlocked.
 
-To add still water, choose **River → Fill / drain basin**. Set **Fill depth**, click an enclosed low spot, and Shift-click inside the fill to drain it. Each action can be undone.
+To pour water without carving, use **River → droplet**. To add still water, choose **River → Fill / drain basin**. Set **Fill depth**, click an enclosed low spot, and Shift-click inside the fill to drain it. Each action can be undone.
 
 ## 6. Plant a forest and make a clearing
 
@@ -75,7 +72,7 @@ To add still water, choose **River → Fill / drain basin**. Set **Fill depth**,
 3. Hold Shift to clear trees, or use **Paint → Forest, then Shift-click/drag**. Ground color stays intact.
 4. The conditional Forests layer lets you hide or lock the woodland. Undo restores a clearing.
 
-Trees avoid water, steep slopes, and saved path corridors. Density remains saved where unsuitable terrain hides trees; erase it if you want permanent removal. See [Forests and clearings](kb/forests.md) for target density, old-map compatibility, and path-corridor limits.
+Trees avoid water, steep slopes, and paths (new paths clear the trees they cross; older maps' saved path corridors still block them). Density remains saved where unsuitable terrain hides trees; erase it if you want permanent removal. See [Forests and clearings](kb/forests.md) for target density, old-map compatibility, and path-corridor limits.
 
 ## 7. Let the landscape breathe
 

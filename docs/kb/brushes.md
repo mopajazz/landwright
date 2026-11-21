@@ -2,7 +2,7 @@
 
 ## Start small before Raise or Lower
 
-**Keep Height per stroke at 1–3 blocks for your first Raise/Lower strokes. Make a short stroke, inspect it in 3D, then build up with more strokes.** Raise and Lower start at 3 blocks; the range is 0.5–20.
+**Keep Height per stroke at 1–3 blocks for your first Raise/Lower strokes (D/E adjusts it). Make a short stroke, inspect it in 3D, then build up with more strokes.** Raise and Lower start at 3 blocks; the range is 0.5–20.
 
 *Height per stroke* is the most one stroke can add (Raise) or remove (Lower) under the center of the brush. Holding the pointer still or scrubbing back and forth inside one stroke cannot go past it; release and stroke again to build higher. Size controls area. Smooth and Flatten keep a percentage *Strength* (35% by default); the two groups remember their settings separately for the session. Undo reverses a completed stroke.
 
@@ -33,7 +33,9 @@ Paint opacity accumulates across separate strokes. Repeated pointer samples insi
 
 ## Flatten edges
 
-Flatten approaches Target height. D lowers / E raises the target by 1 block; Shift+D/E changes it by 10. The target stays between the world's Seabed floor and Highest peak. These shortcuts do not change Strength or paint Opacity, and choosing a target does not edit terrain until you brush. Typing and dialogs keep ordinary keyboard behavior. Preserve map edges holds the perimeter fixed and feathers nearby cells. Uncheck it only to intentionally reshape the rim. This protection is specific to Flatten, not every terrain tool.
+**D / E** make the current tool's main setting smaller / bigger: Height per stroke for Raise and Lower (0.5 blocks), Strength for Smooth (5%), Carve per stroke for River (0.25 blocks) and Opacity for Paint and Path (5%). Shift+D/E takes four steps at once.
+
+Flatten approaches Target height. For Flatten, D lowers / E raises the target by 1 block; Shift+D/E changes it by 10. The target stays between the world's Seabed floor and Highest peak. These shortcuts do not change Strength or paint Opacity, and choosing a target does not edit terrain until you brush. Typing and dialogs keep ordinary keyboard behavior. Preserve map edges holds the perimeter fixed and feathers nearby cells. Uncheck it only to intentionally reshape the rim. This protection is specific to Flatten, not every terrain tool.
 
 ## Why is my terrain too tall or too spiky?
 

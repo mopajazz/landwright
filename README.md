@@ -31,8 +31,8 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 | Right drag or Alt + drag in 3D | Orbit and tilt |
 | R / L / Q / F | Raise / lower / smooth / flatten |
 | B or P / C or M / H | Paint / land / pan |
-| D / E | Flatten target −/+1 block; Paint/Path Opacity −/+5% |
-| Shift + D / E | Flatten target −/+10 blocks |
+| D / E | Smaller/bigger: Height per stroke (Raise/Lower, 0.5 blocks), Strength (Smooth, 5%), Carve per stroke (River, 0.25 blocks), Opacity (Paint/Path, 5%), Flatten target (1 block) |
+| Shift + D / E | Four steps at once; Flatten target 10 blocks |
 | J / V | Path / river |
 | Enter or double-click / Escape | Finish route / cancel preview |
 | Shift + Raise/Lower or Land | Reverse elevation direction / remove land |
@@ -65,13 +65,11 @@ The toolbox is grouped by function: **Terrain** (Raise, Lower, Smooth, Flatten, 
 
 ## Paths and rivers
 
-Choose **Path (J)** or **River (V)**. Click points or drag a curve; the preview shows its width. **Enter**, **double-click**, or **Finish route** commits one undo group. **Escape** cancels without editing the map. Switching tools or 2D/3D views also cancels unfinished routes.
+**River (V)** is a brush: drag and watch it carve. Each stroke lowers the ground under it (*Carve per stroke*, default 1.5 blocks) and releases water (*Water*, default 60%) that runs downhill while you draw. Moving water deepens its bed and carries sediment that settles where the flow slows, building fans and deltas. When you release, the start of the stroke becomes a spring that keeps the river flowing; the sea and map edge drain it, and closed hollows fill into lakes. Shift + drag dries an area (springs and water). Erosion happens only while drawing.
 
-Use W/S or Shift+wheel to adjust route width (2–32 blocks); Shift+W/S changes it by 10. Path offers Dirt, Stone, and Sand and uses paint opacity without changing elevation. River adds channel depth (1–16 blocks), softly carves the banks, and creates local water above sea level. Start at the source and work toward the mouth: its water profile never rises, so uphill terrain is cut through. This is an authored river tool, not a fluid simulation.
+**Path (J)** is a brush too: drag to lay a track in Loam, Bedrock or Sand. It paints the surface, honors Opacity and clears trees under it, without changing heights. Neither tool places points or needs finishing; each drag is one undo step.
 
-The **River water** layer controls visibility/locking of local water; Relief locking also blocks river carving. The Water toggle reveals the bed. Paint → Shift erase target → River water, then Shift-click/drag, removes whole touched river water routes while retaining the carved channel; undo restores them. Surface erasing removes path paint. Route geometry and river levels save in v5 projects; v1–v4 projects migrate automatically. Finished routes cannot yet have individual points repositioned. Map PNGs include visible water; heightmaps export the actual carved bed.
-
-Up to 64 routes / 32,768 sampled points are supported, with an additional shared raster-work budget to keep large or imported routes responsive.
+Older maps made with the previous point-by-point route tool still load, draw their river water and keep **Reflow rivers**.
 
 ### v2.1 — river taper, meander, and reflow
 
