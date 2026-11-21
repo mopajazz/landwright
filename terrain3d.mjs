@@ -1,4 +1,7 @@
-export function projectTerrain(x,y,z,w,h,camera){let c=Math.cos(camera.yaw),s=Math.sin(camera.yaw),rx=(x-(camera.size||256)/2)*c-(y-(camera.size||256)/2)*s,ry=(x-(camera.size||256)/2)*s+(y-(camera.size||256)/2)*c,scale=terrainScale(w,h,camera);return{x:w/2+(camera.panX||0)+rx*scale,y:h*.57+(camera.panY||0)+ry*Math.sin(camera.pitch)*scale-(z-62)*.65*Math.cos(camera.pitch)*scale,depth:ry*Math.cos(camera.pitch)+(z-62)*.65*Math.sin(camera.pitch)};}
+// Height units drawn per map block in 3D. Proportional to map width so every
+// size has the same proportions (a 256 map looks like a 512 one in miniature).
+export const verticalScale=n=>.65*(n||256)/512;
+export function projectTerrain(x,y,z,w,h,camera){let c=Math.cos(camera.yaw),s=Math.sin(camera.yaw),rx=(x-(camera.size||256)/2)*c-(y-(camera.size||256)/2)*s,ry=(x-(camera.size||256)/2)*s+(y-(camera.size||256)/2)*c,scale=terrainScale(w,h,camera);return{x:w/2+(camera.panX||0)+rx*scale,y:h*.57+(camera.panY||0)+ry*Math.sin(camera.pitch)*scale-(z-62)*verticalScale(camera.size)*Math.cos(camera.pitch)*scale,depth:ry*Math.cos(camera.pitch)+(z-62)*verticalScale(camera.size)*Math.sin(camera.pitch)};}
 export function renderTerrain(c,w,h,heights,color,sea,water,camera,step=3,woodland=null){c.clearRect(0,0,w,h);if(!w||!h)return;const n=Math.sqrt(heights.length),cells=[];for(let y=0;y<n-1;y+=step)for(let x=0;x<n-1;x+=step){let x2=Math.min(n-1,x+step),y2=Math.min(n-1,y+step);const p=(xx,yy)=>{let z=heights[yy*n+xx];return projectTerrain(xx,yy,water?Math.max(sea,z):z,w,h,camera)};let vertices=[p(x,y),p(x2,y),p(x2,y2),p(x,y2)];cells.push({vertices,uv:[[x,y],[x2,y],[x2,y2],[x,y2]],textured:!!woodland?.image&&[y*n+x,y*n+x2,y2*n+x,y2*n+x2,Math.floor((y+y2)/2)*n+Math.floor((x+x2)/2)].some(i=>woodland.mask[i]>0),depth:vertices.reduce((a,b)=>a+b.depth,0),i:Math.floor((y+y2)/2)*n+Math.floor((x+x2)/2)});}cells.sort((a,b)=>a.depth-b.depth);for(let cell of cells){let v=cell.vertices,rgb=color(cell.i);c.fillStyle=c.strokeStyle=`rgb(${rgb.map(Math.round).join(',')})`;c.lineWidth=.45;for(let indices of[[0,1,2],[0,2,3]]){c.beginPath();c.moveTo(v[indices[0]].x,v[indices[0]].y);c.lineTo(v[indices[1]].x,v[indices[1]].y);c.lineTo(v[indices[2]].x,v[indices[2]].y);c.closePath();c.fill();c.stroke();if(cell.textured)textureTriangle(c,woodland.image,indices.map(i=>cell.uv[i].map(v=>(v+.5)*woodland.image.width/n)),indices.map(i=>v[i]));}}}
 
 export function terrainScale(w,h,camera){return Math.max(.1,Math.min((w-50)/365,(h-100)/290))*camera.zoom*256/Math.max(256,camera.size??256);}
@@ -7,7 +10,7 @@ export function sampleTerrain(x,y,heights,sea,water){let n=Math.sqrt(heights.len
 // This also catches needle-like summits at grazing angles without ray-march gaps.
 export function pickTerrain(sx,sy,w,h,camera,heights,sea,water){
  const n=Math.sqrt(heights.length),scale=terrainScale(w,h,camera),rx=(sx-w/2-(camera.panX||0))/scale,sv=(sy-h*.57-(camera.panY||0))/scale,c=Math.cos(camera.yaw),s=Math.sin(camera.yaw),sp=Math.sin(camera.pitch),cp=Math.cos(camera.pitch);
- const ry=(sv+(260-62)*.65*cp)/sp,ox=n/2+rx*c+ry*s,oy=n/2-rx*s+ry*c,dx=-.65*cp/sp*s,dy=-.65*cp/sp*c;
+ const v=verticalScale(n),ry=(sv+(260-62)*v*cp)/sp,ox=n/2+rx*c+ry*s,oy=n/2-rx*s+ry*c,dx=-v*cp/sp*s,dy=-v*cp/sp*c;
  let enter=0,exit=260;
  for(let [o,d] of [[ox,dx],[oy,dy]]){if(Math.abs(d)<1e-12){if(o<0||o>(n-1))return null;}else{let a=-o/d,b=((n-1)-o)/d;enter=Math.max(enter,Math.min(a,b));exit=Math.min(exit,Math.max(a,b));}}
  if(enter>exit)return null;

@@ -49,7 +49,7 @@ Landwright is a minimalist cartographic terrain editor with complexity behind a 
 ## Finish the change
 
 - Update the relevant handoff section **in place**; put release notes and measurements in `docs/release-history.md`. Refresh `references/handoff.md` in the same PR.
-- Update `docs/tutorial.md`, `docs/kb/` and README for user-visible changes. Keep the beginner lesson: **start Raise/Lower at 5–10% Strength, short strokes, inspect, increase gradually**.
+- Update `docs/tutorial.md`, `docs/kb/` and README for user-visible changes. Keep the beginner lesson: **start Raise/Lower at 1–3 blocks per stroke, short strokes, inspect, build up gradually**.
 - Browser-check visual changes in both themes and in 2D/3D. jsdom does not verify pixels or GPU performance.
 - After merge, verify the Pages run for the exact commit and the live footer before calling it released. Link the live build and say plainly what was not verified.
 

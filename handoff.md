@@ -1,7 +1,7 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 21, 2026 (America/New_York)<br>
-**Displayed release:** `v2.9.4` · **Cache revision:** `2.9.4` · **Project schema written:** `9`<br>
+**Displayed release:** `v2.10` · **Cache revision:** `2.10.0` · **Project schema written:** `9`<br>
 **Repository:** https://github.com/mopajazz/landwright · **Live app:** https://mopajazz.github.io/landwright/
 
 This document describes **the app as it is now**. It is edited in place whenever behavior changes; it is not appended to. Release-by-release engineering notes (why decisions were made, measurements, rejected directions) live in [docs/release-history.md](docs/release-history.md). Source and tests are authoritative where this document and the code disagree; fix the document when that happens.
@@ -10,8 +10,8 @@ This document describes **the app as it is now**. It is edited in place whenever
 
 | Contract | Current state |
 | --- | --- |
-| Release | **v2.9.4**: organic water shimmer (wave crests and sun glints) on top of v2.9.3 (cumulus clouds, handoff rewrite, merged as `9b43bdb`). |
-| Live deployment | Last verified live on November 21, 2026: v2.9.3 (`9b43bdb`, cache `2.9.3`). After merging v2.9.4, confirm the Pages run for the exact merge commit and that the live footer reads v2.9.4. |
+| Release | **v2.10**: height baseline (per-world height range, height-per-stroke Raise/Lower, natural slope limit, size-independent 3D proportions) on top of v2.9.4. |
+| Live deployment | Last verified live on November 21, 2026: v2.9.4 (`b655ab2`, Pages run 44858054018). After merging v2.10, confirm the Pages run for the exact merge commit and that the live footer reads v2.10. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
 | Project format | Writes **9**, imports **1–9**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan. |
@@ -19,13 +19,14 @@ This document describes **the app as it is now**. It is edited in place whenever
 | D / E keys | Paint and Path: Opacity −/+ 5%. Flatten: target height −/+ 1 (Shift ×10). Other tools ignore them. |
 | Navigation | Space + left-drag or middle-drag pans (2D/3D). Right/Alt-drag orbits in 3D. **Walk** gives an eye-level WebGL view. |
 | Terrain sizes | 128², 192², 256² (default), and **experimental 512²**. |
+| Height | Hard limits 0–255. Each world has a working range, *Seabed floor* (default 20) to *Highest peak* (default 190), that Raise, Lower and Flatten never pass. 3D draws every size with the same proportions. |
 | Water | Sea-connected reactive ocean, authored river channels, basin fill/drain, and poured water that flows and pools. |
 | Look | Eight earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
 | Exports | Map PNG 1024² / 2048² (default) / 4096². Heightmap PNG at N² with bed elevations only. Editable project JSON. |
-| Tests | `npm test`: **185 passed, 0 failed** (November 21, 2026). |
+| Tests | `npm test`: **193 passed, 0 failed** (November 21, 2026). |
 | Settlements | **Parked.** Removed in v2.9; the user may want them back in a different form (§12). |
 
-**Preserve:** beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep nine tools. Never save derived water, canopy or texture geometry into bed heights or project files.
+**Preserve:** beginner guidance must prominently say to start Raise/Lower at **1–3 blocks per stroke**, use short strokes, inspect, and build up gradually. Keep nine tools. Never save derived water, canopy or texture geometry into bed heights or project files.
 
 ## 1. Working agreement
 
@@ -61,6 +62,7 @@ Decisions in force:
 - Nine tools. Brush footprint and material are separate choices and never switch the tool.
 - The palette, Opacity and Sculpt controls are contextual: each appears only for tools that use it.
 - Opacity is a paint concept. It applies to Paint and Path. Sculpt tools and Land ignore it.
+- Sculpting is dialed in by a **height budget per stroke**, a per-world **height range** and a **natural slope limit**, so what looks good in 2D also looks good in 3D and Walk. The user found the old percentage Strength too easy to make extreme ("an EKG of a hummingbird in 3D").
 - Erasing is Shift + Paint; the standalone Erase tool was removed.
 - Coastline is a footprint; **Land** is the explicit add/remove-land tool.
 - The terrain *decides*: woodland grows only where terrain allows, ground texture responds to slope, wetness and light, and ocean water follows connectivity. This "paint intent, terrain decides" model is what the user likes most, especially the woodland.
@@ -95,8 +97,8 @@ New world opens a modal: world name (required, up to 80 characters, default `Unt
 
 - Seed: default 42, bounds ±999,999,999; reroll picks an integer below 1,000,000.
 - Relief: 40–140 (÷100 for the generator), default 100. Gentle below 70, Dramatic above 115, Natural otherwise.
-- Non-flat, non-ocean generation clamps heights to 10–250; relief scales land above sea level 62.
-- Creating a world makes one undo snapshot and clears paint, material coverage, forest density, routes, basin fills, poured water and legacy content. It restores default layers, sea level 62, Water and Hill shading on, and recenters both cameras.
+- Non-flat, non-ocean generation clamps heights to 10–250; relief scales land above sea level 62. New worlds (and their previews) are then fitted into the default height range with `fitHeightRange`: only the band within 24 units of a limit is compressed, and only if the terrain actually passes it, so shapes keep their order.
+- Creating a world makes one undo snapshot and clears paint, material coverage, forest density, routes, basin fills, poured water and legacy content. It restores default layers, sea level 62, the default height range 20–190, Water and Hill shading on, and recenters both cameras.
 - 512 is experimental: sculpting misses frame budgets on measured hardware and painted 512 worlds can exceed the browser storage quota. See [docs/terrain-resolution-512.md](docs/terrain-resolution-512.md).
 
 ### 4.2 Toolbar and shortcuts
@@ -136,13 +138,17 @@ Shortcuts are ignored while typing in inputs, selects, textareas or contentedita
 | --- | --- | --- | --- |
 | Size | 4–120 blocks | 42 | Brush tools |
 | Opacity | 0–100% | 100% | Paint, Path |
-| Strength | 1–100% | Raise/Lower 8%; Smooth/Flatten 35% (two groups remembered separately) | Sculpt tools |
-| Flatten target | 1–255 | 120 | Flatten |
+| Height per stroke | 0.5–20 blocks | 3 | Raise, Lower |
+| Strength | 1–100% | 35% | Smooth, Flatten (remembered separately from Raise/Lower) |
+| Flatten target | Seabed floor – Highest peak | 120 | Flatten |
 | Preserve map edges | Boolean | On | Flatten |
 
 Footprints: **Soft Round** `(1 − d²)²`; **Hard Round** full coverage inside the circle; **Coastline** irregular angular edge with a sharper feather; **Grain** soft weight modulated by stable cell noise. Footprints shape coverage only; material texture is separate.
 
-- Elevation is clamped to 0–255. Raise/Lower are additive and weighted. Smooth samples a pre-dab copy. Flatten converges toward the target.
+- Elevation is clamped to 0–255. Smooth samples a pre-dab copy. Flatten converges toward the target, which is kept inside the height range.
+- **Raise/Lower (`heightStroke` in `terrain.mjs`).** At pointer-down the stroke records the pre-stroke heights and, per cell, the strongest footprint weight it has received (`reach`). A cell can move at most *budget × reach* from its pre-stroke height, so holding still or scrubbing inside one stroke cannot stack; separate strokes build. Each dab moves cells toward that goal at a rate that rises for small brushes (`0.2 + 1.5/r`), so a single pass of any size makes visible progress.
+- **Height range.** Within 14 units of the ceiling (Raise) or floor (Lower) the step is eased (minimum 8% speed) and the result is clamped to the limit. Terrain already outside the range is not pulled in by Raise or Lower.
+- **Natural slope limit.** After each dab, cells this stroke changed are pulled back (never past their pre-stroke height) wherever they are steeper than `maxSlope(n) = 1.2 / verticalScale(n)` units per cell against a 4-neighbor, about 50° in 3D. Pre-existing cliffs are untouched.
 - Preserve map edges holds the outer row/column and feathers over four cells, which prevents the 3D outline from appearing to shrink. It belongs to Flatten only.
 - Land converges toward sea +22 (Shift: sea −18), only on the appropriate side of its target, and never applies paint.
 - Opacity on sculpt tools was once a hidden second strength multiplier; Opacity 0 left over from painting silently disabled sculpting. It is now scoped to Paint and Path (regression-tested).
@@ -202,8 +208,9 @@ Work estimate: `(1 + Σ max(1, ceil(segmentLength × 2))) × (ceil(width × 1.5)
 
 ### 4.7 Views, layers and Walk
 
+- **3D proportions.** `verticalScale(n) = 0.65 × n / 512` height units per map block, used by the WebGL shader, Canvas 3D, picking, Walk and sprite depth. Every map size therefore has the same proportions (a 128 map is a 512 one in miniature). Before v2.10, 0.65 was used at every size, so smaller maps were drawn far steeper (64% of the default 256 island was steeper than 45° in 3D). This changes drawing only; saved heights are untouched.
 - **Workspace:** 2D Map, 3D Terrain, **Walk** (eye-level WebGL camera; W/A/S/D to move, arrow keys or click-to-look, Esc or *Exit walk* restores the previous view). Walk is transient: no project field, editing or export effect.
-- **Views:** Terrain, Heightmap, Biomes (a visualization, not Minecraft biome data). Toggles: Grid, Contours, Water, Hill shading. Sea level 10–150, default 62.
+- **Views:** Terrain, Heightmap, Biomes (a visualization, not Minecraft biome data). Toggles: Grid, Contours, Water, Hill shading. Sea level 10–150, default 62. World Settings also holds the height range: *Seabed floor* 0–120 (default 20) and *Highest peak* 100–255 (default 190), at least 30 apart; changes are undoable and saved.
 - **Close zoom:** in Terrain view, world-aligned shader detail for stone, ground and canopy fades in, hill shading adds nearby occlusion, and WebGL 3D adds distance haze (`terrain-detail.mjs`). Screen-space only; exports and saved data are unchanged.
 - **Layers** (rows appear only when relevant): Surface, Relief (`elevation`), Forests, River water (`rivers`), legacy Landmarks, legacy Drawings. Hidden or locked layers are protected from editing. River creation also needs Relief visible and unlocked.
 
@@ -216,7 +223,7 @@ One World Settings toggle (default on), with *Water motion*, *Clouds & soft shad
   - *Glints* are brief, flat sparkles on their own 2–5 s cycles.
   - At most 260 crests and 140 glints, chosen by a per-mark rank so they spread evenly over the map (the old cap filled the top rows first). Each mark is re-checked against the current wet mask every frame, so marks follow the moving ocean front. JS cost is about 0.1 ms per frame.
 - **Canopy breeze:** up to 256 subtle moving foliage glints.
-- **Clouds (v2.9.3):** six deterministic cumulus clouds (`cloudField(n, time)`). Each is painted once into a cached 640×400 sprite: a flat base row of puffs, one or two towers and shoulder puffs; an opaque body pass so overlaps never seam; then a cool underside, crescent creases and upper-left sun highlights; a feathered base. A second sprite gives the shadow, affine-mapped onto the ground plane so it foreshortens in 3D. In 3D, bodies float at absolute elevation 185 (`livingProject(x, y, z, absolute)`) instead of riding over peaks. Clouds drift east-south-east and fade at the 0..n−1 map edges, fully transparent at least 0.35r outside, so the wrap is never visible (tested). Without an offscreen canvas (Node/jsdom), clouds are skipped.
+- **Clouds (v2.9.3):** six deterministic cumulus clouds (`cloudField(n, time)`). Each is painted once into a cached 640×400 sprite: a flat base row of puffs, one or two towers and shoulder puffs; an opaque body pass so overlaps never seam; then a cool underside, crescent creases and upper-left sun highlights; a feathered base. A second sprite gives the shadow, affine-mapped onto the ground plane so it foreshortens in 3D. In 3D, bodies float at absolute elevation 235 (above the default 190 ceiling) (`livingProject(x, y, z, absolute)`) instead of riding over peaks. Clouds drift east-south-east and fade at the 0..n−1 map edges, fully transparent at least 0.35r outside, so the wrap is never visible (tested). Without an offscreen canvas (Node/jsdom), clouds are skipped.
 
 ### 4.9 Layout and appearance
 
@@ -314,6 +321,7 @@ Downloads are JSON named `<sanitized-name>.world.json` (not the WorldPainter des
 type ProjectV9 = {
   version: 9;
   size: 128 | 192 | 256 | 512;      // missing size → 256
+  floor: number; ceiling: number;    // integers; floor 0..120, ceiling 100..255, ≥ 30 apart; missing → 20 / 190
   name: string;                      // ≤ 80 chars
   heights: number[];                 // N², 0..255 (3 decimals)
   paint: number[];                   // N², 0..9
@@ -374,7 +382,7 @@ Open `http://localhost:8000/` (serve over HTTP; do not open the file directly). 
 
 ### Tests
 
-185 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
+193 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
 
 - `interactions.test.mjs` compares whole project states. A failing `deepEqual` on large arrays can exhaust memory and kill the process instead of printing a diff; run the file alone with `node --test --test-reporter=spec tests/interactions.test.mjs` to find the test.
 - Living World tests need queued animation frames: bind the loop to `document.defaultView.requestAnimationFrame`, not a synchronous stub (see `living-interactions.test.mjs`).
@@ -398,7 +406,7 @@ Also run `node --check` on changed modules and `git diff --check`.
 
 GitHub Pages builds `main:/` automatically (legacy build; no workflow file). Before merging a release PR:
 
-- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.9.4`. Update the footer version when appropriate. Documentation-only changes need no bump.
+- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.10.0`. Update the footer version when appropriate. Documentation-only changes need no bump.
 - Check help text, tutorial and KB against the implemented controls.
 
 After merging, find the Pages run for the exact merge commit, wait for success, then load the live site and confirm the footer and the changed flow. A push is not a deployment. To roll back, revert the faulty commits through a PR and verify Pages again; note any schema implications for files saved by the newer version.
@@ -432,12 +440,14 @@ Open UI items from reviews (not yet assigned):
 - Land = C (reads as Coastline) and Smooth = Q are hard to recall; tool-button shortcut letters are about 9px.
 - The toggle dot, layer icons and selected-tool ring are outside the contrast tests.
 
+- **Walk mode starts on the central summit facing the peak face**, so the first view is a dark wall (pre-existing; reproduced on v2.9.4). Start on open lowland facing the island instead.
+
 Process items:
 
 - Add a GitHub Actions workflow that runs `npm test` on pull requests.
 - Close the stale draft PR for settlement brushes (#3), superseded by v2.9.
 
-Regression-tested behaviors to protect: zero paint opacity never disables sculpting; no preset-driven tool switching; per-stroke opacity caps; Flatten perimeter protection; coalesced frames and no per-pointer rasterization; real 3D picking at the water/canopy surface; safe route-draft cancellation; no route→sculpt fallthrough; middle-pan ordering; delayed erase-target reconciliation; clouds invisible before wrapping; water marks jittered, evenly spread and fully faded at cycle ends.
+Regression-tested behaviors to protect: Raise/Lower never exceed their per-stroke budget or the height range and never create slopes past `maxSlope`; 3D proportions are size-independent; zero paint opacity never disables sculpting; no preset-driven tool switching; per-stroke opacity caps; Flatten perimeter protection; coalesced frames and no per-pointer rasterization; real 3D picking at the water/canopy surface; safe route-draft cancellation; no route→sculpt fallthrough; middle-pan ordering; delayed erase-target reconciliation; clouds invisible before wrapping; water marks jittered, evenly spread and fully faded at cycle ends.
 
 ## 12. Parked and deferred topics
 
