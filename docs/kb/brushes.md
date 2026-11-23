@@ -33,7 +33,7 @@ Paint opacity accumulates across separate strokes. Repeated pointer samples insi
 
 ## Flatten edges
 
-**D / E** make the current tool's main setting smaller / bigger: Strength for Raise, Lower and Smooth (1% steps up to 10%, then 5%), Carve per stroke for River (0.25 blocks) and Opacity for Paint and Path (5%). Shift+D/E takes four steps at once.
+**D / E** make the current tool's main setting smaller / bigger: Strength for Raise, Lower and Smooth (1% steps up to 10%, then 5%), Carve depth for River (0.25 blocks) and Opacity for Paint and Path (5%). Shift+D/E takes four steps at once.
 
 Flatten approaches Target height. For Flatten, D lowers / E raises the target by 1 block; Shift+D/E changes it by 10. The target stays between the world's Seabed floor and Highest peak. These shortcuts do not change Strength or paint Opacity, and choosing a target does not edit terrain until you brush. Typing and dialogs keep ordinary keyboard behavior. Preserve map edges holds the perimeter fixed and feathers nearby cells. Uncheck it only to intentionally reshape the rim. This protection is specific to Flatten, not every terrain tool.
 

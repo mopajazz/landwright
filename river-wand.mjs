@@ -3,9 +3,12 @@
 // water erodes its bed and carries sediment downstream, dropping it where the
 // flow slows (fans, deltas, marshy flats). Everything here works on the
 // authoritative bed and the poured-water depth field; nothing is derived-only.
-import {heightStroke} from './terrain.mjs?v=2.11.2';
+import {heightStroke} from './terrain.mjs?v=2.12.0';
 
-export const WAND_DEFAULTS={depth:1.5,water:15},MAX_SPRINGS=64;
+// Every River stroke releases the same small amount of water: enough to show
+// which way the channel runs, never enough to flood a meadow. More water is a
+// deliberate act with the droplet.
+export const WAND_DEFAULTS={depth:1.5,water:15},STROKE_WATER=WAND_DEFAULTS.water,MAX_SPRINGS=64;
 const EROSION=.06,MAX_CUT=.05,FAST=.04,SETTLE=.5,WET=.02;
 
 // One dab: carve under the brush (bounded per stroke, like Lower) and add water
@@ -97,14 +100,27 @@ export function dryArea(water,springs,n,cx,cy,r){const r2=r*r;for(let y=Math.max
 // two cells, and keep at most MAX_SPRINGS.
 export function addSpring(springs,cell,rate,n){if(rate<=0)return springs;const x=cell%n,y=Math.floor(cell/n);const kept=springs.filter(s=>((s.cell%n)-x)**2+(Math.floor(s.cell/n)-y)**2>4);kept.push({cell,rate,remaining:springSupply(rate)});return kept.slice(-MAX_SPRINGS);}
 
-// Meander: swing the carving point to either side of the drawn stroke along a
-// smooth two-frequency wave, so even a straight drag makes winding bends.
-// `state` keeps the stroke's smoothed direction and arc length.
-export function meanderPoint(state,p,r,amount,n){
- if(state.prev){const dx=p.x-state.prev.x,dy=p.y-state.prev.y,len=Math.hypot(dx,dy);
-  if(len>1e-6){state.arc+=len;const ux=dx/len,uy=dy/len;if(!state.dir)state.dir={x:ux,y:uy};else{const mx=state.dir.x*.85+ux*.15,my=state.dir.y*.85+uy*.15,ml=Math.hypot(mx,my)||1;state.dir={x:mx/ml,y:my/ml};}}}
- state.prev={x:p.x,y:p.y};
- if(!(amount>0)||!state.dir)return {x:p.x,y:p.y};
- const full=amount*Math.max(5,r*2.5),wavelength=Math.max(28,r*12,full*8),amp=full*Math.min(1,state.arc/(wavelength*.5)),a=state.arc/wavelength*Math.PI*2+state.phase;
- const off=amp*(Math.sin(a)+.35*Math.sin(a*2.3+1.7))/1.35;
- return {x:Math.max(0,Math.min(n-1,p.x-state.dir.y*off)),y:Math.max(0,Math.min(n-1,p.y+state.dir.x*off))};}
+
+// The creek a stroke leaves behind: its trail becomes a river route record
+// (the same kind older maps use) whose water sits CREEK_FILL above the carved
+// bed and never rises downstream. Static water shows the course and, with
+// Living World, its direction; it cannot spread, so one pass never floods.
+// Extra flow comes from the droplet.
+export const CREEK_FILL=.35,TRIM_LIMIT=6;
+function trimDisc(h,n,x,y,r,bed){for(let yy=Math.max(0,Math.floor(y-r));yy<=Math.min(n-1,Math.ceil(y+r));yy++)for(let xx=Math.max(0,Math.floor(x-r));xx<=Math.min(n-1,Math.ceil(x+r));xx++){const d=Math.hypot(xx-x,yy-y)/r;if(d>1)continue;const i=yy*n+xx,goal=bed+(h[i]-bed)*d*d;if(h[i]>goal)h[i]=goal;}}
+export function creekRoute(trail,heights,n,{diameter=8,depth=1.5}={}){
+ if(trail.length<3)return null;const points=[];let level=Infinity;
+ // Trim bumps so the creek is continuous: where the bed rises above the water
+ // arriving from upstream (a scour upstream or settled sediment), lower the
+ // channel's center to just under that water, feathered across the creek's
+ // width and by at most TRIM_LIMIT. Part of the same stroke for undo.
+ const half=Math.max(1,Math.min(16,Math.round(diameter*.6))/2);
+ for(const c of trail){const x=c%n,y=Math.floor(c/n);
+  if(level<Infinity&&heights[c]+CREEK_FILL>level){const want=level-CREEK_FILL-.02;if(heights[c]-want<=TRIM_LIMIT)trimDisc(heights,n,x,y,half,want);}
+  level=Math.min(level,heights[c]+CREEK_FILL);
+  if(points.length&&Math.hypot(x-points.at(-1).x,y-points.at(-1).y)<1.5)continue;// thin the trail; `level` keeps falling for later points
+  points.push({x,y,level:Math.max(0,Math.min(255,level))});}
+ for(let i=1;i<points.length;i++)points[i].level=Math.min(points[i].level,points[i-1].level);
+ if(points.length<2)return null;
+ const every=Math.ceil(points.length/4096),sampled=every>1?points.filter((p,i)=>i%every===0||i===points.length-1):points;
+ return {type:'river',width:Math.max(2,Math.min(32,Math.round(diameter*.6))),opacity:1,depth:Math.max(1,Math.min(16,depth)),points:sampled};}

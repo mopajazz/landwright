@@ -31,7 +31,7 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 | Right drag or Alt + drag in 3D | Orbit and tilt |
 | R / L / Q / F | Raise / lower / smooth / flatten |
 | B or P / C or M / H | Paint / land / pan |
-| D / E | Smaller/bigger: Strength (Raise/Lower/Smooth; 1% steps up to 10%, then 5%), Carve per stroke (River, 0.25 blocks), Opacity (Paint/Path, 5%), Flatten target (1 block) |
+| D / E | Smaller/bigger: Strength (Raise/Lower/Smooth; 1% steps up to 10%, then 5%), Carve depth (River, 0.25 blocks), Opacity (Paint/Path, 5%), Flatten target (1 block) |
 | Shift + D / E | Four steps at once; Flatten target 10 blocks |
 | J / V | Path / river |
 | Enter or double-click / Escape | Finish route / cancel preview |
@@ -65,7 +65,7 @@ The toolbox is grouped by function: **Terrain** (Raise, Lower, Smooth, Flatten, 
 
 ## Paths and rivers
 
-**River (V)** is a brush: drag and watch it carve. Each stroke lowers the ground under it (*Carve per stroke*, default 1.5 blocks) and releases water (*Water*, default 60%) that runs downhill while you draw. Moving water deepens its bed and carries sediment that settles where the flow slows, building fans and deltas. When you release, the start of the stroke becomes a spring that keeps the river flowing; the sea and map edge drain it, and closed hollows fill into lakes. Shift + drag dries an area (springs and water). Erosion happens only while drawing.
+**River (V)** is a brush: drag and watch it carve. Its one setting is *Carve depth* (default 1.5 blocks, D/E); the brush size sets the width, and the river goes where your hand draws it. Each stroke lowers the ground, keeps the channel running downhill along the stroke and sends a little water down it, which deepens the bed and carries sediment to where the flow slows. On release it leaves a **creek**, a thin film of still water in the channel that shows the course (Living World streaks show the direction) and never floods. Add more water deliberately with the **droplet**; Shift + drag dries a stretch. Erosion happens only while drawing.
 
 **Path (J)** is a brush too: drag to lay a track in Loam, Bedrock or Sand. It paints the surface, honors Opacity and clears trees under it, without changing heights. Neither tool places points or needs finishing; each drag is one undo step.
 
