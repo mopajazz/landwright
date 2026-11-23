@@ -15,7 +15,7 @@ User documentation is being compiled alongside the application. These articles d
 
 For each new feature, update its article with: where to find it, a short procedure, what it changes, undo/save/export behavior, limits, and common mistakes. Update the tutorial only when the beginner workflow changes. Link new articles here and keep the in-app Help links working. Verify claims against current handlers and tests; label planned features as planned.
 
-The user specifically asked that Raise/Lower guidance teach small, gradual sculpting first. Preserve that lesson (start at 1–3 blocks per stroke, short strokes, inspect, build up) prominently in the tutorial and brush article.
+The user specifically asked that Raise/Lower guidance teach small, gradual sculpting first. Preserve that lesson (start Raise/Lower at 5–10% Strength, short strokes, inspect, build up) prominently in the tutorial and brush article.
 
 Current scope: terrain and cartographic routes, forests, plus visual atmosphere. Holler Maps source assets have not been imported, and storytelling remains deferred. Do not describe future population, simulation, or narrative tools as available.
 

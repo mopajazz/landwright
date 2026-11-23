@@ -1,7 +1,7 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 21, 2026 (America/New_York)<br>
-**Displayed release:** `v2.11` · **Cache revision:** `2.11.0` · **Project schema written:** `9`<br>
+**Displayed release:** `v2.11.1` · **Cache revision:** `2.11.1` · **Project schema written:** `9`<br>
 **Repository:** https://github.com/mopajazz/landwright · **Live app:** https://mopajazz.github.io/landwright/
 
 This document describes **the app as it is now**. It is edited in place whenever behavior changes; it is not appended to. Release-by-release engineering notes (why decisions were made, measurements, rejected directions) live in [docs/release-history.md](https://github.com/mopajazz/landwright/blob/main/docs/release-history.md). Source and tests are authoritative where this document and the code disagree; fix the document when that happens.
@@ -10,23 +10,23 @@ This document describes **the app as it is now**. It is edited in place whenever
 
 | Contract | Current state |
 | --- | --- |
-| Release | **v2.11**: River and Path are freehand brushes. The river wand carves, releases water and erodes while you draw; strokes leave springs. On top of v2.10.1 (Walk, height baseline). |
-| Live deployment | Last verified live on November 21, 2026: v2.10.1 (`f49e56c`, Pages run 44865236565). After merging v2.11, confirm the Pages run for the exact merge commit and the live footer. |
+| Release | **v2.11.1**: Raise/Lower use a percentage Strength again (D/E), with a looser needle guard; on top of v2.11 (river wand, freehand Path). |
+| Live deployment | Last verified live on November 21, 2026: v2.11 (`fa7d41a`, Pages run 44869598624). After merging v2.11.1, confirm the Pages run for the exact merge commit and the live footer. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
 | Project format | Writes **9**, imports **1–9**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan. |
 | Erasing | **Shift + Paint** with Paint's *Shift erase target*. There is no Erase tool. |
-| D / E keys | Smaller / bigger for the current tool's main setting: Raise/Lower Height per stroke (0.5), Smooth Strength (5%), River Carve per stroke (0.25), Paint/Path Opacity (5%), Flatten target (1). Shift = four steps (Flatten: 10). Pan ignores them. |
+| D / E keys | Strength for Raise/Lower/Smooth (1% steps up to 10%, then 5%), River Carve per stroke (0.25), Paint/Path Opacity (5%), Flatten target (1). Shift = four steps (Flatten: 10). Pan ignores them. |
 | Navigation | Space + left-drag or middle-drag pans (2D/3D). Right/Alt-drag orbits in 3D. **Walk** gives an eye-level WebGL view with Space/Shift to fly up/down. |
 | Terrain sizes | 128², 192², 256² (default), and **experimental 512²**. |
 | Height | Hard limits 0–255. Each world has a working range, *Seabed floor* (default 20) to *Highest peak* (default 190), that Raise, Lower and Flatten never pass. 3D draws every size with the same proportions. |
 | Water | Sea-connected reactive ocean; **river wand** strokes and their saved **springs** feeding the flowing-water simulation; pour water; basin fill/drain; and rivers from older maps (fixed levels, Reflow). |
 | Look | Eight earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
 | Exports | Map PNG 1024² / 2048² (default) / 4096². Heightmap PNG at N² with bed elevations only. Editable project JSON. |
-| Tests | `npm test`: **195 passed, 0 failed** (November 21, 2026). |
+| Tests | `npm test`: **196 passed, 0 failed** (November 23, 2026). |
 | Settlements | **Parked.** Removed in v2.9; the user may want them back in a different form (§12). |
 
-**Preserve:** beginner guidance must prominently say to start Raise/Lower at **1–3 blocks per stroke**, use short strokes, inspect, and build up gradually. Keep nine tools. Never save derived water, canopy or texture geometry into bed heights or project files.
+**Preserve:** beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep nine tools. Never save derived water, canopy or texture geometry into bed heights or project files.
 
 ## 1. Working agreement
 
@@ -62,7 +62,7 @@ Decisions in force:
 - Nine tools. Brush footprint and material are separate choices and never switch the tool.
 - The palette, Opacity and Sculpt controls are contextual: each appears only for tools that use it.
 - Opacity is a paint concept. It applies to Paint and Path. Sculpt tools and Land ignore it.
-- Sculpting is dialed in by a **height budget per stroke**, a per-world **height range** and a **natural slope limit**, so what looks good in 2D also looks good in 3D and Walk. The user found the old percentage Strength too easy to make extreme ("an EKG of a hummingbird in 3D").
+- Sculpting is dialed in by a percentage **Strength**, a per-world **height range** and a loose **needle guard**, with 3D drawn at size-independent proportions, so what looks good in 2D also looks good in 3D and Walk. (v2.10 replaced Strength with a "height per stroke" budget and a 50° slope limit; the user found that confusing and overcorrected, so v2.11.1 restored Strength and loosened the guard.)
 - Erasing is Shift + Paint; the standalone Erase tool was removed.
 - Coastline is a footprint; **Land** is the explicit add/remove-land tool.
 - The terrain *decides*: woodland grows only where terrain allows, ground texture responds to slope, wetness and light, and ocean water follows connectivity. This "paint intent, terrain decides" model is what the user likes most, especially the woodland.
@@ -120,7 +120,7 @@ New world opens a modal: world name (required, up to 80 characters, default `Unt
 | W / S, Shift ×10 | Brush diameter ±1 (±10); route width for Path/River |
 | Shift + wheel | Brush or route width ±1 |
 | Wheel | Zoom |
-| D / E (Shift ×4; Flatten ×10) | Height per stroke ±0.5 (Raise/Lower), Strength ±5% (Smooth), Carve per stroke ±0.25 (River), Opacity ±5% (Paint/Path), target ±1 (Flatten). Implemented by `nudgeSlider`, which steps the slider, clamps it and fires its input handler |
+| D / E (Shift ×4; Flatten ×10) | Strength ±1% up to 10%, then ±5% (Raise/Lower/Smooth), Carve per stroke ±0.25 (River), Opacity ±5% (Paint/Path), target ±1 (Flatten). Implemented by `nudgeSlider`, which steps the slider, clamps it and fires its input handler |
 | Left drag | Apply the brush, or add route points while a route is active |
 | Space + left drag, middle drag | Pan (2D/3D), including during a route draft; a started pan stays a pan until release. In Walk, Space flies up and Shift descends |
 | Right drag, Alt + drag (3D) | Orbit/tilt |
@@ -138,17 +138,17 @@ Shortcuts are ignored while typing in inputs, selects, textareas or contentedita
 | --- | --- | --- | --- |
 | Size | 4–120 blocks | 42 | Brush tools |
 | Opacity | 0–100% | 100% | Paint, Path |
-| Height per stroke | 0.5–20 blocks | 3 | Raise, Lower |
-| Strength | 1–100% | 35% | Smooth, Flatten (remembered separately from Raise/Lower) |
+| Strength | 1–100% | Raise/Lower 8%; Smooth/Flatten 35% (two groups remembered separately) | Sculpt tools |
 | Flatten target | Seabed floor – Highest peak | 120 | Flatten |
 | Preserve map edges | Boolean | On | Flatten |
 
 Footprints: **Soft Round** `(1 − d²)²`; **Hard Round** full coverage inside the circle; **Coastline** irregular angular edge with a sharper feather; **Grain** soft weight modulated by stable cell noise. Footprints shape coverage only; material texture is separate.
 
 - Elevation is clamped to 0–255. Smooth samples a pre-dab copy. Flatten converges toward the target, which is kept inside the height range.
-- **Raise/Lower (`heightStroke` in `terrain.mjs`).** At pointer-down the stroke records the pre-stroke heights and, per cell, the strongest footprint weight it has received (`reach`). A cell can move at most *budget × reach* from its pre-stroke height, so holding still or scrubbing inside one stroke cannot stack; separate strokes build. Each dab moves cells toward that goal at a rate that rises for small brushes (`0.2 + 1.5/r`), so a single pass of any size makes visible progress.
+- **Raise/Lower (`strengthStroke` in `terrain.mjs`).** Each dab adds `strength/100 × 3 × footprint weight` (the pre-v2.10 formula), so repeated passes keep building. Measured with a size-24 brush on the default island: about 1.7 blocks per pass at 8%. With the halved 3D scale this looks about half as tall as the same strokes did before v2.10.
 - **Height range.** Within 14 units of the ceiling (Raise) or floor (Lower) the step is eased (minimum 8% speed) and the result is clamped to the limit. Terrain already outside the range is not pulled in by Raise or Lower.
-- **Natural slope limit.** After each dab, cells this stroke changed are pulled back (never past their pre-stroke height) wherever they are steeper than `maxSlope(n) = 1.2 / verticalScale(n)` units per cell against a 4-neighbor, about 50° in 3D. Pre-existing cliffs are untouched.
+- **Needle guard.** After each dab, cells this stroke changed are pulled back (never past their pre-stroke height) wherever they are steeper than `spikeSlope(n) = 2.5 / verticalScale(n)` units per cell against a 4-neighbor, about 68° in 3D. Ordinary strokes never reach it (tested: identical results with and without it at 8%); it only stops 100% Strength on a tiny brush from making a spike. Pre-existing cliffs are untouched.
+- `heightStroke` (per-stroke budget) and the stricter `maxSlope` (~50°) remain in `terrain.mjs` for the river wand's carving, which needs a bounded cut per stroke.
 - Preserve map edges holds the outer row/column and feathers over four cells, which prevents the 3D outline from appearing to shrink. It belongs to Flatten only.
 - Land converges toward sea +22 (Shift: sea −18), only on the appropriate side of its target, and never applies paint.
 - Opacity on sculpt tools was once a hidden second strength multiplier; Opacity 0 left over from painting silently disabled sculpting. It is now scoped to Paint and Path (regression-tested).
@@ -448,7 +448,7 @@ Process items:
 - Add a GitHub Actions workflow that runs `npm test` on pull requests.
 - Close the stale draft PR for settlement brushes (#3), superseded by v2.9.
 
-Regression-tested behaviors to protect: the river wand's carving is bounded per stroke, erosion happens only while drawing, deltas stay below sea level, the sea drains water, one stroke undoes in one step, and Relief locks block it; Path never changes heights and clears trees; Raise/Lower never exceed their per-stroke budget or the height range and never create slopes past `maxSlope`; 3D proportions are size-independent; Walk starts on lowland, hovers, and never flies below eye height or above its ceiling; zero paint opacity never disables sculpting; no preset-driven tool switching; per-stroke opacity caps; Flatten perimeter protection; coalesced frames and no per-pointer rasterization; real 3D picking at the water/canopy surface; safe route-draft cancellation; no route→sculpt fallthrough; middle-pan ordering; delayed erase-target reconciliation; clouds invisible before wrapping; water marks jittered, evenly spread and fully faded at cycle ends.
+Regression-tested behaviors to protect: the river wand's carving is bounded per stroke, erosion happens only while drawing, deltas stay below sea level, the sea drains water, one stroke undoes in one step, and Relief locks block it; Path never changes heights and clears trees; Raise/Lower Strength strokes keep building, never pass the height range and never create needles past `spikeSlope`; 3D proportions are size-independent; Walk starts on lowland, hovers, and never flies below eye height or above its ceiling; zero paint opacity never disables sculpting; no preset-driven tool switching; per-stroke opacity caps; Flatten perimeter protection; coalesced frames and no per-pointer rasterization; real 3D picking at the water/canopy surface; safe route-draft cancellation; no route→sculpt fallthrough; middle-pan ordering; delayed erase-target reconciliation; clouds invisible before wrapping; water marks jittered, evenly spread and fully faded at cycle ends.
 
 ## 12. Parked and deferred topics
 
