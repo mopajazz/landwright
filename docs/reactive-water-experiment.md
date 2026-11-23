@@ -49,3 +49,9 @@ In Terrain view, close zoom fades in world-aligned shader detail for stone, grou
 ### Pouring water
 
 Select River, then the droplet icon. Click anywhere on the map to add water, or hold to keep pouring. The amount slider controls each dose. Water flows between neighboring cells according to differences in surface height. It pools in hollows, spills over low rims, and drains at the map edge. Shift-click removes the water at the clicked spot. Existing saved basin drops still load. Poured water is saved with the world and leaves the terrain bed intact.
+
+### River Wand flow
+
+The wand starts at 15% Water. After a stroke, its spring releases a finite supply. Saved springs keep their remaining supply when a map is reopened. Older saves with unlimited springs receive one bounded supply.
+
+For a flooded project, select River and use **Drain floodwater** in the wand settings. This stops springs and clears simulated and manually poured water. Ocean water, authored pools, route water, and the carved terrain remain. Use Undo to restore the previous state. For a local cleanup, use Shift with the River brush.

@@ -3,9 +3,9 @@
 // water erodes its bed and carries sediment downstream, dropping it where the
 // flow slows (fans, deltas, marshy flats). Everything here works on the
 // authoritative bed and the poured-water depth field; nothing is derived-only.
-import {heightStroke} from './terrain.mjs?v=2.11.1';
+import {heightStroke} from './terrain.mjs?v=2.11.2';
 
-export const WAND_DEFAULTS={depth:1.5,water:60},MAX_SPRINGS=64;
+export const WAND_DEFAULTS={depth:1.5,water:15},MAX_SPRINGS=64;
 const EROSION=.06,MAX_CUT=.05,FAST=.04,SETTLE=.5,WET=.02;
 
 // One dab: carve under the brush (bounded per stroke, like Lower) and add water
@@ -75,17 +75,27 @@ export function drainToSea(water,heights,n,{sea=62,ocean=null}){let any=false;fo
 
 // While a stroke is held, the whole drawn trail stays wet so the channel fills
 // as you draw and erosion works along all of it, not only under the cursor.
-export function feedTrail(water,trail,flow){if(!trail.length)return;const each=flow/100*.6/Math.sqrt(trail.length);for(const i of trail)water[i]+=each;}
-// Springs keep a river flowing after the stroke: each feeds water at its rate
-// (Water %) every simulation tick. The sea and map edge drain it, so rivers
-// reach a steady flow; where water cannot leave it fills hollows into lakes.
-export function feedSprings(water,springs){for(const {cell,rate} of springs)water[cell]+=rate/100*.5;}
+export function feedTrail(water,trail,flow){if(!trail.length)return;const each=flow/100*.10/trail.length;for(const i of trail)water[i]+=each;}
+// A short-lived spring keeps a stroke flowing after release. Its remaining
+// supply is saved so reopening a project cannot replenish a spent spring.
+export const springSupply=rate=>rate/50;
+export function feedSprings(water,springs){
+ let fed=false;
+ for(const spring of springs){
+  const dose=Math.min(spring.remaining,spring.rate/100*.025);
+  if(dose<=0)continue;
+  water[spring.cell]+=dose;
+  spring.remaining-=dose;
+  fed=true;
+ }
+ return fed;
+}
 // Shift + River: dry an area. Removes springs and standing water under the brush.
 export function dryArea(water,springs,n,cx,cy,r){const r2=r*r;for(let y=Math.max(0,Math.floor(cy-r));y<=Math.min(n-1,Math.ceil(cy+r));y++)for(let x=Math.max(0,Math.floor(cx-r));x<=Math.min(n-1,Math.ceil(cx+r));x++)if((x-cx)**2+(y-cy)**2<=r2)water[y*n+x]=0;
  return springs.filter(({cell})=>((cell%n)-cx)**2+(Math.floor(cell/n)-cy)**2>r2);}
 // Add a spring at the start of a finished stroke, replacing any spring within
 // two cells, and keep at most MAX_SPRINGS.
-export function addSpring(springs,cell,rate,n){if(rate<=0)return springs;const x=cell%n,y=Math.floor(cell/n);const kept=springs.filter(s=>((s.cell%n)-x)**2+(Math.floor(s.cell/n)-y)**2>4);kept.push({cell,rate});return kept.slice(-MAX_SPRINGS);}
+export function addSpring(springs,cell,rate,n){if(rate<=0)return springs;const x=cell%n,y=Math.floor(cell/n);const kept=springs.filter(s=>((s.cell%n)-x)**2+(Math.floor(s.cell/n)-y)**2>4);kept.push({cell,rate,remaining:springSupply(rate)});return kept.slice(-MAX_SPRINGS);}
 
 // Meander: swing the carving point to either side of the drawn stroke along a
 // smooth two-frequency wave, so even a straight drag makes winding bends.

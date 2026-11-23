@@ -1,9 +1,9 @@
-import {DEFAULT_FLOOR,DEFAULT_CEILING,validHeightRange} from './terrain.mjs?v=2.11.1';
-import {MAX_WATER_DROPS} from './water-dropper.mjs?v=2.11.1';
-import{validateMaterialCoverage}from'./material-paint.mjs?v=2.11.1';
-import{validRoute,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.11.1';
-import {LEGACY_MATERIAL_COLORS} from './brushes.mjs?v=2.11.1';
-import {validShape} from './shapes.mjs?v=2.11.1';
+import {DEFAULT_FLOOR,DEFAULT_CEILING,validHeightRange} from './terrain.mjs?v=2.11.2';
+import {MAX_WATER_DROPS} from './water-dropper.mjs?v=2.11.2';
+import{validateMaterialCoverage}from'./material-paint.mjs?v=2.11.2';
+import{validRoute,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.11.2';
+import {LEGACY_MATERIAL_COLORS} from './brushes.mjs?v=2.11.2';
+import {validShape} from './shapes.mjs?v=2.11.2';
 export const isWorldSize = size => [128, 192, 256, 512].includes(size);
 export const defaultLayers=()=>({surface:{visible:true,locked:false},landmarks:{visible:true,locked:false},shapes:{visible:true,locked:false},elevation:{visible:true,locked:false},rivers:{visible:true,locked:false},forests:{visible:true,locked:false}});
 export function brushDelta(e){if(typeof e.deltaY==='number')return e.shiftKey?(e.deltaY<0?1:e.deltaY>0?-1:0):0;let key=e.key?.toLowerCase();return key==='w'?(e.shiftKey?10:1):key==='s'?-(e.shiftKey?10:1):0;}
@@ -31,6 +31,6 @@ export function normalizeProject(s,n){
  else{paintColors=Array(n*n*3).fill(0);paintAlpha=s.paint.map(v=>v?1:0);s.paint.forEach((v,i)=>{if(v)for(let k=0;k<3;k++)paintColors[i*3+k]=LEGACY_MATERIAL_COLORS[v-1][k];});}
  let surfaceMaterials=s.version>=7?s.surfaceMaterials:'';validateMaterialCoverage(surfaceMaterials,n,paintAlpha);
  const floor=s.floor??DEFAULT_FLOOR,ceiling=s.ceiling??DEFAULT_CEILING;if(!validHeightRange(floor,ceiling))bad();
-const springs=s.springs??[];if(!Array.isArray(springs)||springs.length>64||!springs.every(e=>Array.isArray(e)&&e.length===2&&Number.isInteger(e[0])&&e[0]>=0&&e[0]<n*n&&Number.isFinite(e[1])&&e[1]>0&&e[1]<=100))bad();
+const springs=s.springs??[];if(!Array.isArray(springs)||springs.length>64||!springs.every(e=>Array.isArray(e)&&(e.length===2||e.length===3)&&Number.isInteger(e[0])&&e[0]>=0&&e[0]<n*n&&finite(e[1],Number.MIN_VALUE,100)&&(e.length===2||finite(e[2],0,2))))bad();
 return{version:9,floor,ceiling,...(springs.length?{springs:springs.map(e=>e.slice())}:{}),...(pouredWater.length?{pouredWater:pouredWater.map(entry=>entry.slice())}:{}),...(waterDrops.length?{waterDrops:waterDrops.map(({cell,level})=>({cell,level}))}:{}),surfaceMaterials,forest:[...forest],routes:structuredClone(routes),size:n,name:String(s.name||'Untitled world').slice(0,80),heights:[...s.heights],paint:[...s.paint],paintColors,paintAlpha,sea:s.sea,water:s.water!==false,shade:s.shade!==false,marks:marks.filter(m=>m.type!=='town').map(m=>({type:m.type,x:m.x,y:m.y,size:m.size,opacity:m.opacity??1})),shapes:structuredClone(shapes),layers};
 }
