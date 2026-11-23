@@ -7,7 +7,7 @@ import {createPouredWater} from '../water-dropper.mjs';
 const slope=n=>{const h=new Float32Array(n*n);for(let y=0;y<n;y++)for(let x=0;x<n;x++)h[y*n+x]=120-x*.55;return h;};
 function draw(h,n,{from=10,to=60,y=64,erode=true,depth=.75}={}){
  const poured=createPouredWater(n),stroke={pre:h.slice(),reach:new Float32Array(n*n),sediment:new Float32Array(n*n)};
- for(let x=from;x<=to;x++){wandDab(h,poured.depth,n,x,y,3,{depth,stroke,floor:20,ceiling:190});for(let s=0;s<3;s++){poured.step(h);if(erode)erodeStep(h,poured.depth,stroke.sediment,n,{floor:20,sea:62});drainToSea(poured.depth,h,n,{sea:62});}}
+ for(let x=from;x<=to;x++){wandDab(h,poured.depth,n,x,y,3,{depth,flow:60,stroke,floor:20,ceiling:190});for(let s=0;s<3;s++){poured.step(h);if(erode)erodeStep(h,poured.depth,stroke.sediment,n,{floor:20,sea:62});drainToSea(poured.depth,h,n,{sea:62});}}
  settleSediment(h,stroke.sediment,190,{sea:62});return {poured,stroke};
 }
 
@@ -51,3 +51,13 @@ test('the channel is graded downhill along the stroke, through a rise, but holdi
  const still=new Float32Array(n*n).fill(80),s2={pre:still.slice(),reach:new Float32Array(n*n),sediment:new Float32Array(n*n)};
  for(let k=0;k<300;k++)wandDab(still,new Float32Array(n*n),n,48,48,3,{depth:1,flow:0,stroke:s2,floor:20,ceiling:190});
  let deepest=0;for(const v of still)deepest=Math.max(deepest,80-v);assert.ok(deepest<=1+1e-6,`holding still stays within the carve depth (${deepest})`);});
+
+test('a spring runs out instead of continuously filling a closed basin',async()=>{
+ const {addSpring,feedSprings}=await import('../river-wand.mjs');
+ const water=new Float64Array(64), springs=addSpring([],27,100,8);
+ const supply=springs[0].remaining;
+ assert.ok(supply>0&&supply<=2);
+ for(let i=0;i<1000;i++)feedSprings(water,springs);
+ assert.ok(Math.abs(water[27]-supply)<1e-9);
+ assert.equal(feedSprings(water,springs),false);
+});
