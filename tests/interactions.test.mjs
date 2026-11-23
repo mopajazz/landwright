@@ -78,12 +78,16 @@ test('routes survive project import and a rejected route leaves the current proj
 test('palette and opacity are contextual; sculpting ignores paint opacity',()=>{for(let tool of['raise','lower','smooth','flatten','land','pan','path','river']){clickTool(tool);assert.equal($('palette-section').hidden,true,tool);}clickTool('paint');assert.equal($('palette-section').hidden,false);assert.equal($('opacity-label').hidden,false);for(let tool of['raise','lower','smooth','flatten','land','pan']){clickTool(tool);assert.equal($('opacity-label').hidden,true,tool);}clickTool('path');assert.equal($('opacity-label').hidden,false);clickTool('paint');assert.equal($('opacity-label').hidden,false);});
 test('zero paint opacity does not silently disable sculpting',async()=>{clickTool('paint');$('opacity').value='0';$('opacity').dispatchEvent(new w.Event('input'));clickTool('raise');let before=(await state()).heights;pointer('pointerdown');pointer('pointermove',516,384);pointer('pointerup');let after=(await state()).heights;assert.notDeepEqual(after,before);$('opacity').value='100';$('opacity').dispatchEvent(new w.Event('input'));});
 
-test('River is a freehand wand: one stroke carves, releases water, adds no route and undoes in one step',async()=>{clickTool('river');assert.equal($('wand-controls').hidden,false);assert.equal($('route-bar').hidden,true);assert.equal($('river-taper-label').hidden,true);
+test('River is a freehand wand: one stroke carves a channel, leaves a creek that runs downhill, and undoes in one step',async()=>{clickTool('river');assert.equal($('wand-controls').hidden,false);assert.equal($('route-bar').hidden,true);assert.equal($('river-taper-label').hidden,true);
+ assert.equal(doc.querySelector('#wand-water'),null,'no Water slider');assert.equal(doc.querySelector('#wand-meander'),null,'no Meander slider');assert.match($('wand-depth').closest('label').textContent,/Carve depth/);
  const before=await state();pointer('pointerdown',300,520);for(let k=1;k<=20;k++)pointer('pointermove',300+k*6,520+k*2);pointer('pointerup',420,560);
- const after=await state();assert.equal(after.routes.length,before.routes.length,'no route record');assert.equal($('route-bar').hidden,true,'no draft bar');
- assert.ok(after.heights.some((v,i)=>v<before.heights[i]-.05),'the stroke carved');assert.ok(after.heights.every((v,i)=>v>=before.heights[i]-.75-1e-6||v>=20),'carving per stroke is bounded');
- assert.ok((after.pouredWater||[]).length>0,'water was released');
- $('undo').click();assert.ok(JSON.stringify(await state())===JSON.stringify(before),'one undo restores bed and water');});
+ const after=await state();assert.equal($('route-bar').hidden,true,'no draft bar');
+ assert.ok(after.heights.some((v,i)=>v<before.heights[i]-.05),'the stroke carved');
+ const creek=after.routes.at(-1);assert.equal(after.routes.length,before.routes.length+1,'the stroke leaves one creek');assert.equal(creek.type,'river');
+ assert.ok(creek.points.every((p,i)=>!i||p.level<=creek.points[i-1].level),'creek water never runs uphill');
+ assert.ok(creek.points.every(p=>p.level<=after.heights[Math.round(p.y)*after.size+Math.round(p.x)]+.35+.002),'creek water sits just above the carved bed (saved heights are rounded to 3 decimals)');
+ const first=creek.points[0],last=creek.points.at(-1);const sx=(p)=>({x:p.x,y:p.y});assert.ok(Math.hypot(first.x-last.x,first.y-last.y)>5,'follows the drawn stroke');
+ $('undo').click();assert.ok(JSON.stringify(await state())===JSON.stringify(before),'one undo restores bed, water and creek');});
 test('the river wand respects hidden or locked Relief',async()=>{clickTool('river');const lock=()=>doc.querySelector('[data-layer="elevation"][data-action="locked"]');lock().click();assert.equal((await state()).layers.elevation.locked,true);const before=await state();pointer('pointerdown',300,520);pointer('pointermove',340,530);pointer('pointerup',340,530);assert.deepEqual((await state()).heights,before.heights);lock().click();assert.equal((await state()).layers.elevation.locked,false);});
 test('Path is a freehand brush: paints its surface, clears trees, keeps heights and honours D/E opacity',async()=>{clickTool('paint');doc.querySelector('[data-material="4"]').click();pointer('pointerdown',600,300);for(let k=1;k<=10;k++)pointer('pointermove',600+k*8,300);pointer('pointerup',680,300);
  const forested=await state();assert.ok(forested.forest.some(v=>v>.2));
@@ -194,3 +198,9 @@ test('D/E adjust Strength (1% below 10%, 5% above) and River carve depth without
  clickTool('smooth');$('strength').value='35';$('strength').dispatchEvent(new w.Event('input'));key('e');assert.equal($('strength').value,'40');key('d');assert.equal($('strength').value,'35');
  clickTool('river');$('wand-depth').value='1.5';$('wand-depth').dispatchEvent(new w.Event('input'));key('e');assert.equal($('wand-depth').value,'1.75');key('d');assert.equal($('wand-depth').value,'1.5');
  assert.equal(doc.querySelector('[data-tool="river"]').getAttribute('aria-pressed'),'true');assert.deepEqual((await state()).heights,before.heights);});
+
+test('Shift + River dries a stretch: removes its creek water and springs but keeps the channel',async()=>{clickTool('river');pointer('pointerdown',300,520);for(let k=1;k<=20;k++)pointer('pointermove',300+k*6,520+k*2);pointer('pointerup',420,560);
+ const carved=await state();assert.ok(carved.routes.length>0);
+ const shift={shiftKey:true};$('map').onpointerdown(new w.MouseEvent('pointerdown',{clientX:300,clientY:520,button:0,bubbles:true,...shift}));for(let k=1;k<=20;k++)$('map').onpointermove(new w.MouseEvent('pointermove',{clientX:300+k*6,clientY:520+k*2,button:0,bubbles:true,...shift}));$('map').onpointerup(new w.MouseEvent('pointerup',{clientX:420,clientY:560,button:0,bubbles:true,...shift}));
+ const dried=await state();assert.equal(dried.routes.length,carved.routes.length-1,'the creek is gone');assert.deepEqual(dried.heights,carved.heights,'the channel stays');assert.ok(!(dried.springs||[]).length);
+ $('undo').click();$('undo').click();});

@@ -1,24 +1,24 @@
-import{wandDab,erodeStep,settleSediment,drainToSea,feedTrail,feedSprings,springSupply,dryArea,addSpring,meanderPoint,WAND_DEFAULTS}from'./river-wand.mjs?v=2.11.2';
-import {createCanvasRaster} from './raster-cache.mjs?v=2.11.2';
-import {createMapDetail, packTerrainDetail} from './terrain-detail.mjs?v=2.11.2';
-import {startWalk,moveWalk} from './walk.mjs?v=2.11.2';
-import {createBasinFill, createPouredWater,MAX_WATER_DROPS} from './water-dropper.mjs?v=2.11.2';
-import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.11.2';
-import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.11.2';
-import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.11.2';
-import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.11.2';
-import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.11.2';
-import{generate,stroke,heightStroke,strengthStroke,fitHeightRange,DEFAULT_FLOOR,DEFAULT_CEILING,FLOOR_MAX,CEILING_MIN,MIN_RANGE}from'./terrain.mjs?v=2.11.2';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers,isWorldSize}from'./editor.mjs?v=2.11.2';
-import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.11.2';
-import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.11.2';
-import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.11.2';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,terrainScale,verticalScale,createFrameScheduler}from'./terrain3d.mjs?v=2.11.2';
-import{initUI}from'./ui.mjs?v=2.11.2';
-import{toolIcon}from'./icons.mjs?v=2.11.2';
-import{touchesShape}from'./eraser.mjs?v=2.11.2';
-import {createReactiveWater, writeOceanSurface} from './reactive-water.mjs?v=2.11.2';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.11.2';
+import{wandDab,erodeStep,settleSediment,drainToSea,feedTrail,feedSprings,springSupply,dryArea,addSpring,WAND_DEFAULTS,STROKE_WATER,creekRoute}from'./river-wand.mjs?v=2.12.0';
+import {createCanvasRaster} from './raster-cache.mjs?v=2.12.0';
+import {createMapDetail, packTerrainDetail} from './terrain-detail.mjs?v=2.12.0';
+import {startWalk,moveWalk} from './walk.mjs?v=2.12.0';
+import {createBasinFill, createPouredWater,MAX_WATER_DROPS} from './water-dropper.mjs?v=2.12.0';
+import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.12.0';
+import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.12.0';
+import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.12.0';
+import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.12.0';
+import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers,validRoute}from'./routes.mjs?v=2.12.0';
+import{generate,stroke,heightStroke,strengthStroke,fitHeightRange,DEFAULT_FLOOR,DEFAULT_CEILING,FLOOR_MAX,CEILING_MIN,MIN_RANGE}from'./terrain.mjs?v=2.12.0';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers,isWorldSize}from'./editor.mjs?v=2.12.0';
+import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.12.0';
+import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.12.0';
+import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.12.0';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,terrainScale,verticalScale,createFrameScheduler}from'./terrain3d.mjs?v=2.12.0';
+import{initUI}from'./ui.mjs?v=2.12.0';
+import{toolIcon}from'./icons.mjs?v=2.12.0';
+import{touchesShape}from'./eraser.mjs?v=2.12.0';
+import {createReactiveWater, writeOceanSurface} from './reactive-water.mjs?v=2.12.0';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.12.0';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=fitHeightRange(generate(N,42)),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface',routes=[],routeDraft=null,routeHover=null,riverWater=new Float32Array(N*N).fill(-1),surfaceHeights=heights,riverWaterDirty=true;
 document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Build a coast · Shift cuts channels from the ocean (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 $('rail-settings').innerHTML=toolIcon('settings');
@@ -53,7 +53,7 @@ function updatePouredWater(time){
   const wasActive=pourActive;
   let moved=false;
   if(springs.length){moved=feedSprings(poured.depth,springs);springs=springs.filter(spring=>spring.remaining>0);}
-  if(wandStroke&&down&&!wandStroke.drying)feedTrail(poured.depth,wandStroke.trail,+$('wand-water').value);
+  if(wandStroke&&down&&!wandStroke.drying)feedTrail(poured.depth,wandStroke.trail,STROKE_WATER);
   for(let step=0;step<3;step++){moved=poured.step(heights)||moved;
    if(wandStroke&&down&&erodeStep(heights,poured.depth,wandStroke.sediment,N,{floor:heightFloor,sea,ocean:ocean.coverage})){moved=true;terrainEdited=true;}
    if(drainToSea(poured.depth,heights,N,{sea,ocean:ocean.coverage}))moved=true;}
@@ -314,9 +314,10 @@ function apply(p,e){
  if(action==='erase'&&eraseTarget==='landmarks'){marks=marks.filter(m=>Math.hypot(m.x-p.x,m.y-p.y)>r+m.size*.6);return;}
  if(action==='erase'&&eraseTarget==='shapes'){drawings=drawings.filter(s=>!touchesShape(s,p.x,p.y,r));return;}
  if((action==='paint'&&material===4)||(action==='erase'&&eraseTarget==='forests')){forestStroke(forest,N,p.x,p.y,r,{preset:brushPreset,opacity:alpha,density:+$('forest-density').value/100,erase:action==='erase'||e.shiftKey,initial:paintStroke?.forest,coverage:paintStroke?.coverage});return;}
- if(tool==='river'){if(!wandStroke)return;if(wandStroke.drying){springs=dryArea(poured.depth,springs,N,p.x,p.y,r);hasPouredWater=pourActive=true;return;}
-  const q=meanderPoint(wandStroke,p,r,+$('wand-meander').value/100,N);
-  wandDab(heights,poured.depth,N,q.x,q.y,r,{depth:+$('wand-depth').value,flow:+$('wand-water').value,stroke:wandStroke,floor:heightFloor,ceiling:heightCeiling,preset:brushPreset});
+ if(tool==='river'){if(!wandStroke)return;if(wandStroke.drying){springs=dryArea(poured.depth,springs,N,p.x,p.y,r);const kept=routes.filter(route=>route.type!=='river'||!routeTouches(route,p.x,p.y,r));if(kept.length!==routes.length){routes=kept;riverWaterDirty=true;}hasPouredWater=pourActive=true;return;}
+  // the river goes exactly where the hand draws it
+  const q=p;
+  wandDab(heights,poured.depth,N,q.x,q.y,r,{depth:+$('wand-depth').value,flow:STROKE_WATER,stroke:wandStroke,floor:heightFloor,ceiling:heightCeiling,preset:brushPreset});
   const cell=Math.round(q.y)*N+Math.round(q.x);if(!wandStroke.seen.has(cell)){wandStroke.seen.add(cell);wandStroke.trail.push(cell);}
   hasPouredWater=pourActive=true;return;}
  if(tool==='path'){const mat=+$('path-material').value,color=materials[mat-1][2];
@@ -344,7 +345,7 @@ function apply(p,e){
 function isRouteTool(){return false;}
 const brushRoute=t=>t==='path'||t==='river';
 let wandStroke=null,springs=[];
-function finishWand(){if(!wandStroke)return;settleSediment(heights,wandStroke.sediment,heightCeiling,{sea});if(!wandStroke.drying&&wandStroke.trail.length)springs=addSpring(springs,wandStroke.trail[0],+$('wand-water').value,N);wandStroke=null;hasPouredWater=pourActive=hasPouredWater||springs.length>0;renderLayers();refresh();}
+function finishWand(){if(!wandStroke)return;settleSediment(heights,wandStroke.sediment,heightCeiling,{sea});if(!wandStroke.drying&&wandStroke.trail.length)springs=addSpring(springs,wandStroke.trail[0],STROKE_WATER,N);if(!wandStroke.drying){const creek=creekRoute(wandStroke.trail,heights,N,{diameter:+$('size').value,depth:+$('wand-depth').value});if(creek&&validRoute(creek,N)&&routes.length<64&&routes.reduce((t,r)=>t+r.points.length,0)+creek.points.length<=32768&&routes.reduce((t,r)=>t+routeWork(r),0)+routeWork(creek)<=PROJECT_WORK_LIMIT){routes=[...routes,creek];riverWaterDirty=true;}else if(creek)notify('River limit reached: the channel is carved, but no more creek water can be added.');}wandStroke=null;hasPouredWater=pourActive=hasPouredWater||springs.length>0;renderLayers();refresh();}
 function dropCell(point){
  if(!point.hit||point.x<0||point.y<0||point.x>=N||point.y>=N)return -1;
  return Math.min(N-1,Math.round(point.y))*N+Math.min(N-1,Math.round(point.x));
@@ -481,7 +482,7 @@ function selectTool(t){
  $('water-dropper-help').hidden=!waterTool();
  $('water-dropper-help').textContent=fillingBasin()?'Click to fill an enclosed basin. Shift-click inside it to drain.':'Click to add water. Hold to keep pouring. Shift-click to drain the spot under the cursor.';
  $('water-depth-title').textContent=fillingBasin()?'Fill depth':droppingWater()?'Pour amount':'Channel depth';
- $('route-width').closest('label').hidden=true;$('wand-controls').hidden=t!=='river'||waterTool();$('route-instructions').textContent=t==='river'?'Drag to carve. Water follows the land while you draw. The start of the stroke feeds a short-lived spring. Go over it again to cut deeper; Shift dries an area.':'Drag to lay a path. It paints the surface and keeps trees off the track.';
+ $('route-width').closest('label').hidden=true;$('wand-controls').hidden=t!=='river'||waterTool();$('route-instructions').textContent=t==='river'?'Drag to carve a channel. A little water runs down it so you can see which way it flows. Use the droplet to add more. Go over it again to cut deeper; Shift dries an area.':'Drag to lay a path. It paints the surface and keeps trees off the track.';
  $('route-settings').hidden=!brushRoute(t);$('route-title').textContent=t==='river'?'RIVER':'PATH';$('path-material-label').hidden=t!=='path';$('river-depth-label').hidden=t!=='river'||!waterTool();$('river-taper-label').hidden=true;$('river-meander-label').hidden=true;updateRouteControls();
  $('sculpt-settings').hidden=!['raise','lower','smooth','flatten'].includes(t);$('brush-settings').hidden=t==='river'&&waterTool();document.querySelectorAll('[data-brush]').forEach(b=>b.disabled=!['raise','lower','smooth','flatten','paint'].includes(t));
  $('forest-settings').hidden=!(t==='paint'&&material===4);$('palette-section').hidden=t!=='paint';$('paint-status').textContent=t==='paint'?`${materials[material-1][0]} · ${brushPreset==='coast'?'Coastline':brushPreset==='hard'?'Hard Round':brushPreset==='grain'?'Grain':'Soft Round'} · Shift erases ${$('erase-target').selectedOptions[0]?.textContent||'paint'}`:`${materials[material-1][0]} selected · Use Paint (P) to apply.`;
@@ -558,7 +559,7 @@ $('drain-floodwater').onclick=()=>{
  persist();
  notify('Flowing and poured water cleared. Use Undo to restore it.');
 };
-for(const id of['wand-depth','wand-water','wand-meander'])$(id).oninput=()=>{$(id+'out').value=id==='wand-depth'?$(id).value+' blocks':$(id).value+'%';};
+$('wand-depth').oninput=()=>{$('wand-depthout').value=$('wand-depth').value+' blocks';};
 $('brush-presets').onclick=e=>{let b=e.target.closest('[data-brush]');if(b)chooseBrush(b.dataset.brush);};
 function exitWalk(mode=walkReturnMode){
  if(!$('walk').matches('[aria-pressed="true"]'))return;

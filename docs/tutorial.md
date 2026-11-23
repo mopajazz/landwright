@@ -50,12 +50,12 @@ There are no points to place and nothing to finish: each drag is one stroke and 
 
 ## 5. Carve a river
 
-1. Choose **River (V)**. *Carve per stroke* sets how much one stroke cuts (default 1.5 blocks, D/E to change); *Water* sets how much water it releases (default 60%); *Meander* bends the channel from side to side of your stroke (default 40%).
-2. Drag from high ground toward the sea. The channel is graded downhill along your stroke so the water stays in it. The ground under the brush is lowered, water runs down the land as you draw, and moving water deepens the channel and carries sediment, which settles where the flow slows: fans, deltas, marshy flats.
-3. Release. The start of your stroke becomes a **spring** that keeps the river flowing. Where the water cannot reach the sea it fills hollows into lakes.
-4. Go over a river again to cut deeper. Hold **Shift** while dragging to dry an area: it removes springs and standing water under the brush.
+1. Choose **River (V)**. Its only setting is *Carve depth* (default 1.5 blocks; D/E to change). The brush size (W/S) sets the width.
+2. Drag from high ground toward the sea, down a valley if you can. The river goes where you draw it, so bend your stroke for bends. The ground under the brush is lowered, the channel is kept running downhill along your stroke, and a little water runs down it as you draw, deepening the bed and carrying sediment to where the flow slows.
+3. Release. The stroke leaves a **creek**: a thin film of water in the channel that shows its course. Turn on *Living World → Water motion* to see which way it runs. One pass never floods the land around it.
+4. Want more water? Use the **droplet** and hold it at the head of the creek. Go over a river again to cut deeper. Hold **Shift** while dragging to dry a stretch and try again.
 
-If you draw uphill, the channel cuts through the rise up to a limit; beyond that, gravity has the final say and the water pools or finds another way. Erosion only happens while you are drawing; afterwards the water flows but does not keep cutting.
+If you draw over a ridge, the channel cuts through small rises; beyond that the stretch stays dry, because water does not run uphill. Erosion only happens while you are drawing.
 
 In the sea-connected water draft, a low basin stays dry until you open a channel from the ocean. Start with short Lower strokes at 5–10% Strength. With **Living World → Water motion** enabled in Terrain view, you can see the advance during sculpting. Turning motion off shows the settled water immediately.
 
