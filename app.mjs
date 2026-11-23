@@ -1,24 +1,24 @@
-import{wandDab,erodeStep,settleSediment,drainToSea,feedTrail,feedSprings,dryArea,addSpring,meanderPoint,WAND_DEFAULTS}from'./river-wand.mjs?v=2.11.0';
-import {createCanvasRaster} from './raster-cache.mjs?v=2.11.0';
-import {createMapDetail, packTerrainDetail} from './terrain-detail.mjs?v=2.11.0';
-import {startWalk,moveWalk} from './walk.mjs?v=2.11.0';
-import {createBasinFill, createPouredWater,MAX_WATER_DROPS} from './water-dropper.mjs?v=2.11.0';
-import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.11.0';
-import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.11.0';
-import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.11.0';
-import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.11.0';
-import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.11.0';
-import{generate,stroke,heightStroke,fitHeightRange,DEFAULT_FLOOR,DEFAULT_CEILING,FLOOR_MAX,CEILING_MIN,MIN_RANGE}from'./terrain.mjs?v=2.11.0';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers,isWorldSize}from'./editor.mjs?v=2.11.0';
-import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.11.0';
-import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.11.0';
-import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.11.0';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,terrainScale,verticalScale,createFrameScheduler}from'./terrain3d.mjs?v=2.11.0';
-import{initUI}from'./ui.mjs?v=2.11.0';
-import{toolIcon}from'./icons.mjs?v=2.11.0';
-import{touchesShape}from'./eraser.mjs?v=2.11.0';
-import {createReactiveWater, writeOceanSurface} from './reactive-water.mjs?v=2.11.0';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.11.0';
+import{wandDab,erodeStep,settleSediment,drainToSea,feedTrail,feedSprings,dryArea,addSpring,meanderPoint,WAND_DEFAULTS}from'./river-wand.mjs?v=2.11.1';
+import {createCanvasRaster} from './raster-cache.mjs?v=2.11.1';
+import {createMapDetail, packTerrainDetail} from './terrain-detail.mjs?v=2.11.1';
+import {startWalk,moveWalk} from './walk.mjs?v=2.11.1';
+import {createBasinFill, createPouredWater,MAX_WATER_DROPS} from './water-dropper.mjs?v=2.11.1';
+import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.11.1';
+import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.11.1';
+import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.11.1';
+import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.11.1';
+import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers}from'./routes.mjs?v=2.11.1';
+import{generate,stroke,heightStroke,strengthStroke,fitHeightRange,DEFAULT_FLOOR,DEFAULT_CEILING,FLOOR_MAX,CEILING_MIN,MIN_RANGE}from'./terrain.mjs?v=2.11.1';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers,isWorldSize}from'./editor.mjs?v=2.11.1';
+import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.11.1';
+import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.11.1';
+import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.11.1';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,terrainScale,verticalScale,createFrameScheduler}from'./terrain3d.mjs?v=2.11.1';
+import{initUI}from'./ui.mjs?v=2.11.1';
+import{toolIcon}from'./icons.mjs?v=2.11.1';
+import{touchesShape}from'./eraser.mjs?v=2.11.1';
+import {createReactiveWater, writeOceanSurface} from './reactive-water.mjs?v=2.11.1';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.11.1';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=fitHeightRange(generate(N,42)),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface',routes=[],routeDraft=null,routeHover=null,riverWater=new Float32Array(N*N).fill(-1),surfaceHeights=heights,riverWaterDirty=true;
 document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Build a coast · Shift cuts channels from the ocean (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 $('rail-settings').innerHTML=toolIcon('settings');
@@ -337,7 +337,7 @@ function apply(p,e){
   return;
  }
  let active=tool;if(e.shiftKey){if(tool==='raise')active='lower';else if(tool==='lower')active='raise';}
- if(isHeightTool(active)){if(!sculptStroke)sculptStroke={pre:heights.slice(),reach:new Float32Array(N*N)};heightStroke(heights,N,p.x,p.y,r,{dir:active==='raise'?1:-1,budget:+$('strength').value,pre:sculptStroke.pre,reach:sculptStroke.reach,floor:heightFloor,ceiling:heightCeiling,preset:brushPreset});return;}
+ if(isHeightTool(active)){if(!sculptStroke)sculptStroke={pre:heights.slice()};strengthStroke(heights,N,p.x,p.y,r,{dir:active==='raise'?1:-1,strength:+$('strength').value,pre:sculptStroke.pre,floor:heightFloor,ceiling:heightCeiling,preset:brushPreset});return;}
  stroke(heights,N,p.x,p.y,r,+$('strength').value/100*3*alpha,active,Math.min(heightCeiling,Math.max(heightFloor,+$('target').value)),{preserveBoundary:$('preserve-edges').checked,preset:brushPreset});
 }
 // Path and River are freehand brushes; the old click-points route drafting is retired.
@@ -460,11 +460,11 @@ function end(){pouring=false;document.body.classList.remove('panning');if(isRout
 function cancelStroke(){pouring=false;document.body.classList.remove('panning');const finishWoodland=down&&!last?.pan,forestEdit=down&&tool==='paint';cancelRoute(false);if(down&&!last?.pan)persist();down=false;last=null;paintStroke=null;sculptStroke=null;finishWand();if(forestEdit)renderLayers();if(finishWoodland)refresh();draw();}
 map.onpointerup=end;map.onpointercancel=()=>{if(down)persist();cancelStroke();};map.onpointerleave=()=>{brushPosition=null;$('brush').style.display='none';};
 function changeZoom(z){zoom=Math.max(.4,Math.min(4,z));draw()}map.addEventListener('wheel',e=>{e.preventDefault();if(e.shiftKey){adjustBrush(brushDelta(e));return;}changeZoom(zoom*(e.deltaY>0?.9:1.1))},{passive:false});$('plus').onclick=()=>changeZoom(zoom*1.2);$('minus').onclick=()=>changeZoom(zoom/1.2);$('fit').onclick=()=>{zoom=1;pan={x:0,y:0};draw()};
-let raiseLowerStrength=3,blendStrength=35,heightFloor=DEFAULT_FLOOR,heightCeiling=DEFAULT_CEILING,sculptStroke=null;
+let raiseLowerStrength=8,blendStrength=35,heightFloor=DEFAULT_FLOOR,heightCeiling=DEFAULT_CEILING,sculptStroke=null;
 const isHeightTool=t=>t==='raise'||t==='lower';
-// Raise/Lower strength is a height budget per stroke (blocks); Smooth/Flatten keep a percentage.
-function strengthUnits(t){const s=$('strength');if(isHeightTool(t)){s.min='0.5';s.max='20';s.step='0.5';$('strength-name').textContent='Height per stroke';}else{s.min='1';s.max='100';s.step='1';$('strength-name').textContent='Strength';}}
-function strengthText(t){return isHeightTool(t)?(+$('strength').value).toString()+' blocks':$('strength').value+'%';}
+// Strength is a percentage for every sculpt tool; Raise/Lower and Smooth/Flatten remember theirs separately.
+function strengthUnits(){const s=$('strength');s.min='1';s.max='100';s.step='1';$('strength-name').textContent='Strength';}
+function strengthText(){return $('strength').value+'%';}
 function syncHeightRange(){$('height-floor').value=heightFloor;$('height-ceiling').value=heightCeiling;$('height-floorout').value=heightFloor;$('height-ceilingout').value=heightCeiling;$('target').min=String(heightFloor);$('target').max=String(heightCeiling);}
 function selectTool(t){
 
@@ -543,8 +543,8 @@ function chooseBrush(preset){
  brushPreset=preset;
  selectTool(tool);
 }
-// D/E nudge: one slider step per press (Smooth 5%), Shift for four.
-function nudgeSlider(id,dir,big){const el=$(id),step=id==='strength'&&!isHeightTool(tool)?5:+el.step||1,next=+el.value+dir*step*(big?4:1);el.value=String(Math.max(+el.min,Math.min(+el.max,Math.round(next/(+el.step||1))*(+el.step||1))));el.dispatchEvent(new el.ownerDocument.defaultView.Event('input'));}
+// D/E nudge: Strength moves 1% below 10% and 5% above; other sliders one step. Shift takes four steps.
+function nudgeSlider(id,dir,big){const el=$(id),v=+el.value,step=id==='strength'?((dir<0?v<=10:v<10)?1:5):+el.step||1,next=+el.value+dir*step*(big?4:1);el.value=String(Math.max(+el.min,Math.min(+el.max,Math.round(next/(+el.step||1))*(+el.step||1))));el.dispatchEvent(new el.ownerDocument.defaultView.Event('input'));}
 for(const id of['wand-depth','wand-water','wand-meander'])$(id).oninput=()=>{$(id+'out').value=id==='wand-depth'?$(id).value+' blocks':$(id).value+'%';};
 $('brush-presets').onclick=e=>{let b=e.target.closest('[data-brush]');if(b)chooseBrush(b.dataset.brush);};
 function exitWalk(mode=walkReturnMode){

@@ -18,7 +18,7 @@ Map export is not the orbit-camera screenshot. Neither PNG includes editor UI, r
 
 **Sand does not appear.** Select Paint explicitly, choose Sand and a footprint, and check Surface visibility/lock. Enabled water conceals underwater paint. Land changes height, not paint.
 
-**Raise/Lower is too strong.** Undo and set Height per stroke to 1–3 blocks. Use short strokes and build gradually. Lower *Highest peak* in World Settings to cap the whole world. Paint Opacity does not affect sculpting.
+**Raise/Lower is too strong.** Undo and set Strength to 5–10% (D lowers it). Use short strokes and build gradually. Lower *Highest peak* in World Settings to cap the whole world. Paint Opacity does not affect sculpting.
 
 **I cannot finish a route.** Place at least two distinct points inside the map; make sure required layers are visible/unlocked. Use Enter, double-click, or Finish route. Very complex routes may exceed safety limits. Focus the canvas after editing a form field if keyboard shortcuts seem inactive.
 

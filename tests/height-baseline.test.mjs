@@ -51,3 +51,17 @@ test('projects carry a validated height range; older files get the defaults',()=
  const custom=normalizeProject({...base,floor:5,ceiling:240});assert.equal(custom.floor,5);assert.equal(custom.ceiling,240);
  for(const bad of [{floor:-1,ceiling:190},{floor:20,ceiling:256},{floor:100,ceiling:120},{floor:20.5,ceiling:190},{floor:130,ceiling:200}])assert.throws(()=>normalizeProject({...base,...bad}));
  assert.ok(validHeightRange(0,255));assert.ok(!validHeightRange(0,29));});
+
+import {strengthStroke,spikeSlope} from '../terrain.mjs';
+test('Strength strokes build without a per-stroke cap, ease into the range and only stop true needles',()=>{
+ const n=128,a=flat(n,80),pre=a.slice();for(let k=0;k<60;k++)strengthStroke(a,n,64,64,12,{dir:1,strength:8,pre});
+ assert.ok(range(a)[1]-80>10,'60 dabs at 8% build well past 3 blocks');
+ const b=flat(n,185),pb=b.slice();for(let k=0;k<200;k++)strengthStroke(b,n,64,64,12,{dir:1,strength:100,pre:pb});assert.ok(range(b)[1]<=DEFAULT_CEILING+1e-9);
+ const c=flat(n,24),pc=c.slice();for(let k=0;k<200;k++)strengthStroke(c,n,64,64,12,{dir:-1,strength:100,pre:pc});assert.ok(range(c)[0]>=DEFAULT_FLOOR-1e-9);
+ // a tiny brush at 100% is held to the spike guard, which is far looser than the old 50° limit
+ const d=flat(n,80),pd=d.slice();for(let k=0;k<300;k++)strengthStroke(d,n,64,64,1.5,{dir:1,strength:100,pre:pd});
+ let steepest=0;for(let y=0;y<n;y++)for(let x=0;x<n-1;x++)steepest=Math.max(steepest,Math.abs(d[y*n+x]-d[y*n+x+1]));
+ assert.ok(steepest<=spikeSlope(n)+1e-6);assert.ok(spikeSlope(n)>2*maxSlope(n)-1e-9);
+ // ordinary strokes never touch the guard: same result with and without it
+ const e=flat(n,80),f=flat(n,80),pe=e.slice();for(let k=0;k<60;k++){strengthStroke(e,n,64,64,12,{dir:1,strength:8,pre:pe});strengthStroke(f,n,64,64,12,{dir:1,strength:8});}
+ assert.deepEqual(e,f);});

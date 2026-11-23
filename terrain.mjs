@@ -1,5 +1,5 @@
-import{brushWeight}from'./brushes.mjs?v=2.11.0';
-import{verticalScale}from'./terrain3d.mjs?v=2.11.0';
+import{brushWeight}from'./brushes.mjs?v=2.11.1';
+import{verticalScale}from'./terrain3d.mjs?v=2.11.1';
 export function generate(n,seed=42,{shape="island",relief=1}={}){if(shape==='flat')return new Float32Array(n*n).fill(80);let hash=(x,y)=>{let v=Math.sin(x*127.1+y*311.7+seed*0.79)*43758.5453;return v-Math.floor(v)};let noise=(x,y)=>{let a=Math.floor(x),b=Math.floor(y),u=x-a,v=y-b;u=u*u*(3-2*u);v=v*v*(3-2*v);return (hash(a,b)*(1-u)+hash(a+1,b)*u)*(1-v)+(hash(a,b+1)*(1-u)+hash(a+1,b+1)*u)*v};let data=new Float32Array(n*n);for(let y=0;y<n;y++)for(let x=0;x<n;x++){let u=x/n*2-1,v=y/n*2-1;let angle=Math.atan2(v,u),radius=Math.hypot(u*1.04,v);let coast=.74+.09*Math.sin(angle*3+1)+.05*Math.sin(angle*7);let f=noise(x/n*4,y/n*4)*.55+noise(x/n*9,y/n*9)*.27+noise(x/n*22,y/n*22)*.12+noise(x/n*60,y/n*60)*.06;let mask=coast-radius;
 if(shape==='continent')mask=.85-Math.hypot(u*.72+.13,v*.91)+.12*Math.sin(v*7+u*3);
 if(shape==='archipelago'){mask=.22-Math.hypot(u+.06,v-.02);for(let j=0;j<6;j++){let a=j*Math.PI/3+seed*.1,cx=Math.cos(a)*(.63+(j%2)*.07),cy=Math.sin(a)*(.63+(j%2)*.07);mask=Math.max(mask,.17+(j%3)*.022-Math.hypot(u-cx,v-cy));}mask*=1.7;}
@@ -32,10 +32,24 @@ export function heightStroke(a,n,cx,cy,r,{dir=1,budget=3,pre,reach,floor=DEFAULT
  limitSlope(a,n,x0,y0,x1,y1,dir,pre);}
 // Pull back only what this stroke added (or removed) where it created a slope
 // steeper than maxSlope. Pre-existing cliffs are left alone.
-function limitSlope(a,n,x0,y0,x1,y1,dir,pre){const m=maxSlope(n);x0=Math.max(0,x0-1);y0=Math.max(0,y0-1);x1=Math.min(n-1,x1+1);y1=Math.min(n-1,y1+1);
+function limitSlope(a,n,x0,y0,x1,y1,dir,pre,m=maxSlope(n)){x0=Math.max(0,x0-1);y0=Math.max(0,y0-1);x1=Math.min(n-1,x1+1);y1=Math.min(n-1,y1+1);
  for(let pass=0;pass<3;pass++)for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){let i=y*n+x,h=a[i];if(dir>0?h<=pre[i]:h>=pre[i])continue;
   let lo=Infinity,hi=-Infinity;if(x>0){lo=Math.min(lo,a[i-1]);hi=Math.max(hi,a[i-1]);}if(x<n-1){lo=Math.min(lo,a[i+1]);hi=Math.max(hi,a[i+1]);}if(y>0){lo=Math.min(lo,a[i-n]);hi=Math.max(hi,a[i-n]);}if(y<n-1){lo=Math.min(lo,a[i+n]);hi=Math.max(hi,a[i+n]);}
   if(dir>0&&h>lo+m)a[i]=Math.max(pre[i],lo+m);else if(dir<0&&h<hi-m)a[i]=Math.min(pre[i],hi-m);}}
+// Raise/Lower with a percentage Strength (v2.11.1). Each dab adds
+// strength/100 × 3 × footprint weight, so repeated strokes keep building, as
+// before v2.10. It still eases into the height range and never passes it, and a
+// loose spike guard (about 68° in 3D) stops single-cell needles; ordinary
+// strokes never reach it. `pre` is the terrain before the stroke, so cliffs
+// that already existed are left alone.
+export const spikeSlope=n=>2.5/verticalScale(n);
+export function strengthStroke(a,n,cx,cy,r,{dir=1,strength=8,pre,floor=DEFAULT_FLOOR,ceiling=DEFAULT_CEILING,preset='soft'}={}){
+ const x0=Math.max(0,Math.floor(cx-r)),x1=Math.min(n-1,Math.ceil(cx+r)),y0=Math.max(0,Math.floor(cy-r)),y1=Math.min(n-1,Math.ceil(cy+r)),p=strength/100*3,soft=14;
+ for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const w=brushWeight(x,y,cx,cy,r,preset);if(!w)continue;const i=y*n+x,h=a[i];
+  if(dir>0){if(h>=ceiling)continue;a[i]=Math.min(ceiling,h+w*p*Math.max(.08,Math.min(1,(ceiling-h)/soft)));}
+  else{if(h<=floor)continue;a[i]=Math.max(floor,h-w*p*Math.max(.08,Math.min(1,(h-floor)/soft)));}}
+ if(pre)limitSlope(a,n,x0,y0,x1,y1,dir,pre,spikeSlope(n));}
+
 // Fit generated terrain into the working range. If peaks exceed the ceiling,
 // the band from (ceiling - soft) to the highest peak is compressed linearly
 // into (ceiling - soft)..ceiling; the seabed is treated the same way. Shapes

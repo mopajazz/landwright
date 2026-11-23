@@ -2,11 +2,11 @@
 
 This tutorial covers the current v2.11 interface. It takes you from a flat field to a sculpted map with a path, river, forests and visual atmosphere. [Open Landwright](https://mopajazz.github.io/landwright/) or browse the [knowledge base](kb/index.md).
 
-## Before your first stroke: start small
+## Before your first stroke: start with low Strength
 
-**Before using Raise or Lower, keep Height per stroke at 1–3 blocks. Make a short stroke, inspect the result in 3D, and build up with more strokes.** Raise and Lower start at 3 blocks. One stroke never adds more than that, even if you hold still, and the world's *Highest peak* and *Seabed floor* (World Settings) are never passed. Smooth and Flatten use a percentage Strength, starting at 35%.
+**Before using Raise or Lower, set Strength to around 5–10%. Make a short stroke, inspect the result in 3D, and build up with more strokes.** Raise and Lower start at 8%; press D/E to change it. The world's *Highest peak* and *Seabed floor* (World Settings) are never passed. Smooth and Flatten have their own Strength, starting at 35%.
 
-Height per stroke and Strength are sculpting controls. **Opacity is separate:** it affects Paint, Path, surface erasing, and forest painting/erasing; lowering paint Opacity does not make Raise or Lower gentler. Use Ctrl/Cmd+Z if your first stroke is too strong.
+Strength is sculpting power. **Opacity is separate:** it affects Paint, Path, surface erasing, and forest painting/erasing; lowering paint Opacity does not make Raise or Lower gentler. Use Ctrl/Cmd+Z if your first stroke is too strong.
 
 ## 1. Choose a starting canvas
 
@@ -19,10 +19,10 @@ Other starts include Island, Archipelago, Continent, Atoll, and Open ocean. Gene
 
 ## 2. Raise a ridge and lower a valley
 
-1. Select **Raise (R)** and check that Height per stroke is 1–3 blocks before touching the map.
+1. Select **Raise (R)** and check that Strength is 5–10% before touching the map.
 2. Use W/S to change brush size. Shift+W/S changes it by 10; Shift+wheel also resizes.
 3. Drag a short, broad stroke. Release, look at the shape, and gradually build a ridge with additional short strokes.
-4. Select **Lower (L)**. Keep Height per stroke small and make a shallow valley beside the ridge.
+4. Select **Lower (L)**. Keep Strength low and make a shallow valley beside the ridge.
 5. Use **Smooth (Q)** lightly if transitions become too abrupt.
 
 Switch to **3D Terrain** to inspect your slopes. Right-drag or Alt-drag orbits; hold Space and left-drag to pan from any tool, or middle-drag; the wheel zooms. All terrain tools work in 3D as well as 2D.
@@ -57,7 +57,7 @@ There are no points to place and nothing to finish: each drag is one stroke and 
 
 If you draw uphill, the channel cuts through the rise up to a limit; beyond that, gravity has the final say and the water pools or finds another way. Erosion only happens while you are drawing; afterwards the water flows but does not keep cutting.
 
-In the sea-connected water draft, a low basin stays dry until you open a channel from the ocean. Start with short Lower strokes at 1–3 blocks per stroke. With **Living World → Water motion** enabled in Terrain view, you can see the advance during sculpting. Turning motion off shows the settled water immediately.
+In the sea-connected water draft, a low basin stays dry until you open a channel from the ocean. Start with short Lower strokes at 5–10% Strength. With **Living World → Water motion** enabled in Terrain view, you can see the advance during sculpting. Turning motion off shows the settled water immediately.
 
 Use Water off/on to inspect the bed. The River water layer hides river water without undoing the channel.
 
