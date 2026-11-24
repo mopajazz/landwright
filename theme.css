@@ -68,19 +68,14 @@ input[type=range]::-moz-range-track{height:4px;background:var(--border);border-r
 #paint-status{height:3.5em;overflow:auto;min-height:0}
 /* Toolbar: one icon metric, explicit functional groups, no tool-specific scaling. */
 #tools{display:flex;flex-direction:column;gap:0;padding:0 12px 14px}
-.tool-group+.tool-group{border-top:1px solid var(--border);margin-top:12px;padding-top:12px}
-.tool-group-label{font-size:9px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);margin:0 0 8px 2px}
 .tool-group-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 #tools button,#tools button:last-child{height:48px;min-height:48px;display:flex;flex-direction:row;justify-content:flex-start;gap:7px;padding:7px 6px;font-size:10px;border-radius:6px;position:relative}
 #tools button .tool-icon,#tools [data-tool=raise] .tool-icon,#tools [data-tool=lower] .tool-icon{width:28px;height:28px;flex:0 0 28px}
 #tools button span,#tools button:last-child span{margin-left:auto}
-#tools [data-tool=land],#tools [data-tool=pan]{grid-column:1/-1}
 #tools button.selected:before{content:'';position:absolute;left:-1px;top:10px;bottom:10px;width:3px;background:var(--accent);border-radius:2px}
 #tools [data-tool=erase].selected{background:var(--selected);color:var(--fg);border-color:var(--accent)}
 #tools [data-tool=erase].selected .tool-icon,#tools [data-tool=erase].selected span{color:var(--accent)}
 .sidebar-collapsed #tools{padding:0 7px 10px}
-.sidebar-collapsed .tool-group-label{display:none}
-.sidebar-collapsed .tool-group+.tool-group{margin-top:10px;padding-top:10px}
 .sidebar-collapsed .tool-group-buttons{grid-template-columns:minmax(0,1fr);gap:5px}
 .sidebar-collapsed #tools button,.sidebar-collapsed #tools button:last-child{height:46px;min-height:46px;justify-content:center;gap:0;padding:6px;font-size:0}
 .sidebar-collapsed #tools button .tool-icon{width:28px;height:28px;flex-basis:28px}
@@ -92,7 +87,6 @@ input[type=range]::-moz-range-track{height:4px;background:var(--border);border-r
 #route-settings select{width:100%;margin-top:8px;padding:9px;background:var(--input);color:var(--fg);border:1px solid var(--border);border-radius:5px}
 .route-actions{display:flex;gap:6px}.route-actions button{border-color:var(--border);background:var(--surface);flex:1;font-size:10px}
 #route-instructions{line-height:1.7}
-#tools [data-tool=land],#tools [data-tool=path]{grid-column:auto}
 #route-bar{position:absolute;z-index:6;top:64px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;max-width:calc(100% - 24px);padding:8px 10px;background:var(--hud);color:var(--fg);border:1px solid var(--border);border-radius:7px;box-shadow:0 3px 16px #0003}
 #route-bar strong{font-size:10px;white-space:nowrap;font-weight:500}
 #route-bar .route-actions{flex-shrink:0}#route-bar button{white-space:nowrap;font-size:10px}
@@ -101,7 +95,6 @@ input[type=range]::-moz-range-track{height:4px;background:var(--border);border-r
 .sidebar-collapsed #tools{padding-bottom:4px}
 .sidebar-collapsed #tools button,.sidebar-collapsed #tools button:last-child{height:40px;min-height:40px}
 .sidebar-collapsed .tool-group-buttons{gap:4px}
-.sidebar-collapsed .tool-group+.tool-group{margin-top:8px;padding-top:8px}
 .sidebar-collapsed .rail-settings{margin-top:4px;margin-bottom:8px}
 #tools [data-tool=erase]{grid-column:1/-1}
 /* v2.1 UI review: clearer selection, toggles distinct from mode choices, reachable save, larger targets. */
@@ -144,4 +137,37 @@ body.space-pan #map,body.space-pan #preview{cursor:grab!important}body.space-pan
 @media(max-width:650px){.world-dialog-header{padding:20px}.world-dialog-header h2{font-size:25px!important}.world-setup{grid-template-columns:1fr;gap:20px;padding:20px}.world-preview-card{display:grid;grid-template-columns:100px minmax(0,1fr);gap:0 16px;order:-1;padding:14px}.preview-eyebrow{grid-column:1/-1;margin-bottom:10px}.world-preview-card canvas{width:100px;grid-row:2/4}.world-preview-card h3{margin:0 0 4px;font-size:17px}.world-preview-card figcaption p{font-size:10px;margin-bottom:7px}.world-preview-card #new-world-summary{padding-top:7px;font-size:9px}.preview-note{grid-column:1/-1;font-size:9px}.new-world-footer{padding:14px 20px;flex-wrap:wrap;gap:12px}.new-world-footer .dialog-actions{width:100%;justify-content:space-between}.world-backup p{font-size:10px}}
 
 /* Material families own texture; brush footprints only control coverage. */
-#palette{display:block}.material-family{margin-bottom:12px}.material-family-title{font-size:8px;letter-spacing:1.15px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}.family-materials{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.family-materials button{min-height:39px;display:flex;gap:8px;align-items:center;text-align:left;border:1px solid var(--border);background:var(--surface);padding:7px;font-size:10px;color:var(--fg)}.family-materials button .swatch{width:17px;height:17px;flex:none;border-radius:50%;box-shadow:inset 0 0 0 1px #0002}.family-materials button.selected{background:var(--selected);border-color:var(--accent)}.forest-paint{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}.forest-paint button{width:100%;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);padding:10px;color:var(--fg);font-size:11px}.forest-paint button small{margin-left:auto;font-size:8px;color:var(--muted)}.forest-paint button.selected{background:var(--selected);border-color:var(--accent)}.forest-paint .swatch{display:inline-block;width:18px;height:18px;border-radius:50%}#brush-presets{grid-template-columns:repeat(2,minmax(0,1fr))}#brush-presets button{padding:8px 2px;font-size:9px}
+
+/* v2.13 compact toolbox: tools, dials and brush form one group; shortcut keys stay visible. */
+#tools{padding:0 10px 10px}
+body:not(.sidebar-collapsed) #tools .tool-group-buttons{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+body:not(.sidebar-collapsed) #tools button{height:50px;min-height:50px;flex-direction:column;justify-content:center;align-items:center;gap:3px;padding:6px 2px 4px;font-size:9px;line-height:1;white-space:nowrap;overflow:hidden}
+body:not(.sidebar-collapsed) #tools button .tool-icon,body:not(.sidebar-collapsed) #tools [data-tool=raise] .tool-icon,body:not(.sidebar-collapsed) #tools [data-tool=lower] .tool-icon{width:22px;height:22px;flex:0 0 22px}
+body:not(.sidebar-collapsed) #tools button.selected:before{left:8px;right:8px;top:auto;bottom:-1px;width:auto;height:2px}
+#tools .tool-key{position:absolute;top:2px;right:2px;min-width:13px;padding:1px 3px;font:600 9px/1.2 'DM Sans',sans-serif;text-align:center;border-radius:3px;border:1px solid var(--border);background:var(--input);color:var(--fg)}
+#tools .selected .tool-key{border-color:var(--accent);color:var(--accent)}
+.sidebar-collapsed #tools .tool-key{display:none}
+#tool-settings>.section{padding:10px 13px}
+#tool-settings .panel-title{margin:0 0 6px;font-size:9px}
+#tool-settings .panel-title>span{float:right;letter-spacing:.3px;text-transform:none;color:var(--fg);font-weight:500}
+.dials{display:flex;flex-direction:column;gap:8px}
+.dial{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;column-gap:6px;margin:0;font-size:11px}
+.dial[hidden]{display:none}
+.dial output{font-size:10px;color:var(--secondary);font-variant-numeric:tabular-nums}
+.dial kbd{font:600 9px/1.2 'DM Sans',sans-serif;padding:1px 4px;border:1px solid var(--border);border-radius:3px;background:var(--input);color:var(--fg)}
+.dial input[type=range]{grid-column:1/-1;margin:4px 0 0}
+#brush-presets{display:flex;flex-wrap:wrap;gap:4px}
+#brush-presets button{width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;font-size:0}
+#brush-presets .brush-symbol{width:20px;height:20px;margin:0}
+#brush-description{margin:6px 0 0;font-size:10px;line-height:1.4}
+#palette-section{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+#palette-section>:not(#palette):not(#forest-paint){flex-basis:100%}
+#palette,#forest-paint{display:flex;flex-wrap:wrap;gap:4px;margin:0;padding:0;border:0}
+#palette button,#forest-paint button{width:28px;height:28px;padding:3px;border:1px solid var(--border);border-radius:6px;background:var(--surface)}
+#palette .swatch,#forest-paint .swatch{display:block;width:100%;height:100%;border-radius:4px;box-shadow:inset 0 0 0 1px #0003}
+#palette button.selected,#forest-paint button.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+#paint-status{margin:6px 0 0;font-size:10px}
+#forest-settings label{margin-top:6px}
+#erase-settings label{font-size:11px}
+@container(max-width:210px){body:not(.sidebar-collapsed) #tools button{font-size:0;gap:0}body:not(.sidebar-collapsed) #tools button .tool-icon{width:20px;height:20px;flex-basis:20px}}
+
