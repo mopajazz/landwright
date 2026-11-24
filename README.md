@@ -27,10 +27,10 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 | Shift + W / S | Change brush size by 10 |
 | Shift + mouse wheel | Resize brush |
 | Mouse wheel | Zoom |
-| Space + left drag / Middle drag | Pan |
+| Space + left drag / Middle drag / two-finger touch drag | Pan |
 | Right drag or Alt + drag in 3D | Orbit and tilt |
 | R / L / Q / F | Raise / lower / smooth / flatten |
-| B or P / C or M / H | Paint / land / pan |
+| B or P / C or M | Paint / land |
 | D / E | Smaller/bigger: Strength (Raise/Lower/Smooth; 1% steps up to 10%, then 5%), Carve depth (River, 0.25 blocks), Opacity (Paint/Path, 5%), Flatten target (1 block) |
 | Shift + D / E | Four steps at once; Flatten target 10 blocks |
 | J / V | Path / river |
@@ -61,7 +61,7 @@ UI palette contrast checks and their scope are documented in [the contrast audit
 
 New world includes a **Flat grass** preset: a completely level grass field at elevation 80. Select **Small (128 × 128)**, **Medium (192 × 192)**, **Large (256 × 256)**, or **Experimental (512 × 512)** before creation. Project files and undo history retain the world size. Older projects without a size open at 256 × 256.
 
-The toolbox is grouped by function: **Terrain** (Raise, Lower, Smooth, Flatten, River, Land), **Surface** (Path, Paint), and **Navigate** (Pan). Group separators remain visible in the collapsed rail. Icons share a 24-unit grid, 1.9-unit stroke, and 28px display size: peak/add, excavated basin/remove, sanding block, spirit level, shoreline, brush and hand. Labels, shortcut hints, accessible names, and a selected-edge marker supplement the silhouettes.
+The toolbox keeps everything in one compact group: eight tools in a 4×2 grid (Raise, Lower, Smooth, Flatten / River, Land, Path, Paint), each with its shortcut key as a visible badge; right below, Size (W/S) and the active tool's main D/E dial (Strength, Target height, Carve depth or Opacity); then the brush icons, and the tool's own extras such as Paint's colour swatches. At 1440×900 no tool needs scrolling. Icons share a 24-unit grid and 1.9-unit stroke. Labels, key badges, accessible names, and a selected-edge marker supplement the silhouettes.
 
 ## Paths and rivers
 
