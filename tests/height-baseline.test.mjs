@@ -65,3 +65,21 @@ test('Strength strokes build without a per-stroke cap, ease into the range and o
  // ordinary strokes never touch the guard: same result with and without it
  const e=flat(n,80),f=flat(n,80),pe=e.slice();for(let k=0;k<60;k++){strengthStroke(e,n,64,64,12,{dir:1,strength:8,pre:pe});strengthStroke(f,n,64,64,12,{dir:1,strength:8});}
  assert.deepEqual(e,f);});
+
+import {removeSpikes} from '../terrain.mjs';
+import {coastStroke} from '../brushes.mjs';
+test('removeSpikes lowers walls one or two cells thick and keeps wider ridges and one-sided cliffs',()=>{
+ const n=64,L=spikeSlope(n),plain=()=>flat(n,54);
+ const one=plain();for(let x=10;x<50;x++)one[30*n+x]=146;assert.ok(removeSpikes(one,n)>0);for(let x=10;x<50;x++)assert.ok(one[30*n+x]<=54+L+1e-4,'one-cell wall lowered');
+ const two=plain();for(let x=10;x<50;x++){two[30*n+x]=140;two[31*n+x]=140;}removeSpikes(two,n);for(let x=10;x<50;x++)assert.ok(two[30*n+x]<=54+L+1e-4&&two[31*n+x]<=54+L+1e-4,'two-cell wall lowered');
+ const three=plain();for(let x=10;x<50;x++)for(let y=30;y<33;y++)three[y*n+x]=140;const keep3=three.slice();removeSpikes(three,n);assert.deepEqual(three,keep3,'a ridge three cells thick is kept');
+ const cliff=plain();for(let y=0;y<n;y++)for(let x=32;x<n;x++)cliff[y*n+x]=140;const keepC=cliff.slice();removeSpikes(cliff,n);assert.deepEqual(cliff,keepC,'a one-sided cliff is kept');
+ const again=one.slice();assert.equal(removeSpikes(again,n),0,'running it again changes nothing');});
+test('parallel Shift + Land passes with a gap between them leave no knife-edge wall',()=>{
+ const n=96,h=flat(n,130);for(const y0 of [40,49])for(let x=10;x<=86;x+=3){coastStroke(h,n,x,y0,4,72,1,true);removeSpikes(h,n,{x0:x-7,y0:y0-7,x1:x+7,y1:y0+7,passes:2});}
+ let worst=0;for(let x=14;x<82;x++)for(let y=42;y<48;y++){const i=y*n+x;worst=Math.max(worst,h[i]-Math.max(h[i-n],h[i+n]),h[i]-Math.max(h[i-n],h[i+2*n]));}
+ assert.ok(worst<=spikeSlope(n)+1e-4,`no thin wall left between the passes (${worst.toFixed(1)})`);});
+
+test('removeSpikes also fills pits and slots one or two cells wide',()=>{const n=64,L=spikeSlope(n),a=flat(n,140);a[20*n+20]=54;for(let x=30;x<40;x++){a[40*n+x]=54;a[41*n+x]=54;}removeSpikes(a,n);
+ assert.ok(a[20*n+20]>=140-L-1e-4,'single pit filled');for(let x=30;x<40;x++)assert.ok(a[40*n+x]>=140-L-1e-4&&a[41*n+x]>=140-L-1e-4,'two-wide slot filled');
+ const valley=flat(n,140);for(let x=0;x<n;x++)for(let y=20;y<23;y++)valley[y*n+x]=54;const keep=valley.slice();removeSpikes(valley,n);assert.deepEqual(valley,keep,'a valley three cells wide is kept');});

@@ -15,7 +15,7 @@ Do not lower paint Opacity to tame sculpting: Raise, Lower, Smooth, Flatten, and
 
 ## Choose action, footprint, and material separately
 
-- Raise(R), Lower(L), Smooth(Q), Flatten(F), Land(C/M) change elevation.
+- Raise(R), Lower(L), Smooth(Q), Flatten(F), Land(C/M) change elevation. Land cuts or builds straight to its height, and cleans up any wall or pit one or two cells thick that a gap between passes would leave.
 - Paint(P/B) paints Grass, Loam, Clay, Bedrock, Scree, Mud, Sand, or Snow with terrain-responsive textures. Forest paints tree density instead; see [Forests](forests.md).
 - Soft Round, Hard Round, and Coastline determine coverage. A footprint choice does not change the selected tool.
 - Sand+Coastline works in Paint without raising/lowering terrain. Land is the separate tool for coastline height changes.

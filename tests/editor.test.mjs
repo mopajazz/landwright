@@ -30,3 +30,12 @@ test('512-square projects round-trip through schema 9 without losing the last ce
  assert.equal(restored.heights[cells-1],123);
  assert.equal(restored.paintColors.length,cells*3);
 });
+
+import {MAX_ROUTES} from '../routes.mjs';
+import {normalizeProject as normalizeForLimits} from '../editor.mjs';
+test('projects can hold up to 512 creeks (raised from 64) and reject one more',()=>{
+ const n=128,base={version:9,size:n,name:'creeks',heights:Array(n*n).fill(90),paint:Array(n*n).fill(0),paintColors:Array(3*n*n).fill(0),paintAlpha:Array(n*n).fill(0),surfaceMaterials:'',forest:Array(n*n).fill(0),sea:62,marks:[],shapes:[]};
+ const creek=k=>({type:'river',width:3,opacity:1,depth:1.5,points:[{x:(k*7)%120+2,y:Math.floor(k/16)*3+2,level:89},{x:(k*7)%120+5,y:Math.floor(k/16)*3+2,level:88.9}]});
+ assert.equal(MAX_ROUTES,512);
+ assert.equal(normalizeForLimits({...base,routes:Array.from({length:512},(_,k)=>creek(k))}).routes.length,512);
+ assert.throws(()=>normalizeForLimits({...base,routes:Array.from({length:513},(_,k)=>creek(k))}));});

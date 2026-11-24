@@ -18,6 +18,10 @@ Map export is not the orbit-camera screenshot. Neither PNG includes editor UI, r
 
 **Sand does not appear.** Select Paint explicitly, choose Sand and a footprint, and check Surface visibility/lock. Enabled water conceals underwater paint. Land changes height, not paint.
 
+**Thin walls, spikes or pits in 3D.** Use **World Settings → Smooth spikes**. It lowers walls and spikes and fills pits that are one or two cells thick across the whole map, keeps cliffs, ridges and valleys that are wider, and is one undo step. Maps edited with Shift + Land before v2.12.1 are the usual source.
+
+**I can't add more creek water.** A map holds up to 512 creeks (64 before v2.12.1). Past that, River still carves the channel; use the droplet for water, or Shift + River to dry old creeks you no longer need.
+
 **Raise/Lower is too strong.** Undo and set Strength to 5–10% (D lowers it). Use short strokes and build gradually. Lower *Highest peak* in World Settings to cap the whole world. Paint Opacity does not affect sculpting.
 
 **I cannot finish a route.** Place at least two distinct points inside the map; make sure required layers are visible/unlocked. Use Enter, double-click, or Finish route. Very complex routes may exceed safety limits. Focus the canvas after editing a form field if keyboard shortcuts seem inactive.

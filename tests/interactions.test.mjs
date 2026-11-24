@@ -204,3 +204,8 @@ test('Shift + River dries a stretch: removes its creek water and springs but kee
  const shift={shiftKey:true};$('map').onpointerdown(new w.MouseEvent('pointerdown',{clientX:300,clientY:520,button:0,bubbles:true,...shift}));for(let k=1;k<=20;k++)$('map').onpointermove(new w.MouseEvent('pointermove',{clientX:300+k*6,clientY:520+k*2,button:0,bubbles:true,...shift}));$('map').onpointerup(new w.MouseEvent('pointerup',{clientX:420,clientY:560,button:0,bubbles:true,...shift}));
  const dried=await state();assert.equal(dried.routes.length,carved.routes.length-1,'the creek is gone');assert.deepEqual(dried.heights,carved.heights,'the channel stays');assert.ok(!(dried.springs||[]).length);
  $('undo').click();$('undo').click();});
+test('Smooth spikes lowers thin walls across the map in one undoable step and respects a locked Relief',async()=>{const s=await state(),n=s.size,h=s.heights.slice();for(let x=20;x<60;x++)h[40*n+x]=Math.min(255,h[40*n+x]+90);
+ Object.defineProperty($('file'),'files',{configurable:true,value:[{name:'spiky.json',size:1000,text:async()=>JSON.stringify({...s,heights:h})}]});await $('file').onchange();
+ const before=await state();$('smooth-spikes').click();const after=await state();assert.ok(after.heights.some((v,i)=>v<before.heights[i]-50),'the wall came down');
+ $('undo').click();assert.deepEqual((await state()).heights,before.heights,'one undo restores it');
+ const lock=()=>doc.querySelector('[data-layer="elevation"][data-action="locked"]');lock().click();$('smooth-spikes').click();assert.deepEqual((await state()).heights,before.heights,'locked Relief is protected');lock().click();});
