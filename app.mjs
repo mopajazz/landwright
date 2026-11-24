@@ -143,9 +143,8 @@ let frameRequested=false;
 const requestFrame=createFrameScheduler(renderFrame);
 function scheduleFrame(){frameRequested=true;requestFrame();}
 
-const materialFamilies=[...new Set(EARTHEN_MATERIALS.map(m=>m.family))];
-$('palette').innerHTML=materialFamilies.map(family=>`<div class="material-family" role="group" aria-label="${family}"><div class="material-family-title">${family}</div><div class="family-materials">${EARTHEN_MATERIALS.filter(m=>m.family===family).map(m=>`<button data-material="${m.id}" class="${m.id===1?'selected':''}" aria-pressed="${m.id===1}" title="Paint ${m.name} · automatic terrain texture"><span class="swatch" style="--c:${m.hex}"></span><span>${m.name}</span></button>`).join('')}</div></div>`).join('');
-$('forest-paint').innerHTML='<div class="material-family-title">WOODLAND · DENSITY LAYER</div><button data-material="4" aria-pressed="false" title="Paint Forest density"><span class="swatch" style="--c:#355e43"></span><span>Forest</span><small>Paint trees, not ground</small></button>';
+$('palette').innerHTML=EARTHEN_MATERIALS.map(m=>`<button data-material="${m.id}" class="${m.id===1?'selected':''}" aria-pressed="${m.id===1}" aria-label="${m.name}" title="${m.name} · ${m.family}"><span class="swatch" style="--c:${m.hex}"></span></button>`).join('');
+$('forest-paint').innerHTML='<button data-material="4" aria-pressed="false" aria-label="Forest" title="Forest · trees, not ground"><span class="swatch" style="--c:#355e43"></span></button>';
 
 function notify(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(notify.t);notify.t=setTimeout(()=>$('toast').classList.remove('show'),2400)}
 function color(i){
@@ -496,7 +495,7 @@ function selectTool(t){
  $('route-width').closest('label').hidden=true;$('wand-controls').hidden=t!=='river'||waterTool();$('wand-depth-label').hidden=t!=='river'||waterTool();$('route-instructions').textContent=t==='river'?'Drag to carve a channel. A little water runs down it so you can see which way it flows. Use the droplet to add more. Go over it again to cut deeper; Shift dries an area.':'Drag to lay a path. It paints the surface and keeps trees off the track.';
  $('route-settings').hidden=!brushRoute(t);$('route-title').textContent=t==='river'?'RIVER':'PATH';$('path-material-label').hidden=t!=='path';$('river-depth-label').hidden=t!=='river'||!waterTool();$('river-taper-label').hidden=true;$('river-meander-label').hidden=true;updateRouteControls();
  $('sculpt-settings').hidden=t!=='flatten';$('brush-settings').hidden=t==='river'&&waterTool();document.querySelectorAll('[data-brush]').forEach(b=>b.disabled=!['raise','lower','smooth','flatten','paint'].includes(t));
- $('forest-settings').hidden=!(t==='paint'&&material===4);$('palette-section').hidden=t!=='paint';$('paint-status').textContent=t==='paint'?`${materials[material-1][0]} · ${brushPreset==='coast'?'Coastline':brushPreset==='hard'?'Hard Round':brushPreset==='grain'?'Grain':'Soft Round'} · Shift erases ${$('erase-target').selectedOptions[0]?.textContent||'paint'}`:`${materials[material-1][0]} selected · Use Paint (P) to apply.`;
+ $('forest-settings').hidden=!(t==='paint'&&material===4);$('palette-section').hidden=t!=='paint';$('paint-status').textContent=t==='paint'?`${materials[material-1][0]} · ${brushName(brushPreset)} · Shift erases ${$('erase-target').selectedOptions[0]?.textContent||'paint'}`:`${materials[material-1][0]} selected · Use Paint (P) to apply.`;
  document.querySelectorAll('[data-tool]').forEach(b=>{b.classList.toggle('selected',b.dataset.tool===t);b.setAttribute('aria-pressed',b.dataset.tool===t);});
  $('toolhint').textContent=fillingBasin()?'Click to fill a basin · Shift-click to drain':droppingWater()?'Click or hold to pour · Shift-click to drain here':{raise:'Raise terrain',lower:'Lower terrain',smooth:'Smooth terrain',flatten:'Flatten to target height',paint:'Paint '+materials[material-1][0],land:'Shape coastline · Shift to remove land',path:'Lay a path · drag to paint the track',river:'Carve a river · drag and watch the water find its way'}[t];$('toolkeys').textContent=fillingBasin()?'Set fill depth in River settings':droppingWater()?'Set pour amount in River settings':isRouteTool()?'W/S route width · Shift + wheel resize · Scroll to zoom':t==='flatten'?'D/E target height · Shift ×10 · W/S brush size':'W/S brush size · Shift + wheel resize · Scroll to zoom';map.style.cursor='crosshair';
 }
@@ -550,7 +549,9 @@ $('export').onclick=()=>{updateExportSize();$('exportdialog').showModal();};$('e
  }if(visibleForest())cx.drawImage(forestMap,0,0,resolution,resolution);cx.scale(resolution/N,resolution/N);if(layers.shapes.visible&&view!=='height')for(let s of drawings)drawShape(cx,s);if(layers.landmarks.visible&&view!=='height')for(let m of marks)drawLandmark(cx,m);c.toBlob(b=>{download(b,slug()+'-map.png');notify(resolution+' × '+resolution+' map exported.');});};
 
 $('erase-target').onchange=()=>{eraseTarget=$('erase-target').value;$('erase-description').textContent={forests:'Thin or clear trees without changing the ground. Opacity controls removal.',surface:'Reveal the natural terrain color. Elevation stays intact.',landmarks:'Remove whole landmarks touched by the brush. Undo to restore.',shapes:'Remove whole drawings touched by the brush. Undo to restore.'}[eraseTarget];selectTool(tool);};
+function brushName(preset){return{coast:'Coastline',hard:'Hard Round',grain:'Grain'}[preset]||'Soft Round';}
 function updateBrushUI(){
+ $('brush-name').textContent=brushName(brushPreset);
  document.querySelectorAll('[data-brush]').forEach(b=>{b.classList.toggle('selected',b.dataset.brush===brushPreset);b.setAttribute('aria-pressed',b.dataset.brush===brushPreset);});
  $('brush-description').textContent={soft:'Soft transitions for elevation and terrain paint.',coast:'Irregular footprint for rugged painted edges. Use Land to add or remove terrain.',hard:'Solid circular coverage with crisp edges. Useful for fills and clean boundaries.',grain:'Scattered coverage with soft edges. Works with any material; its terrain texture stays intact.'}[brushPreset];
 }
