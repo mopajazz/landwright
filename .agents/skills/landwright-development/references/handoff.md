@@ -1,7 +1,7 @@
 # Landwright — engineering and product handoff
 
-**Documentation date:** November 23, 2026 (America/New_York)<br>
-**Displayed release:** `v2.12` · **Cache revision:** `2.12.0` · **Project schema written:** `9`<br>
+**Documentation date:** November 24, 2026 (America/New_York)<br>
+**Displayed release:** `v2.12.1` · **Cache revision:** `2.12.1` · **Project schema written:** `9`<br>
 **Repository:** https://github.com/mopajazz/landwright · **Live app:** https://mopajazz.github.io/landwright/
 
 This document describes **the app as it is now**. It is edited in place whenever behavior changes; it is not appended to. Release-by-release engineering notes (why decisions were made, measurements, rejected directions) live in [docs/release-history.md](https://github.com/mopajazz/landwright/blob/main/docs/release-history.md). Source and tests are authoritative where this document and the code disagree; fix the document when that happens.
@@ -10,8 +10,8 @@ This document describes **the app as it is now**. It is edited in place whenever
 
 | Contract | Current state |
 | --- | --- |
-| Release | **v2.12**: River has one setting (Carve depth); strokes follow the hand and leave a creek; the droplet adds water. On top of v2.11.2 (PR #14: short-lived springs, Drain floodwater) and v2.11.1 (Strength restored). |
-| Live deployment | Last verified live on November 23, 2026: v2.11.1 (`e78fd9e`, Pages run 45094010821); v2.11.2 (`143bd54`) was merged by PR #14. After merging v2.12, confirm the Pages run for the exact merge commit and the live footer. |
+| Release | **v2.12.1**: up to 512 creeks per map (was 64); Shift + Land no longer leaves knife-edge walls; *Smooth spikes* in World Settings repairs existing maps. On top of v2.12 (one River setting, creeks, droplet). |
+| Live deployment | Last verified live on November 23, 2026: v2.12 (`e071ee3`, Pages run 45256066960). After merging v2.12.1, confirm the Pages run for the exact merge commit and the live footer. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
 | Project format | Writes **9**, imports **1–9**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan. |
@@ -23,7 +23,7 @@ This document describes **the app as it is now**. It is edited in place whenever
 | Water | Sea-connected reactive ocean; **River strokes** that carve a channel and leave a still-water **creek** (a river route record), plus a little running water from a short-lived spring; the **droplet** for deliberate extra water; basin fill/drain; and rivers from older maps (fixed levels, Reflow). |
 | Look | Eight earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
 | Exports | Map PNG 1024² / 2048² (default) / 4096². Heightmap PNG at N² with bed elevations only. Editable project JSON. |
-| Tests | `npm test`: **199 passed, 0 failed** (November 23, 2026). |
+| Tests | `npm test`: **204 passed, 0 failed** (November 24, 2026). |
 | Settlements | **Parked.** Removed in v2.9; the user may want them back in a different form (§12). |
 
 **Preserve:** beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep nine tools. Never save derived water, canopy or texture geometry into bed heights or project files.
@@ -151,6 +151,7 @@ Footprints: **Soft Round** `(1 − d²)²`; **Hard Round** full coverage inside 
 - `heightStroke` (per-stroke budget) and the stricter `maxSlope` (~50°) remain in `terrain.mjs` for the river wand's carving, which needs a bounded cut per stroke.
 - Preserve map edges holds the outer row/column and feathers over four cells, which prevents the 3D outline from appearing to shrink. It belongs to Flatten only.
 - Land converges toward sea +22 (Shift: sea −18), only on the appropriate side of its target, and never applies paint.
+- **No knife-edge walls (v2.12.1).** Land jumps straight to its target with a near-hard edge, so a gap between parallel passes used to leave a wall one cell thick (a user map had a 92-block wall one cell thick near its south coast after Shift + Land, plus pits). After every Land dab, `removeSpikes` runs on the brush area + 3 cells. `removeSpikes(a, n, {limit = spikeSlope(n)})` lowers any cell that stands more than `limit` above both neighbors along x or y (and two-cell walls standing above the cells either side of the pair) and fills the mirror-image pits and two-cell slots; ridges, valleys and cuts three or more cells wide and one-sided cliffs never match. Float32 rounding is ignored (EPS 1e-3) so a second run is a no-op.
 - Opacity on sculpt tools was once a hidden second strength multiplier; Opacity 0 left over from painting silently disabled sculpting. It is now scoped to Paint and Path (regression-tested).
 
 ### 4.4 Paint: ground materials and forest
@@ -202,8 +203,8 @@ Fills and pours leave the bed intact; the river wand changes the bed only while 
 | Limit (imported routes) | Value |
 | --- | ---: |
 | Sampled points per route | 2–4,096 |
-| Routes per project | 64 |
-| Total route points | 32,768 |
+| Routes per project (`MAX_ROUTES`) | 512 (64 before v2.12.1) |
+| Total route points (`MAX_ROUTE_POINTS`) | 65,536 (32,768 before v2.12.1) |
 | Raster work per route / project | 8,000,000 / 32,000,000 |
 
 Work estimate: `(1 + Σ max(1, ceil(segmentLength × 2))) × (ceil(width × 1.5) + 3)²`. Keep the work-budget checks in `validRoute` and normalization; point limits alone once allowed billions of raster operations from imported files.
@@ -212,7 +213,7 @@ Work estimate: `(1 + Σ max(1, ceil(segmentLength × 2))) × (ceil(width × 1.5)
 
 - **3D proportions.** `verticalScale(n) = 0.65 × n / 512` height units per map block, used by the WebGL shader, Canvas 3D, picking, Walk and sprite depth. Every map size therefore has the same proportions (a 128 map is a 512 one in miniature). Before v2.10, 0.65 was used at every size, so smaller maps were drawn far steeper (64% of the default 256 island was steeper than 45° in 3D). This changes drawing only; saved heights are untouched.
 - **Workspace:** 2D Map, 3D Terrain, **Walk**: an eye-level WebGL camera (`walk.mjs`). It arrives hovering 14 blocks above lowland (the lowest quarter of dry, gentle ground nearest the land's centroid) facing the centroid, so the first view is a landscape rather than the face of the central summit. W/A/S/D move; **Space** flies up and **Shift** descends at 12 blocks/s; with neither held the camera hovers at its altitude (pushed up over higher ground, capped at 60 blocks above the highest possible peak). Descending to eye height lands, after which the camera follows the ground. Arrow keys or click-to-look; Esc or *Exit walk* restores the previous view. Walk's key handler runs first, so Space does not start a map pan while walking. Walk is transient: no project field, editing or export effect.
-- **Views:** Terrain, Heightmap, Biomes (a visualization, not Minecraft biome data). Toggles: Grid, Contours, Water, Hill shading. Sea level 10–150, default 62. World Settings also holds the height range: *Seabed floor* 0–120 (default 20) and *Highest peak* 100–255 (default 190), at least 30 apart; changes are undoable and saved.
+- **Views:** Terrain, Heightmap, Biomes (a visualization, not Minecraft biome data). Toggles: Grid, Contours, Water, Hill shading. Sea level 10–150, default 62. World Settings also holds the height range: *Seabed floor* 0–120 (default 20) and *Highest peak* 100–255 (default 190), at least 30 apart; changes are undoable and saved. **Smooth spikes** runs `removeSpikes` over the whole map in one undoable step (refused while Relief is hidden or locked; says so when nothing matches). On the user's Evergreen Island it changed 216 cells (0.33%); on a freshly generated island it changes about 11 (the summit crease).
 - **Close zoom:** in Terrain view, world-aligned shader detail for stone, ground and canopy fades in, hill shading adds nearby occlusion, and WebGL 3D adds distance haze (`terrain-detail.mjs`). Screen-space only; exports and saved data are unchanged.
 - **Layers** (rows appear only when relevant): Surface, Relief (`elevation`), Forests, River water (`rivers`), legacy Landmarks, legacy Drawings. Hidden or locked layers are protected from editing. River creation also needs Relief visible and unlocked.
 
@@ -453,7 +454,7 @@ Process items:
 - Add a GitHub Actions workflow that runs `npm test` on pull requests.
 - Close the stale draft PR for settlement brushes (#3), superseded by v2.9.
 
-Regression-tested behaviors to protect: one River pass makes a readable creek that stays behind a low lip while a deliberate droplet pour floods the meadow; creeks are continuous and never rise downstream; the river wand's carving is bounded per stroke, erosion happens only while drawing, deltas stay below sea level, the sea drains water, one stroke undoes in one step, and Relief locks block it; Path never changes heights and clears trees; Raise/Lower Strength strokes keep building, never pass the height range and never create needles past `spikeSlope`; 3D proportions are size-independent; Walk starts on lowland, hovers, and never flies below eye height or above its ceiling; zero paint opacity never disables sculpting; no preset-driven tool switching; per-stroke opacity caps; Flatten perimeter protection; coalesced frames and no per-pointer rasterization; real 3D picking at the water/canopy surface; safe route-draft cancellation; no route→sculpt fallthrough; middle-pan ordering; delayed erase-target reconciliation; clouds invisible before wrapping; water marks jittered, evenly spread and fully faded at cycle ends.
+Regression-tested behaviors to protect: imports accept 512 creeks and reject 513; parallel Shift + Land passes leave no thin wall; removeSpikes fixes walls, pits and two-cell slots but keeps wider ridges, valleys and one-sided cliffs, and is idempotent; one River pass makes a readable creek that stays behind a low lip while a deliberate droplet pour floods the meadow; creeks are continuous and never rise downstream; the river wand's carving is bounded per stroke, erosion happens only while drawing, deltas stay below sea level, the sea drains water, one stroke undoes in one step, and Relief locks block it; Path never changes heights and clears trees; Raise/Lower Strength strokes keep building, never pass the height range and never create needles past `spikeSlope`; 3D proportions are size-independent; Walk starts on lowland, hovers, and never flies below eye height or above its ceiling; zero paint opacity never disables sculpting; no preset-driven tool switching; per-stroke opacity caps; Flatten perimeter protection; coalesced frames and no per-pointer rasterization; real 3D picking at the water/canopy surface; safe route-draft cancellation; no route→sculpt fallthrough; middle-pan ordering; delayed erase-target reconciliation; clouds invisible before wrapping; water marks jittered, evenly spread and fully faded at cycle ends.
 
 ## 12. Parked and deferred topics
 

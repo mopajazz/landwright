@@ -1,6 +1,10 @@
-import{applyMaterialCoverage}from'./material-paint.mjs?v=2.12.0';
-import{MATERIALS,blendPaint}from'./brushes.mjs?v=2.12.0';
-export const ROUTE_WORK_LIMIT=8000000,PROJECT_WORK_LIMIT=32000000;
+import{applyMaterialCoverage}from'./material-paint.mjs?v=2.12.1';
+import{MATERIALS,blendPaint}from'./brushes.mjs?v=2.12.1';
+// Project-wide limits. Raised in v2.12.1 from 64 routes / 32,768 points: every
+// River stroke now leaves a creek, and real maps reached 64 creeks while using
+// ~1% of the raster-work budget. riverField for 512 typical creeks is ~90 ms
+// and runs only when routes change, not per frame.
+export const ROUTE_WORK_LIMIT=8000000,PROJECT_WORK_LIMIT=32000000,MAX_ROUTES=512,MAX_ROUTE_POINTS=65536;
 export function routeWork(r){let samples=1;for(let i=1;i<r.points.length;i++)samples+=Math.max(1,Math.ceil(Math.hypot(r.points[i].x-r.points[i-1].x,r.points[i].y-r.points[i-1].y)*2));return samples*(Math.ceil(r.width*1.5)+3)**2;}
 const finite=(v,a,b)=>typeof v==='number'&&Number.isFinite(v)&&v>=a&&v<=b;
 export function validRoute(r,n){return !!r&&['path','river'].includes(r.type)&&finite(r.width,2,32)&&finite(r.opacity,0,1)&&Array.isArray(r.points)&&r.points.length>=2&&r.points.length<=4096&&r.points.every((p,i)=>p&&finite(p.x,0,n-1)&&finite(p.y,0,n-1)&&(r.type!=='river'||finite(p.level,0,255)&&(!i||p.level<=r.points[i-1].level)))&&(r.type==='path'?[2,3,6].includes(r.material):finite(r.depth,1,16)&&(r.taper===undefined||typeof r.taper==='boolean'))&&routeWork(r)<=ROUTE_WORK_LIMIT;}
