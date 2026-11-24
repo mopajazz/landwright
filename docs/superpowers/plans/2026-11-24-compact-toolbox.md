@@ -50,7 +50,22 @@ test('Pan tool is removed; H selects nothing and Space still pans',()=>{
 });
 ```
 
-- [ ] **Step 2:** Run `node --test tests/interactions.test.mjs`. Expected: FAIL (count 9; the pan button exists).
+Also add a touch-pan test (the user chose option b: two-finger drag pans on touch). Dispatch `PointerEvent`-like events (`new w.MouseEvent(type,{clientX,clientY,button:0})` with `pointerId` and `pointerType:'touch'` defined via `Object.defineProperty`):
+
+```js
+test('two-finger touch drag pans without editing; a touch that started a stroke is undone',async()=>{
+  flatTestWorld();$('fit').click();clickTool('raise');const before=await state();draws=[];
+  touch('pointerdown',1,512,380);touch('pointerdown',2,560,380);
+  touch('pointermove',1,572,410);touch('pointermove',2,620,410);
+  touch('pointerup',1,572,410);touch('pointerup',2,620,410);
+  assert.deepEqual((await state()).heights,before.heights);
+  const mapDraw=draws.filter(a=>a.length===5&&Math.abs(a[3]-633)<.01).at(-1);assert.ok(Math.abs(mapDraw[1]-(195.5+60))<.01);
+  assert.equal(doc.querySelector('[data-tool="raise"]').getAttribute('aria-pressed'),'true');
+});
+```
+
+- [ ] **Step 2:** Run `node --test tests/interactions.test.mjs`. Expected: FAIL (count 9; the pan button exists; touch moves edit terrain).
+- [ ] **Step 2b: Implement two-finger pan in `app.mjs`.** Keep a `Map` of active touch pointers (`pointerType==='touch'`). When a second touch goes down, end any stroke the first touch started. If that stroke took a snapshot, restore it through `restoreHistory(undo,redo)` and then drop the redo entry it creates, so the gesture leaves no trace. Then enter a two-touch pan: on each move, shift `pan` by the change in the midpoint of the two touches. Any touch going up ends the pan, and the remaining finger does nothing until all touches lift. Single-finger touch stays a normal brush stroke. No pinch zoom (not requested).
 - [ ] **Step 3:** Make the removals listed under Files. Then grep `app.mjs` for `'pan'`; the only remaining matches should be pan-gesture code, not tool code.
 - [ ] **Step 4:** Run `npm test`. Expected: all pass, including the existing Space-pan tests (lines 114–116).
 - [ ] **Step 5:** Commit: `Remove the Pan tool; Space and middle-drag still pan`.
