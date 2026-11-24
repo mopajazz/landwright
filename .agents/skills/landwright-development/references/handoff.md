@@ -23,7 +23,7 @@ This document describes **the app as it is now**. It is edited in place whenever
 | Water | Sea-connected reactive ocean; **River strokes** that carve a channel and leave a still-water **creek** (a river route record), plus a little running water from a short-lived spring; the **droplet** for deliberate extra water; basin fill/drain; and rivers from older maps (fixed levels, Reflow). |
 | Look | Eight earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
 | Exports | Map PNG 1024² / 2048² (default) / 4096². Heightmap PNG at N² with bed elevations only. Editable project JSON. |
-| Tests | `npm test`: **209 passed, 0 failed** (November 24, 2026). |
+| Tests | `npm test`: **214 passed, 0 failed** (November 24, 2026). |
 | Settlements | **Parked.** Removed in v2.9; the user may want them back in a different form (§12). |
 
 **Preserve:** beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep eight tools. Never save derived water, canopy or texture geometry into bed heights or project files.
@@ -122,7 +122,7 @@ New world opens a modal: world name (required, up to 80 characters, default `Unt
 | D / E (Shift ×4; Flatten ×10) | Strength ±1% up to 10%, then ±5% (Raise/Lower/Smooth), Carve per stroke ±0.25 (River), Opacity ±5% (Paint/Path), target ±1 (Flatten). Implemented by `nudgeSlider`, which steps the slider, clamps it and fires its input handler |
 | Left drag | Apply the brush, or add route points while a route is active |
 | Space + left drag, middle drag | Pan (2D/3D), including during a route draft; a started pan stays a pan until release. In Walk, Space flies up and Shift descends |
-| Two-finger touch drag | Pan (2D map or 3D camera). If the first finger already started a stroke, that stroke is rolled back (no undo or redo entry). One finger edits as usual. No pinch zoom |
+| Two-finger touch drag | Pan (2D map or 3D camera). If the first finger already started a stroke, pour or basin edit, it is rolled back and undo/redo history is left exactly as it was. Any new first touch, window blur or hidden page clears stale touch state. One finger edits as usual. No pinch zoom |
 | Right drag, Alt + drag (3D) | Orbit/tilt |
 | Shift + tool | Raise↔Lower reverse; Land removes; Paint erases the chosen target |
 | Enter / double-click | Finish a route draft |
@@ -387,7 +387,7 @@ Open `http://localhost:8000/` (serve over HTTP; do not open the file directly). 
 
 ### Tests
 
-209 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
+214 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
 
 - `interactions.test.mjs` compares whole project states. A failing `deepEqual` on large arrays can exhaust memory and kill the process instead of printing a diff; run the file alone with `node --test --test-reporter=spec tests/interactions.test.mjs` to find the test.
 - Living World tests need queued animation frames: bind the loop to `document.defaultView.requestAnimationFrame`, not a synchronous stub (see `living-interactions.test.mjs`).

@@ -37,7 +37,7 @@ Landwright is a minimalist cartographic terrain editor with complexity behind a 
 ## Rules that are easy to break
 
 - Work on a branch and open a pull request; never push to `main`.
-- Keep nine tools. Footprint and material choices never switch the tool. Opacity applies to Paint and Path only.
+- Keep eight tools. Footprint and material choices never switch the tool. Opacity applies to Paint and Path only.
 - Derived data (water coverage, canopy, textures, Living World) is never saved, never enters undo history, and stays out of the Heightmap.
 - Keep rendering, cursor projection and picking on the same effective surface.
 - Validate imports and route work budgets before mutating the project; never replay saved carving on load.

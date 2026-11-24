@@ -436,10 +436,11 @@ for(let [id,suffix]of[['route-width',' blocks'],['river-depth',' blocks']])$(id)
 $('path-material').onchange=()=>draw();$('river-taper').onchange=()=>draw();$('river-meander').oninput=()=>{$('river-meanderout').value=$('river-meander').value+'%';draw();};
 for(let canvas of[map,mini])canvas.ondblclick=e=>{if(isRouteTool()){e.preventDefault();finishRoute();}};
 // Two-finger touch drag pans (2D map or 3D camera). A stroke the first finger started is rolled back.
-const touches=new Map();let touchPan=null,touchTop=null;
+const touches=new Map();let touchPan=null,touchTop=null,touchRedo=null;
+function clearTouches(){touches.clear();touchPan=null;document.body.classList.remove('panning');}
 function panBy(dx,dy){if(workspaceMode==='3d'){camera.panX=(camera.panX||0)+dx;camera.panY=(camera.panY||0)+dy;preview();}else{pan.x+=dx;pan.y+=dy;draw();}}
 function touchMid(){const[a,b]=touches.values();return{x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
-function touchDown(e){if(e.pointerType!=='touch')return false;if(!touches.size)touchTop=undo.at(-1);touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(touches.size<2)return!!touchPan;if(!touchPan){if(down){cancelStroke();if(undo.at(-1)!==touchTop){restoreHistory(undo,redo);redo.pop();historyUI();}}document.body.classList.add('panning');}touchPan=touchMid();return true;}
+function touchDown(e){if(e.pointerType!=='touch')return false;if(e.isPrimary)clearTouches();if(!touches.size){touchTop=undo.at(-1);touchRedo=redo;}touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(touches.size<2)return!!touchPan;if(!touchPan){if(down)cancelStroke();if(undo.at(-1)!==touchTop){restoreHistory(undo,redo);redo=touchRedo;historyUI();}document.body.classList.add('panning');}touchPan=touchMid();return true;}
 function touchMove(e){if(e.pointerType!=='touch'||!touches.has(e.pointerId))return false;touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!touchPan)return false;if(touches.size>=2){const m=touchMid();panBy(m.x-touchPan.x,m.y-touchPan.y);touchPan=m;}return true;}
 function touchUp(e){if(e?.pointerType!=='touch')return false;touches.delete(e.pointerId);if(!touchPan)return false;if(!touches.size){touchPan=null;document.body.classList.remove('panning');}else touchPan=touches.size>=2?touchMid():{x:NaN,y:NaN};return true;}
 map.onpointerdown=e=>{
@@ -482,7 +483,7 @@ function selectTool(t){
  if(t!==tool){cancelRoute(false);dropperEnabled=basinMode=false;}
  $('erase-description').textContent={forests:'Thin or clear trees without changing the ground. Opacity controls removal.',surface:'Reveal the natural terrain color. Elevation stays intact.',landmarks:'Remove whole legacy landmarks touched by the brush. Undo to restore.',shapes:'Remove whole legacy drawings touched by the brush. Undo to restore.',rivers:'Remove river water along a touched route. The carved channel remains; undo restores the water.'}[eraseTarget];
  if(down)end();if(['raise','lower'].includes(tool))raiseLowerStrength=+$('strength').value;else if(['smooth','flatten'].includes(tool))blendStrength=+$('strength').value;if(['raise','lower','smooth','flatten'].includes(t)){strengthUnits(t);$('strength').value=['raise','lower'].includes(t)?raiseLowerStrength:blendStrength;$('strengthout').value=strengthText(t);}orbitPointer=null;orbitMode=false;$('orbit-toggle').setAttribute('aria-pressed','false');$('orbit-toggle').textContent='Orbit';tool=t;if(isRouteTool())$('brush').style.display='none';updateBrushUI();
- $('erase-settings').hidden=t!=='paint';$('opacity-label').hidden=!usesOpacity(t);$('brush-controls').hidden=t==='river'&&waterTool();$('size-label').hidden=isRouteTool();$('size-shortcuts').hidden=isRouteTool();$('size').disabled=isRouteTool();$('opacity').disabled=t==='river';$('strength-label').hidden=!['raise','lower','smooth','flatten'].includes(t);$('target-label').hidden=t!=='flatten';$('edge-protection-label').hidden=t!=='flatten';
+ $('erase-settings').hidden=t!=='paint';$('opacity-label').hidden=!usesOpacity(t);$('brush-controls').hidden=t==='river'&&waterTool();$('size-label').hidden=isRouteTool();$('size-shortcuts').hidden=isRouteTool();$('size').disabled=isRouteTool();$('opacity').disabled=t==='river';$('strength-label').hidden=!['raise','lower','smooth','flatten'].includes(t);$('target-label').hidden=t!=='flatten';$('strength-keys').hidden=t==='flatten';$('edge-protection-label').hidden=t!=='flatten';
  $('water-dropper').hidden=t!=='river';
  $('water-dropper').setAttribute('aria-pressed',String(droppingWater()));
  $('water-dropper').classList.toggle('active',droppingWater());
@@ -516,8 +517,8 @@ document.onkeydown=e=>{if(e.target.closest('input,textarea,select,[contenteditab
 
 function releasePanKey(){spacePan=false;document.body.classList.remove('space-pan');draw();}
 document.addEventListener('keyup',e=>{if(e.code==='Space'||e.key===' '){releasePanKey();}});
-document.defaultView.addEventListener('blur',()=>{releasePanKey();orbitPointer=null;cancelStroke();});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){releasePanKey();orbitPointer=null;cancelStroke();}});
+document.defaultView.addEventListener('blur',()=>{releasePanKey();orbitPointer=null;clearTouches();cancelStroke();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){releasePanKey();orbitPointer=null;clearTouches();cancelStroke();}});
 
 function adjustBrush(delta){if(isRouteTool()){$('route-width').value=Math.max(2,Math.min(32,+$('route-width').value+delta));$('route-widthout').value=$('route-width').value+' blocks';draw();return;}$('size').value=resizeBrush(+$('size').value,delta);$('sizeout').value=$('size').value+' blocks';if(brushPosition){let t=transform();$('brush').style.width=$('brush').style.height=(+$('size').value*t.scale)+'px';}if(workspaceMode==='3d')preview();}
 function renderLayers(){riverWaterDirty=true;let hasRivers=routes.some(r=>r.type==='river');$('reflow-rivers').hidden=$('reflow-note').hidden=!hasRivers;$('reflow-rivers').disabled=!hasRivers||layers.elevation.locked||!layers.elevation.visible||layers.rivers.locked||!layers.rivers.visible;let names={...(forest.some(v=>v>0)?{forests:['Forests','Trees & clearings']}:{}),...(hasPouredWater||waterDrops.length||hasRivers?{rivers:hasPouredWater||waterDrops.length?['River and lake water','Inland water surfaces']:['River water','Local water above carved channels']}:{}),...(drawings.length?{shapes:['Drawings','From an earlier project']}:{}),...(marks.length?{landmarks:['Landmarks','From an earlier project']}:{}),surface:['Surface','Terrain & biome paint'],elevation:['Relief','Sculpting, shading & contours']};$('layer-count').textContent=Object.keys(names).length;
