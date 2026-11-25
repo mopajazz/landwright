@@ -1,7 +1,7 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 24, 2026 (America/New_York)<br>
-**Displayed release:** `v2.12.1` · **Cache revision:** `2.12.1` · **Project schema written:** `9`<br>
+**Displayed release:** `v2.13.0` · **Cache revision:** `2.13.0` · **Project schema written:** `9`<br>
 **Repository:** https://github.com/mopajazz/landwright · **Live app:** https://mopajazz.github.io/landwright/
 
 This document describes **the app as it is now**. It is edited in place whenever behavior changes; it is not appended to. Release-by-release engineering notes (why decisions were made, measurements, rejected directions) live in [docs/release-history.md](https://github.com/mopajazz/landwright/blob/main/docs/release-history.md). Source and tests are authoritative where this document and the code disagree; fix the document when that happens.
@@ -10,23 +10,23 @@ This document describes **the app as it is now**. It is edited in place whenever
 
 | Contract | Current state |
 | --- | --- |
-| Release | **v2.12.1**: up to 512 creeks per map (was 64); Shift + Land no longer leaves knife-edge walls; *Smooth spikes* in World Settings repairs existing maps. On top of v2.12 (one River setting, creeks, droplet). |
-| Live deployment | Last verified live on November 23, 2026: v2.12 (`e071ee3`, Pages run 45256066960). After merging v2.12.1, confirm the Pages run for the exact merge commit and the live footer. |
+| Release | **v2.13.0**: compact toolbox. Tools, Size, each tool's main D/E dial and the brush presets form one group with visible key badges; paint materials are swatches; the Pan tool is gone (Space/middle-drag, and two-finger drag on touch). On top of v2.12.1 (512 creeks, *Smooth spikes*). |
+| Live deployment | Last verified live on November 23, 2026: v2.12 (`e071ee3`, Pages run 45256066960). After merging v2.13.0, confirm the Pages run for the exact merge commit and the live footer. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
 | Project format | Writes **9**, imports **1–9**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
-| Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan. |
+| Toolbar | **Eight** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint. |
 | Erasing | **Shift + Paint** with Paint's *Shift erase target*. There is no Erase tool. |
-| D / E keys | Strength for Raise/Lower/Smooth (1% steps up to 10%, then 5%), River Carve per stroke (0.25), Paint/Path Opacity (5%), Flatten target (1). Shift = four steps (Flatten: 10). Pan ignores them. |
-| Navigation | Space + left-drag or middle-drag pans (2D/3D). Right/Alt-drag orbits in 3D. **Walk** gives an eye-level WebGL view with Space/Shift to fly up/down. |
+| D / E keys | Strength for Raise/Lower/Smooth (1% steps up to 10%, then 5%), River Carve per stroke (0.25), Paint/Path Opacity (5%), Flatten target (1). Shift = four steps (Flatten: 10). Land ignores them. |
+| Navigation | Space + left-drag or middle-drag pans (2D/3D); on touch, a two-finger drag pans. Right/Alt-drag orbits in 3D. **Walk** gives an eye-level WebGL view with Space/Shift to fly up/down. |
 | Terrain sizes | 128², 192², 256² (default), and **experimental 512²**. |
 | Height | Hard limits 0–255. Each world has a working range, *Seabed floor* (default 20) to *Highest peak* (default 190), that Raise, Lower and Flatten never pass. 3D draws every size with the same proportions. |
 | Water | Sea-connected reactive ocean; **River strokes** that carve a channel and leave a still-water **creek** (a river route record), plus a little running water from a short-lived spring; the **droplet** for deliberate extra water; basin fill/drain; and rivers from older maps (fixed levels, Reflow). |
 | Look | Eight earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
 | Exports | Map PNG 1024² / 2048² (default) / 4096². Heightmap PNG at N² with bed elevations only. Editable project JSON. |
-| Tests | `npm test`: **204 passed, 0 failed** (November 24, 2026). |
+| Tests | `npm test`: **214 passed, 0 failed** (November 24, 2026). |
 | Settlements | **Parked.** Removed in v2.9; the user may want them back in a different form (§12). |
 
-**Preserve:** beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep nine tools. Never save derived water, canopy or texture geometry into bed heights or project files.
+**Preserve:** beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep eight tools. Never save derived water, canopy or texture geometry into bed heights or project files.
 
 ## 1. Working agreement
 
@@ -59,7 +59,7 @@ The goal is a **minimalist cartographic terrain builder with complexity behind a
 
 Decisions in force:
 
-- Nine tools. Brush footprint and material are separate choices and never switch the tool.
+- Eight tools. Brush footprint and material are separate choices and never switch the tool.
 - The palette, Opacity and Sculpt controls are contextual: each appears only for tools that use it.
 - Opacity is a paint concept. It applies to Paint and Path. Sculpt tools and Land ignore it.
 - Sculpting is dialed in by a percentage **Strength**, a per-world **height range** and a loose **needle guard**, with 3D drawn at size-independent proportions, so what looks good in 2D also looks good in 3D and Walk. (v2.10 replaced Strength with a "height per stroke" budget and a 50° slope limit; the user found that confusing and overcorrected, so v2.11.1 restored Strength and loosened the guard.)
@@ -113,7 +113,6 @@ New world opens a modal: world name (required, up to 80 characters, default `Unt
 | Terrain | Land | `land` | C, M | Add land; Shift removes land |
 | Surface | Path | `path` | J | Brush that paints a track in the path surface and clears trees (§4.6) |
 | Surface | Paint | `paint` | P, B | Paint ground material or forest density; Shift erases |
-| Navigate | Pan | `pan` | H | Pan the map/camera |
 
 | Input | Behavior |
 | --- | --- |
@@ -123,6 +122,7 @@ New world opens a modal: world name (required, up to 80 characters, default `Unt
 | D / E (Shift ×4; Flatten ×10) | Strength ±1% up to 10%, then ±5% (Raise/Lower/Smooth), Carve per stroke ±0.25 (River), Opacity ±5% (Paint/Path), target ±1 (Flatten). Implemented by `nudgeSlider`, which steps the slider, clamps it and fires its input handler |
 | Left drag | Apply the brush, or add route points while a route is active |
 | Space + left drag, middle drag | Pan (2D/3D), including during a route draft; a started pan stays a pan until release. In Walk, Space flies up and Shift descends |
+| Two-finger touch drag | Pan (2D map or 3D camera). If the first finger already started a stroke, pour or basin edit, it is rolled back and undo/redo history is left exactly as it was. Any new first touch, window blur or hidden page clears stale touch state. One finger edits as usual. No pinch zoom |
 | Right drag, Alt + drag (3D) | Orbit/tilt |
 | Shift + tool | Raise↔Lower reverse; Land removes; Paint erases the chosen target |
 | Enter / double-click | Finish a route draft |
@@ -156,7 +156,7 @@ Footprints: **Soft Round** `(1 − d²)²`; **Hard Round** full coverage inside 
 
 ### 4.4 Paint: ground materials and forest
 
-Paint shows a grouped palette of eight ground materials plus a separate **Forest** density action.
+Paint shows eight ground materials as colour swatches (in family order; name and family on hover, accessible name on each), followed by a separate **Forest** density swatch.
 
 | ID | Material | Family | Swatch |
 | --- | --- | --- | --- |
@@ -231,7 +231,7 @@ One World Settings toggle (default on), with *Water motion*, *Clouds & soft shad
 ### 4.9 Layout and appearance
 
 - Toolbox: default 228px, stored 180–360px, effective width `max(128, min(preferred, 360, viewport − reserve))` with reserve 180 (≤800px), 470 (≤1100px), else 510. Collapsed rail: 64px track, 40px buttons, 28px icons. New visitors below 800px start collapsed; saved preferences win.
-- Toolbox order: footprint → brush controls (Size, Opacity where used) → Sculpt (Strength; Flatten target and edge option) → Paint material and Shift erase target (Paint only).
+- Toolbox order (v2.13): one 4×2 tool grid with key badges → **dials** (`#brush-controls`: Size with W/S, then the tool's main D/E dial: Strength for Raise/Lower/Smooth, Strength + Target height for Flatten, Carve depth for River, Opacity for Paint/Path; none for Land) → brush icon row with the selected name → tool extras (Flatten edge option, River/Path settings, Paint swatches, Shift erase target). At 1440×900 with the default width, no tool scrolls. Below ~210px tile labels hide; icons and key badges stay. The collapsed rail hides badges.
 - Header: world name, autosave badge ("Saving…", "Saved in browser", "Not saved · download"), theme toggle naming the destination mode, Shortcuts, **Download** (visible at every width; icon-only below 800px), **Export map**.
 - Nav: New world, Import, undo/redo, 2D/3D/Walk, view choices (filled selected state) and Grid/Contours **toggles** (dot indicator, `aria-pressed`), which are deliberately styled unlike the view choices.
 - Selected tool: filled background, inset accent ring, semibold label, 4px edge marker. Layer rows use SVG eye and padlock icons in 32×32 targets.
@@ -239,7 +239,7 @@ One World Settings toggle (default on), with *Water motion*, *Clouds & soft shad
 
 ## 5. Iconography and accessibility
 
-Tool icons are original inline SVG from `icons.mjs`: 24×24 viewBox, stroke 1.9, rounded caps/joins, 20% fills, 28px display. Do not distinguish actions only by arrow direction or color. Concepts: Raise (peak +), Lower (basin −), Smooth (sanding block), Flatten (spirit level), River (winding banks), Land (land over shoreline), Path (paired curved edges), Paint (brush), Pan (hand), Settings (sliders). Icons are decorative (`aria-hidden`); group labels, accessible names, shortcut hints, tooltips and pressed states carry meaning.
+Tool icons are original inline SVG from `icons.mjs`: 24×24 viewBox, stroke 1.9, rounded caps/joins, 20% fills, 22px in the tool grid (28px in the collapsed rail). Do not distinguish actions only by arrow direction or color. Concepts: Raise (peak +), Lower (basin −), Smooth (sanding block), Flatten (spirit level), River (winding banks), Land (land over shoreline), Path (paired curved edges), Paint (brush), Settings (sliders). Icons are decorative (`aria-hidden`); labels, accessible names, key badges, tooltips and pressed states carry meaning.
 
 Semantic color tokens live in `theme.css`, loaded after `style.css`:
 
@@ -387,7 +387,7 @@ Open `http://localhost:8000/` (serve over HTTP; do not open the file directly). 
 
 ### Tests
 
-195 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
+214 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
 
 - `interactions.test.mjs` compares whole project states. A failing `deepEqual` on large arrays can exhaust memory and kill the process instead of printing a diff; run the file alone with `node --test --test-reporter=spec tests/interactions.test.mjs` to find the test.
 - Living World tests need queued animation frames: bind the loop to `document.defaultView.requestAnimationFrame`, not a synchronous stub (see `living-interactions.test.mjs`).
@@ -411,7 +411,7 @@ Also run `node --check` on changed modules and `git diff --check`.
 
 GitHub Pages builds `main:/` automatically (legacy build; no workflow file). Before merging a release PR:
 
-- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.10.1`. Update the footer version when appropriate. Documentation-only changes need no bump.
+- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.13.0`. Update the footer version when appropriate. Documentation-only changes need no bump.
 - Check help text, tutorial and KB against the implemented controls.
 
 After merging, find the Pages run for the exact merge commit, wait for success, then load the live site and confirm the footer and the changed flow. A push is not a deployment. To roll back, revert the faulty commits through a PR and verify Pages again; note any schema implications for files saved by the newer version.
@@ -430,19 +430,18 @@ Limitations (facts, not promises):
 2. Water is authored or approximated: no momentum, volume conservation in the ocean, erosion, watershed detection, or automatic river recomputation after sculpting.
 3. Erasing river water keeps the carved channel; undo the original commit to restore both.
 4. 512 is experimental: CPU-bound sculpting misses frame budgets; storage quota can be exceeded.
-5. Desktop-first. Touch and comprehensive accessibility are unaudited; Shortcuts help is hidden below 800px.
+5. Desktop-first. Touch and comprehensive accessibility are unaudited (two-finger pan is covered by jsdom tests only; mobile testing is on the roadmap); Shortcuts help is hidden below 800px.
 6. Browser-local persistence only; no backups, collaboration or multi-project library.
 7. No Minecraft/WorldPainter formats, no WorldBox-style simulation.
 8. Old CSS selectors remain (legacy tools, `.breadcrumb`, `.smallgreen`); remove deliberately with visual checks.
 
 Open UI items from reviews (not yet assigned):
 
-- Brush controls (Size, Strength) sit below the footprint presets and fall below the fold at 900px height; consider putting controls first.
 - Export dialog cards are buttons but look like information panels; add a download affordance.
 - Paint's footer hint mentions W/S but not D/E.
 - Paint repeats the Shift-erase message three times and shows a one-option target dropdown; hide the dropdown until there is a choice.
 - World dimensions appear in four places; "Made for world builders" filler remains in the right panel.
-- Land = C (reads as Coastline) and Smooth = Q are hard to recall; tool-button shortcut letters are about 9px.
+- Land = C (reads as Coastline) and Smooth = Q are hard to recall.
 - The toggle dot, layer icons and selected-tool ring are outside the contrast tests.
 
 
