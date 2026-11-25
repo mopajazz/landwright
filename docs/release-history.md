@@ -424,3 +424,4 @@ The user asked for less vertical space in the toolbox, with Strength, Opacity an
 - Rejected: a Photoshop-style options bar (separates the dials from the tools, runs out of width) and tabs or accordions (add clicks for controls used constantly).
 - Fixed: the River droplet (Pour water) button had been blank since v2.12 (commit 82f85b0), when its text label became an icon-only SVG with no size; `.tool-icon` sizes only apply inside the tool grid. It is now a 34px button with a 20px icon and a selected state while pouring.
 - Styled River's *Fill / drain basin* and *Drain floodwater* as bordered buttons (they inherited the borderless global button reset and read as plain text); basin mode shows the shared selected state.
+- *Smooth spikes* (World Settings) had the same plain-text look; it now shares the *Reflow rivers* button style.
