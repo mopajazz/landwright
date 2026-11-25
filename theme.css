@@ -172,3 +172,8 @@ body:not(.sidebar-collapsed) #tools button.selected:before{left:8px;right:8px;to
 #erase-settings label{font-size:11px}
 @container(max-width:210px){body:not(.sidebar-collapsed) #tools button{font-size:0;gap:0}body:not(.sidebar-collapsed) #tools button .tool-icon{width:20px;height:20px;flex-basis:20px}}
 
+/* River droplet: icon-only button needs its own size; .tool-icon sizes only apply inside the tool grid. */
+#water-dropper{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;vertical-align:middle;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--secondary)}
+#water-dropper[hidden]{display:none}
+#water-dropper .tool-icon{width:20px;height:20px;flex:0 0 20px}
+#water-dropper.active{background:var(--selected);border-color:var(--accent);color:var(--accent)}

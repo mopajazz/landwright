@@ -442,7 +442,6 @@ Open UI items from reviews (not yet assigned):
 - Paint repeats the Shift-erase message three times and shows a one-option target dropdown; hide the dropdown until there is a choice.
 - World dimensions appear in four places; "Made for world builders" filler remains in the right panel.
 - Land = C (reads as Coastline) and Smooth = Q are hard to recall.
-- The River droplet (Pour water) button's icon renders at 0×0, so the button looks blank (seen in v2.12.1 and v2.13 screenshots).
 - The toggle dot, layer icons and selected-tool ring are outside the contrast tests.
 
 

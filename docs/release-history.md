@@ -422,4 +422,4 @@ The user asked for less vertical space in the toolbox, with Strength, Opacity an
 - Brush presets became 34px icon buttons with the selected name in the section title. Paint materials became swatches (name and family in the tooltip and accessible name) on an auto-fill grid that can grow when new materials arrive.
 - **Pan removed.** Touch had no other way to pan, so a two-finger drag now pans the 2D map or the 3D camera. A stroke the first finger had started is rolled back without leaving an undo/redo entry. There is no pinch zoom. This is tested in jsdom only; real touch devices are unverified.
 - Rejected: a Photoshop-style options bar (separates the dials from the tools, runs out of width) and tabs or accordions (add clicks for controls used constantly).
-- Found, not fixed: the River droplet button's icon renders 0×0 (already the case in v2.12.1).
+- Fixed: the River droplet (Pour water) button had been blank since v2.12 (commit 82f85b0), when its text label became an icon-only SVG with no size; `.tool-icon` sizes only apply inside the tool grid. It is now a 34px button with a 20px icon and a selected state while pouring.
