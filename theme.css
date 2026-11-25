@@ -177,3 +177,9 @@ body:not(.sidebar-collapsed) #tools button.selected:before{left:8px;right:8px;to
 #water-dropper[hidden]{display:none}
 #water-dropper .tool-icon{width:20px;height:20px;flex:0 0 20px}
 #water-dropper.active{background:var(--selected);border-color:var(--accent);color:var(--accent)}
+/* River action buttons: the global button reset is borderless, so give them the same look as Reflow rivers. */
+#basin-fill,#drain-floodwater{height:34px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--fg);font-size:11px;text-align:center;vertical-align:middle}
+#basin-fill{width:calc(100% - 40px);margin-left:4px;padding:0 8px}
+#drain-floodwater{width:100%;margin-top:8px}
+#basin-fill:hover,#drain-floodwater:hover{background:var(--hover)}
+#basin-fill.active{background:var(--selected);border-color:var(--accent);color:var(--fg)}
