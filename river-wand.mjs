@@ -3,7 +3,7 @@
 // water erodes its bed and carries sediment downstream, dropping it where the
 // flow slows (fans, deltas, marshy flats). Everything here works on the
 // authoritative bed and the poured-water depth field; nothing is derived-only.
-import {heightStroke} from './terrain.mjs?v=2.14.0';
+import {heightStroke} from './terrain.mjs?v=2.14.0-textures.1';
 
 // Every River stroke releases the same small amount of water: enough to show
 // which way the channel runs, never enough to flood a meadow. More water is a
