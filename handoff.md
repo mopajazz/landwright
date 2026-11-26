@@ -11,7 +11,7 @@ This document describes **the app as it is now**. It is edited in place whenever
 | Contract | Current state |
 | --- | --- |
 | Release | **v2.13.0**: compact toolbox. Tools, Size, each tool's main D/E dial and the brush presets form one group with visible key badges; paint materials are swatches; the Pan tool is gone (Space/middle-drag, and two-finger drag on touch). On top of v2.12.1 (512 creeks, *Smooth spikes*). |
-| Live deployment | Last verified live on November 23, 2026: v2.12 (`e071ee3`, Pages run 45256066960). After merging v2.13.0, confirm the Pages run for the exact merge commit and the live footer. |
+| Live deployment | Last verified live on November 26, 2026: v2.13.0 (`bdead9e`, Pages run 45522287081; live footer confirmed by the user). After merging the next release, confirm the Pages run for the exact merge commit and the live footer. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
 | Project format | Writes **9**, imports **1–9**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
 | Toolbar | **Eight** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint. |
