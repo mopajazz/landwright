@@ -16,7 +16,7 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 - Paint eight procedural ground materials—Grass, Loam, Clay, Bedrock, Scree, Mud, Sand, and Snow—grouped by family. Their textures automatically respond to slope, shelter and nearby water. Forest paints a separate tree-density layer. Forest has its own density control and conditional layer/eraser; it keeps ground colors unchanged. Drawing and Details creation tools have been removed to keep the toolbox focused on terrain. Existing drawings and landmarks still load, render, export, and save.
 - Hold Shift while clicking/dragging with Paint to erase. Paint’s Shift erase target defaults to Surface paint for ground materials and Forests for Forest; River water and saved-object targets appear when that content exists. Surface erasing uses brush opacity and reveals the natural terrain color without changing heights. Landmark/drawing erasing removes whole touched objects; undo restores them. Hidden and locked layers are protected.
 - Hide and lock Surface and Relief. Legacy Drawings and Landmarks layers appear only when a project contains that content. Relief visibility controls shading/contours, while elevation remains the world foundation. Hidden or locked layers cannot be edited. Water has its own toggle and sea-level control.
-- Toggle the main workspace between 2D Map and 3D Terrain. All editing tools work directly on the 3D terrain. Left-drag edits with the active tool; right-drag or Alt-drag orbits and tilts; middle-drag or the Pan tool moves the camera. Scroll zooms, Shift+scroll resizes the brush, and Reset view recenters. The Orbit toggle supports touch; selecting a tool returns to editing while staying in 3D. Switch to terrain, heightmap, or biome visualization.
+- Toggle the main workspace between 2D Map and 3D Terrain. All editing tools work directly on the 3D terrain. Left-drag edits with the active tool; right-drag or Alt-drag orbits and tilts; middle-drag, Space + drag or a two-finger touch drag moves the camera. Scroll zooms, Shift+scroll resizes the brush, and Reset view recenters. The Orbit toggle supports touch; selecting a tool returns to editing while staying in 3D. Switch to terrain, heightmap, or biome visualization.
 - Download artwork from any world's menu in Worlds, open or not: a 1024×1024, 2048×2048, or 4096×4096 map PNG, including visible drawings and landmarks, or an 8-bit PNG heightmap at the world's size. Map images omit editor overlays such as grid and cursor.
 - Undo/redo retains 35 states for the open world, including stamps, layer settings, names, translucent paint and drawings; opening another world starts a fresh history. Editable project files and local autosaves use schema v9 and accept v1–v8 projects. Older Forest paint remains color, without automatically adding trees.
 
@@ -28,10 +28,10 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 | Shift + W / S | Change brush size by 10 |
 | Shift + mouse wheel | Resize brush |
 | Mouse wheel | Zoom |
-| Space + left drag / Middle drag | Pan |
+| Space + left drag / Middle drag / two-finger touch drag | Pan |
 | Right drag or Alt + drag in 3D | Orbit and tilt |
 | R / L / Q / F | Raise / lower / smooth / flatten |
-| B or P / C or M / H | Paint / land / pan |
+| B or P / C or M | Paint / land |
 | D / E | Smaller/bigger: Strength (Raise/Lower/Smooth; 1% steps up to 10%, then 5%), Carve depth (River, 0.25 blocks), Opacity (Paint/Path, 5%), Flatten target (1 block) |
 | Shift + D / E | Four steps at once; Flatten target 10 blocks |
 | J / V | Path / river |
@@ -63,7 +63,7 @@ UI palette contrast checks and their scope are documented in [the contrast audit
 
 New world includes a **Flat grass** preset: a completely level grass field at elevation 80. Select **Small (128 × 128)**, **Medium (192 × 192)**, **Large (256 × 256)**, or **Experimental (512 × 512)** before creation. Project files and undo history retain the world size. Older projects without a size open at 256 × 256.
 
-The toolbox is grouped by function: **Terrain** (Raise, Lower, Smooth, Flatten, River, Land), **Surface** (Path, Paint), and **Navigate** (Pan). Group separators remain visible in the collapsed rail. Icons share a 24-unit grid, 1.9-unit stroke, and 28px display size: peak/add, excavated basin/remove, sanding block, spirit level, shoreline, brush and hand. Labels, shortcut hints, accessible names, and a selected-edge marker supplement the silhouettes.
+The toolbox keeps everything in one compact group: eight tools in a 4×2 grid (Raise, Lower, Smooth, Flatten / River, Land, Path, Paint), each with its shortcut key as a visible badge; right below, Size (W/S) and the active tool's main D/E dial (Strength, Target height, Carve depth or Opacity); then the brush icons, and the tool's own extras such as Paint's colour swatches. At 1440×900 no tool needs scrolling. Icons share a 24-unit grid and 1.9-unit stroke. Labels, key badges, accessible names, and a selected-edge marker supplement the silhouettes.
 
 ## Paths and rivers
 
@@ -104,7 +104,7 @@ Verified with 123 passing tests and actual browser Map/Heightmap exports. Real-G
 ## v2.5.1 — simpler sidebar and Space-drag pan
 
 
-Hold **Space + left mouse drag** to pan in 2D or 3D from any active tool. Releasing Space preserves the selected tool; the current pan gesture continues until mouse release. Text fields and open dialogs keep ordinary Space behavior. Losing window focus or hiding the page clears the held-key state. Middle-drag, Pan(H), and3D orbit controls remain available.
+Hold **Space + left mouse drag** to pan in 2D or 3D from any active tool. Releasing Space preserves the selected tool; the current pan gesture continues until mouse release. Text fields and open dialogs keep ordinary Space behavior. Losing window focus or hiding the page clears the held-key state. Middle-drag, two-finger touch drag and 3D orbit controls remain available.
 
 ## v2.5.2 — opacity keys and Shift erasing
 
@@ -118,7 +118,7 @@ New World now offers a live preview of the selected terrain and detail, descript
 
 [Open the standalone swatch sheet](https://mopajazz.github.io/landwright/studies/earthen/). Eight proposed procedural materials — Grass, Loam, Clay, Bedrock, Scree, Mud, Sand and Snow — appear on identical flat/relief terrain against parchment and midnight frames. Includes a mixed landscape, interface theme switch and downloadable comparison PNG. This is a visual prototype, not the editor palette or a physical erosion simulation. No app data, tools, forests or schema changes.
 
-## v2.13 — the Worlds library
+## v2.14 — the Worlds library
 
 Worlds replaces the single browser save. It is a full-screen library of every world, with New world, Import, rename, duplicate, artwork and backup downloads, and Recently deleted (30 days). The header's Download and Export map buttons are gone; their jobs live in each world's menu. Your existing saved world moves into the library automatically on the first visit. Project files are unchanged (schema 9).
 

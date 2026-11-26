@@ -1,4 +1,4 @@
-import{relativeTime,daysLeft,formatBytes}from'./library.mjs?v=2.13.0';
+import{relativeTime,daysLeft,formatBytes}from'./library.mjs?v=2.14.0';
 // DOM for the Worlds library: cards, Recently deleted and the per-world menu.
 // It only draws; app.mjs owns storage and the open world.
 export const MAP_SIZES=[1024,2048,4096];

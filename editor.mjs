@@ -1,9 +1,9 @@
-import {DEFAULT_FLOOR,DEFAULT_CEILING,validHeightRange} from './terrain.mjs?v=2.13.0';
-import {MAX_WATER_DROPS} from './water-dropper.mjs?v=2.13.0';
-import{validateMaterialCoverage}from'./material-paint.mjs?v=2.13.0';
-import{validRoute,routeWork,PROJECT_WORK_LIMIT}from'./routes.mjs?v=2.13.0';
-import {LEGACY_MATERIAL_COLORS} from './brushes.mjs?v=2.13.0';
-import {validShape} from './shapes.mjs?v=2.13.0';
+import {DEFAULT_FLOOR,DEFAULT_CEILING,validHeightRange} from './terrain.mjs?v=2.14.0';
+import {MAX_WATER_DROPS} from './water-dropper.mjs?v=2.14.0';
+import{validateMaterialCoverage}from'./material-paint.mjs?v=2.14.0';
+import{validRoute,routeWork,PROJECT_WORK_LIMIT,MAX_ROUTES,MAX_ROUTE_POINTS}from'./routes.mjs?v=2.14.0';
+import {LEGACY_MATERIAL_COLORS} from './brushes.mjs?v=2.14.0';
+import {validShape} from './shapes.mjs?v=2.14.0';
 export const isWorldSize = size => [128, 192, 256, 512].includes(size);
 export const defaultLayers=()=>({surface:{visible:true,locked:false},landmarks:{visible:true,locked:false},shapes:{visible:true,locked:false},elevation:{visible:true,locked:false},rivers:{visible:true,locked:false},forests:{visible:true,locked:false}});
 export function brushDelta(e){if(typeof e.deltaY==='number')return e.shiftKey?(e.deltaY<0?1:e.deltaY>0?-1:0):0;let key=e.key?.toLowerCase();return key==='w'?(e.shiftKey?10:1):key==='s'?-(e.shiftKey?10:1):0;}
@@ -17,7 +17,7 @@ export function normalizeProject(s,n){
  let marks=s.marks??[],shapes=s.shapes??[];
  if(!Array.isArray(marks)||marks.length>3000||!marks.every(m=>m&&['tree','mountain','town'].includes(m.type)&&finite(m.x,0,n-Number.EPSILON)&&m.x<n&&finite(m.y,0,n)&&m.y<n&&finite(m.size,2,40)&&(m.opacity===undefined||finite(m.opacity,0,1))))bad();
  if(!Array.isArray(shapes)||shapes.length>500||!shapes.every(x=>validShape(x,n))||shapes.reduce((count,x)=>count+x.points.length,0)>100000)bad();
- let routes=s.routes??[];if(!Array.isArray(routes)||routes.length>64||!routes.every(r=>validRoute(r,n))||routes.reduce((sum,r)=>sum+r.points.length,0)>32768||routes.reduce((sum,r)=>sum+routeWork(r),0)>PROJECT_WORK_LIMIT)bad();
+ let routes=s.routes??[];if(!Array.isArray(routes)||routes.length>MAX_ROUTES||!routes.every(r=>validRoute(r,n))||routes.reduce((sum,r)=>sum+r.points.length,0)>MAX_ROUTE_POINTS||routes.reduce((sum,r)=>sum+routeWork(r),0)>PROJECT_WORK_LIMIT)bad();
  const waterDrops=s.waterDrops??[];
  if(!Array.isArray(waterDrops)||waterDrops.length>MAX_WATER_DROPS||!waterDrops.every(drop=>
   drop&&Number.isInteger(drop.cell)&&drop.cell>=0&&drop.cell<n*n&&finite(drop.level,0,255)))bad();

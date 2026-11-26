@@ -20,6 +20,10 @@ Map export is not the orbit-camera screenshot. Neither PNG includes editor UI, r
 
 **Sand does not appear.** Select Paint explicitly, choose Sand and a footprint, and check Surface visibility/lock. Enabled water conceals underwater paint. Land changes height, not paint.
 
+**Thin walls, spikes or pits in 3D.** Use **World Settings → Smooth spikes**. It lowers walls and spikes and fills pits that are one or two cells thick across the whole map, keeps cliffs, ridges and valleys that are wider, and is one undo step. Maps edited with Shift + Land before v2.12.1 are the usual source.
+
+**I can't add more creek water.** A map holds up to 512 creeks (64 before v2.12.1). Past that, River still carves the channel; use the droplet for water, or Shift + River to dry old creeks you no longer need.
+
 **Raise/Lower is too strong.** Undo and set Strength to 5–10% (D lowers it). Use short strokes and build gradually. Lower *Highest peak* in World Settings to cap the whole world. Paint Opacity does not affect sculpting.
 
 **I cannot finish a route.** Place at least two distinct points inside the map; make sure required layers are visible/unlocked. Use Enter, double-click, or Finish route. Very complex routes may exceed safety limits. Focus the canvas after editing a form field if keyboard shortcuts seem inactive.
@@ -38,6 +42,6 @@ Map export is not the orbit-camera screenshot. Neither PNG includes editor UI, r
 
 ## Main shortcuts
 
-R Raise · L Lower · Q Smooth · F Flatten · C/M Land · P/B Paint · J Path · V River · H Pan. D/E decreases/increases Opacity by5% in Paint or Path. Shift-click/drag in Paint erases the chosen target. W/S changes brush or route width; Shift changes it by 10. Right/Alt-drag orbits in 3D; Space + left-drag or middle-drag pans. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z redoes. Escape cancels a route draft.
+R Raise · L Lower · Q Smooth · F Flatten · C/M Land · P/B Paint · J Path · V River. D/E decreases/increases Opacity by5% in Paint or Path. Shift-click/drag in Paint erases the chosen target. W/S changes brush or route width; Shift changes it by 10. Right/Alt-drag orbits in 3D; Space + left-drag, middle-drag or a two-finger touch drag pans. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z redoes. Escape cancels a route draft.
 
 [New worlds and resolution](worlds.md) explains the difference between editable terrain grids and export pixels. Map PNG defaults to2048×2048;4K square is4096×4096. Heightmap always remains at the editable grid size.
