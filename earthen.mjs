@@ -1,5 +1,5 @@
-import{rasterFrame}from'./raster-cache.mjs?v=2.14.0';
-import {MATERIAL_IDS} from './material-paint.mjs?v=2.14.0';
+import{rasterFrame}from'./raster-cache.mjs?v=2.14.0-textures.1';
+import {MATERIAL_IDS} from './material-paint.mjs?v=2.14.0-textures.1';
 
 export const EARTHEN_MATERIALS = [
   [1,'grass','Grass','Living ground',[105,125,72]],
@@ -9,8 +9,12 @@ export const EARTHEN_MATERIALS = [
   [8,'scree','Scree','Stone',[145,137,121]],
   [9,'mud','Mud','Wet ground',[100,88,65]],
   [2,'sand','Sand','Dry & cold',[194,174,125]],
-  [5,'snow','Snow','Dry & cold',[221,226,217]]
+  [5,'snow','Snow','Dry & cold',[221,226,217]],
+  [10,'moss','Moss','Living ground',[87,108,47]],
+  [11,'lava','Lava','Stone',[52,38,35]],
+  [12,'metamorphic','Metamorphic Rock','Stone',[125,124,132]]
 ].map(([id,key,name,family,color])=>({id,key,name,family,color,hex:'#'+color.map(v=>v.toString(16).padStart(2,'0')).join('')}));
+const channelsPerCell = MATERIAL_IDS.length;
 const colors = MATERIAL_IDS.map(id=>EARTHEN_MATERIALS.find(m=>m.id===id).color);
 const clamp = (v,min=0,max=1)=>Math.max(min,Math.min(v,max));
 const mix = (a,b,t)=>a+(b-a)*t;
@@ -61,7 +65,8 @@ function pattern() {
 function context(s){
   const {n,heights,sea,rawRiverWater=s.riverWater,paintAlpha,weights,surfaceVisible=true}=s;
   const length=n*n, wet=new Float32Array(length),slope=new Float32Array(length),shelter=new Float32Array(length),light=new Float32Array(length);
-  const coverage=new Float32Array(length*8),active=new Uint8Array(length);
+  const coverage=new Float32Array(length*channelsPerCell),active=new Uint16Array(length);
+  const weightChannels = weights ? weights.length / length : 0;
   // Two city-block distance sweeps suffice for the short damp shoreline band.
   for(let i=0;i<length;i++){
     wet[i]=heights[i]<sea||rawRiverWater?.[i]>heights[i]+.01?0:12;
@@ -78,9 +83,9 @@ function context(s){
     light[i]=s.shade!==false&&s.elevationVisible!==false?clamp(1+(r-l+d-u)*.055,.47,1.4):1;
     const natural=h<sea+4?1:h>180?3:h>145?2:0;
     const a=surfaceVisible?(paintAlpha?.[i]??0):0;
-    for(let k=0;k<8;k++){
-      const value=(k===natural?1-a:0)+(surfaceVisible?(weights?.[i*8+k]??0)/255:0);
-      coverage[i*8+k]=value;
+    for(let k=0;k<channelsPerCell;k++){
+      const value=(k===natural?1-a:0)+(surfaceVisible&&k<weightChannels?weights[i*weightChannels+k]/255:0);
+      coverage[i*channelsPerCell+k]=value;
       if(value)active[i]|=1<<k;
     }
   }
@@ -127,6 +132,26 @@ function pigment(k,f,atlas,p,out){
       tone+=Math.sin(y*1.04+x*.14+m*7)*.018;
       t=clamp(Math.sin(y*.78+x*.1+low*8))**28*wet*(1-slope)*.14;
       r=mix(r,147,t);v=mix(v,164,t);b=mix(b,145,t);break;
+    case 10:
+      t=clamp((low*.45+m*.28+wet*.24+shelter*.20-slope*.27-.26)*3.2);
+      r=mix(67,119,t);v=mix(72,143,t);b=mix(41,61,t);
+      tone+=(atlas.tuft[p]-.16)*.33+(g-.5)*.14;break;
+    case 11: {
+      const fissure=clamp((atlas.crack[p]-.32)*1.6)*(0.48+low*.52);
+      const glow=fissure*fissure;
+      r=mix(38+atlas.rubble[p]*42,253,glow);
+      v=mix(32+atlas.rubble[p]*32,106,glow**1.25);
+      b=mix(35+atlas.rubble[p]*29,22,glow);break;
+    }
+    case 12: {
+      const fold=Math.sin(y*.38+x*.27+h*.19+Math.sin(x*.22+y*.15)*2.6+low*.9);
+      const band=clamp(.5+fold*.65);
+      const vein=clamp((.11-Math.abs(fold-.45))*7.5);
+      r=mix(mix(78,152,band),206,vein*.76);
+      v=mix(mix(87,142,band),194,vein*.76);
+      b=mix(mix(104,145,band),181,vein*.76);
+      tone+=atlas.rubble[p]*.45;break;
+    }
   }
   out[0]=r*tone-base[0];out[1]=v*tone-base[1];out[2]=b*tone-base[2];
 }
@@ -167,7 +192,7 @@ export function renderEarthen(s){
           while(channels){
             const k=31-Math.clz32(channels&-channels);
             channels&=channels-1;
-            const amount=interpolate(ctx.coverage,a*8+k,b*8+k,c*8+k,d*8+k,wa,wb,wc,wd)*light;
+            const amount=interpolate(ctx.coverage,a*channelsPerCell+k,b*channelsPerCell+k,c*channelsPerCell+k,d*channelsPerCell+k,wa,wb,wc,wd)*light;
             pigment(k,f,atlas,p,out);
             red+=out[0]*amount;green+=out[1]*amount;blue+=out[2]*amount;
           }

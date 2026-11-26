@@ -164,9 +164,9 @@ body:not(.sidebar-collapsed) #tools button.selected:before{left:8px;right:8px;to
 #palette-section{display:grid;grid-template-columns:repeat(auto-fill,minmax(24px,1fr));gap:4px}
 #palette-section:not([hidden])>:not(#palette):not(#forest-paint){grid-column:1/-1}
 #palette,#forest-paint{display:contents}
-#palette button,#forest-paint button{width:auto;height:auto;aspect-ratio:1;max-width:32px;padding:3px;border:1px solid var(--border);border-radius:6px;background:var(--surface)}
-#palette .swatch,#forest-paint .swatch{display:block;width:100%;height:100%;border-radius:4px;box-shadow:inset 0 0 0 1px #0003}
-#palette button.selected,#forest-paint button.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+#palette button,#forest-paint button,#biome-palette button{width:auto;height:auto;aspect-ratio:1;max-width:32px;padding:3px;border:1px solid var(--border);border-radius:6px;background:var(--surface)}
+#palette .swatch,#forest-paint .swatch,#biome-palette .swatch{display:block;width:100%;height:100%;border-radius:4px;box-shadow:inset 0 0 0 1px #0003}
+#palette button.selected,#forest-paint button.selected,#biome-palette button.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 #paint-status{margin:6px 0 0;font-size:10px}
 #forest-settings label{margin-top:6px}
 #erase-settings label{font-size:11px}
@@ -263,3 +263,12 @@ dialog.library::backdrop{background:var(--bg)}
 .library button:focus-visible,.library select:focus-visible,.library summary:focus-visible,.library input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 @media(max-width:520px){.library-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.library .new-world-tile{min-height:0;aspect-ratio:auto}.library-actions label{display:none}}
 @media(prefers-reduced-motion:reduce){.world-thumb,.world-menu .chev,.library-trash>summary:before{transition:none}.world-spinner{animation-duration:2.4s}}
+
+
+/* Biome swatches follow the compact Paint palette. */
+.biome-row{display:flex;align-items:center;gap:8px;margin:4px 0;color:var(--secondary);font-size:11px}
+#biome-palette{display:flex;gap:4px;margin:0}
+#biome-palette button{width:26px}
+.biome-swatch.jungle{background:linear-gradient(135deg,#315b43 48%,#72864b 49% 72%,#675641 73%)}
+.biome-swatch.volcanic{background:linear-gradient(135deg,#4e4140 45%,#c56a3f 46% 58%,#574f4c 59%)}
+.biome-swatch.alpine{background:linear-gradient(135deg,#e1e5da 43%,#81838e 44% 72%,#6b7953 73%)}

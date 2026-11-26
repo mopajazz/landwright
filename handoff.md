@@ -1,7 +1,7 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 26, 2026 (America/New_York)<br>
-**Displayed release:** `v2.14` · **Cache revision:** `2.14.0` · **Project schema written:** `9`<br>
+**Displayed release:** `v2.14` · **Cache revision:** `2.14.0-textures.1` · **Project schema written:** `9` or `10`<br>
 **Repository:** https://github.com/mopajazz/landwright · **Live app:** https://mopajazz.github.io/landwright/
 
 This document describes **the app as it is now**. It is edited in place whenever behavior changes; it is not appended to. Release-by-release engineering notes (why decisions were made, measurements, rejected directions) live in [docs/release-history.md](docs/release-history.md). Source and tests are authoritative where this document and the code disagree; fix the document when that happens.
@@ -13,7 +13,7 @@ This document describes **the app as it is now**. It is edited in place whenever
 | Release | **v2.14**: the **Worlds library**, a full-screen screen that holds every world in the browser (open, rename, duplicate, download artwork or a backup file, delete with 30-day recovery, New world, Import). Download and Export map left the header. On top of v2.13.0 (compact toolbox: one tool group with key badges, swatches, no Pan tool). |
 | Live deployment | Last verified live on November 23, 2026: v2.12 (`e071ee3`, Pages run 45256066960). v2.13.0 was merged by PR #17 after that. After merging v2.14, confirm the Pages run for the exact merge commit and the live footer. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
-| Project format | Writes **9**, imports **1–9**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
+| Project format | Writes **9 or 10**, imports **1–10**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
 | Toolbar | **Eight** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint. |
 | Erasing | **Shift + Paint** with Paint's *Shift erase target*. There is no Erase tool. |
 | D / E keys | Strength for Raise/Lower/Smooth (1% steps up to 10%, then 5%), River Carve per stroke (0.25), Paint/Path Opacity (5%), Flatten target (1). Shift = four steps (Flatten: 10). Land ignores them. |
@@ -21,7 +21,7 @@ This document describes **the app as it is now**. It is edited in place whenever
 | Terrain sizes | 128², 192², 256² (default), and **experimental 512²**. |
 | Height | Hard limits 0–255. Each world has a working range, *Seabed floor* (default 20) to *Highest peak* (default 190), that Raise, Lower and Flatten never pass. 3D draws every size with the same proportions. |
 | Water | Sea-connected reactive ocean; **River strokes** that carve a channel and leave a still-water **creek** (a river route record), plus a little running water from a short-lived spring; the **droplet** for deliberate extra water; basin fill/drain; and rivers from older maps (fixed levels, Reflow). |
-| Look | Eight earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
+| Look | Eleven earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
 | Worlds | Every world is stored in the browser's IndexedDB (§8). The app reopens the last world; **Worlds** (header, Ctrl/Cmd+O) is the only way to create, switch, import, copy, delete or download. |
 | Exports | From each world's menu in Worlds: Map PNG 1024² / 2048² (default) / 4096², Heightmap PNG at N² with bed elevations only, and the editable project JSON ("backup file"). Works for closed worlds too. |
 | Tests | `npm test`: **220 passed, 0 failed** (November 26, 2026). |
@@ -158,7 +158,7 @@ Footprints: **Soft Round** `(1 − d²)²`; **Hard Round** full coverage inside 
 
 ### 4.4 Paint: ground materials and forest
 
-Paint shows eight ground materials as colour swatches (in family order; name and family on hover, accessible name on each), followed by a separate **Forest** density swatch.
+Paint shows eleven ground swatches and a **Forest** density swatch. The **Biomes** row offers Jungle, Volcanic Field, and Alpine Tundra. A biome paints editable Surface and Forests layers together with one undo entry, skips wet ground, and preserves elevation. Shift clears paint and canopy on editable layers.
 
 | ID | Material | Family | Swatch |
 | --- | --- | --- | --- |
@@ -170,10 +170,13 @@ Paint shows eight ground materials as colour swatches (in family order; name and
 | 9 | Mud | Wet ground | `#645841` |
 | 2 | Sand | Dry & cold | `#c2ae7d` |
 | 5 | Snow | Dry & cold | `#dde2d9` |
+| 10 | Moss | Living ground | `#576c2f` |
+| 11 | Lava | Stone | `#342623` |
+| 12 | Metamorphic Rock | Stone | `#7d7c84` |
 | 4 | Forest | — | density, not a ground color |
 
 - **Ground texture** is procedural (`earthen.mjs`) and responds to slope, curvature/shelter, light and proximity to sea and river water. It is visual, not erosion or sediment transport. Diagnostic views bypass it.
-- **Coverage** is stored per cell as eight bytes, one per ground material (`material-paint.mjs`), alongside legacy blended RGB/alpha. Within one held stroke, coverage is capped against the pre-stroke state so repeated samples do not compound opacity; separate strokes build up.
+- **Coverage** is stored per cell as eight bytes in schema 9 or eleven in schema 10, one per ground material (`material-paint.mjs`), alongside legacy blended RGB/alpha. Within one held stroke, coverage is capped against the pre-stroke state so repeated samples do not compound opacity; separate strokes build up.
 - **Forest** paints a density field 0–1. Woodland (`forests.mjs`) is a continuous procedural canopy that grows only on eligible terrain: above sea +2, adjacent height difference ≤ 6, not under water, not on committed paths. Density is kept where trees cannot grow and reappears if the terrain changes. Canopy adds under 3 blocks of derived visual relief, never saved.
 - **Shift erase target** lists only targets that exist: Surface paint, Forests, River water, and legacy landmarks/drawings. Choosing a ground material resets the target to Surface; choosing Forest selects Forests. Surface/Forest erasing honors Opacity; whole-object targets ignore it.
 - Path surfaces: Loam (default), Bedrock, Sand.
@@ -269,7 +272,7 @@ Semantic color tokens live in `theme.css`, loaded after `style.css`:
 | `app.mjs` | State, events, history/autosave, composition, rendering orchestration, import/export, the Worlds controller (open/switch, artwork for closed worlds, delete/restore) |
 | `library.mjs` | World storage: IndexedDB `landwright` with `worlds` (metadata, thumbnail) and `projects` (JSON text) stores; memory fallback; sorting, trash expiry, copy names |
 | `library-view.mjs` | Draws library cards, Recently deleted and the per-world menu; no storage |
-| `editor.mjs` | Project validation, migration (v1–v9), sizes, default layers, brush-size helpers |
+| `editor.mjs` | Project validation, migration (v1–v10), sizes, default layers, brush-size helpers |
 | `terrain.mjs` | Deterministic generation and bounded sculpt strokes |
 | `brushes.mjs` | Material table, footprints, alpha compositing, Land operation |
 | `earthen.mjs` | Earthen material definitions and procedural ground renderer |
@@ -300,7 +303,7 @@ All cell arrays are row-major `i = y × N + x`. Internally X/Y are horizontal; t
 | --- | --- | --- | --- |
 | `heights` | Float32Array N² | yes | Authoritative bed |
 | `paint`, `paintColors`, `paintAlpha` | Uint8 N², Uint8Clamped 3N², Float32 N² | yes | Legacy material marker, blended RGB, coverage |
-| `surfaceMaterials` | 8 bytes × N² | yes (Base64) | Ground material coverage |
+| `surfaceMaterials` | 11 bytes × N² | yes (Base64) | Ground material coverage |
 | `forest` | Float32Array N² | yes | Forest density 0–1 |
 | `routes` | Array | yes | Committed Path/River records |
 | `waterDrops`, poured water | Arrays | yes, when non-empty | Basin fills, poured water |
@@ -326,16 +329,16 @@ Keep effective water geometry consistent across rendering, cursor projection and
 Downloads are JSON named `<sanitized-name>.world.json` (not the WorldPainter desktop format).
 
 ```ts
-type ProjectV9 = {
-  version: 9;
+type Project = {
+  version: 9 | 10;
   size: 128 | 192 | 256 | 512;      // missing size → 256
   floor: number; ceiling: number;    // integers; floor 0..120, ceiling 100..255, ≥ 30 apart; missing → 20 / 190
   name: string;                      // ≤ 80 chars
   heights: number[];                 // N², 0..255 (3 decimals)
-  paint: number[];                   // N², 0..9
+  paint: number[];                   // N², 0..9 in v9 or 0..12 in v10
   paintColors: number[];             // 3N², 0..255
   paintAlpha: number[];              // N², 0..1 (4 decimals)
-  surfaceMaterials: string;          // Base64 of N×N×8 coverage bytes, '' when empty
+  surfaceMaterials: string;          // Base64 of N² × 8 (v9) or N² × 11 (v10) bytes, '' when empty
   forest: number[];                  // N², 0..1 (4 decimals)
   sea: number;                       // 10..150
   water: boolean; shade: boolean;

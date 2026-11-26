@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { MATERIAL_IDS, encodeMaterialCoverage, decodeMaterialCoverage, validateMaterialCoverage, applyMaterialCoverage } from '../material-paint.mjs';
 
 test('canonical compact roundtrip, including a full map', () => {
-  assert.deepEqual(MATERIAL_IDS, [1,2,3,5,6,7,8,9]);
+  assert.deepEqual(MATERIAL_IDS, [1,2,3,5,6,7,8,9,10,11,12]);
   const bytes = new Uint8Array(256*256*8);
   assert.equal(encodeMaterialCoverage(bytes), '');
   bytes[bytes.length-1] = 255;

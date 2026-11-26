@@ -1,5 +1,5 @@
-import{applyMaterialCoverage}from'./material-paint.mjs?v=2.14.0';
-import{MATERIALS,blendPaint}from'./brushes.mjs?v=2.14.0';
+import{applyMaterialCoverage}from'./material-paint.mjs?v=2.14.0-textures.1';
+import{MATERIALS,blendPaint}from'./brushes.mjs?v=2.14.0-textures.1';
 // Project-wide limits. Raised in v2.13.0 from 64 routes / 32,768 points: every
 // River stroke now leaves a creek, and real maps reached 64 creeks while using
 // ~1% of the raster-work budget. riverField for 512 typical creeks is ~90 ms
@@ -31,7 +31,7 @@ function footprint(route,n,extent=1){let distance=new Float32Array(n*n).fill(Inf
  return{distance,levels};
 }
 export function applyRoute(route,heights,paint,colors,alpha,n,coverage=null){let {distance,levels}=footprint(route,n,route.type==='river'?1.5:1);
- for(let i=0;i<distance.length;i++){let d=distance[i];if(!Number.isFinite(d))continue;if(route.type==='path'){let amount=Math.min(1,(1-d)*4)*route.opacity;if(amount<=0)continue;blendPaint(colors,alpha,i,MATERIALS[route.material-1][2],amount);paint[i]=route.material;if(coverage)applyMaterialCoverage(coverage,i,{id:route.material,amount,alpha:alpha[i]});}else{let target=levels[i]-route.depth*(.25+.75*Math.max(0,1-d*d)),weight=d<=1?1:Math.max(0,(1.5-d)*2);heights[i]=Math.max(0,Math.min(heights[i],heights[i]+(target-heights[i])*weight));}}
+ for(let i=0;i<distance.length;i++){let d=distance[i];if(!Number.isFinite(d))continue;if(route.type==='path'){let amount=Math.min(1,(1-d)*4)*route.opacity;if(amount<=0)continue;blendPaint(colors,alpha,i,MATERIALS[route.material-1][2],amount);paint[i]=route.material;if(coverage)applyMaterialCoverage(coverage,i,{id:route.material,amount,alpha:alpha[i],channels:coverage.length/heights.length});}else{let target=levels[i]-route.depth*(.25+.75*Math.max(0,1-d*d)),weight=d<=1?1:Math.max(0,(1.5-d)*2);heights[i]=Math.max(0,Math.min(heights[i],heights[i]+(target-heights[i])*weight));}}
 }
 export function riverField(routes,n){let field=new Float32Array(n*n).fill(-1);for(let route of routes){if(route.type!=='river')continue;let {distance,levels}=footprint(route,n);for(let i=0;i<field.length;i++)if(distance[i]<=1)field[i]=Math.max(field[i],levels[i]);}return field;}
 export function routeTouches(route,x,y,radius){let fractions=routeFractions(route.points);for(let i=1;i<route.points.length;i++){let a=route.points[i-1],b=route.points[i],dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/(dx*dx+dy*dy||1)));if(Math.hypot(x-a.x-t*dx,y-a.y-t*dy)<=radius+routeRadius(route,fractions[i-1]+(fractions[i]-fractions[i-1])*t))return true;}return false;}
