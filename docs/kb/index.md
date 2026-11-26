@@ -4,12 +4,12 @@ User documentation is being compiled alongside the application. These articles d
 
 | Topic | What you will find |
 | --- | --- |
-| [New worlds and resolution](worlds.md) | Live previews, terrain detail, backups, 1K/2K/4K exports |
+| [New worlds and resolution](worlds.md) | Live previews, terrain detail, 1K/2K/4K artwork from Worlds |
 | [Brushes and strength](brushes.md) | Low-strength first strokes, material/footprint independence, opacity, edge protection |
 | [Paths and rivers](routes.md) | Drawing rivers and paths, creeks, the droplet, drying, older maps and Reflow |
 | [Forests and clearings](forests.md) | Density painting, terrain eligibility, layers, breeze and save/export behavior |
 | [Living World](living-world.md) | Water motion, atmosphere, pause behavior, preferences and performance |
-| [Projects and troubleshooting](projects.md) | Saving, exports, shortcuts, common problems, recovery |
+| [Projects and troubleshooting](projects.md) | The Worlds library, backup files, exports, Recently deleted, common problems |
 
 ## Documentation maintenance
 

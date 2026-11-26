@@ -26,7 +26,7 @@ test('a held Lower stroke sends ocean coverage into the basin only through the c
     for(const cb of batch)cb(time);
   }
 
-  w.HTMLCanvasElement.prototype.getContext=function(kind){
+  w.HTMLCanvasElement.prototype.toDataURL=()=>'data:image/png;base64,'+'A'.repeat(80);w.HTMLCanvasElement.prototype.getContext=function(kind){
     if(kind!=='2d')return null;
     return new Proxy({
       createImageData:(width,height)=>({width,height,data:new Uint8ClampedArray(width*height*4)}),

@@ -1,24 +1,26 @@
-import{wandDab,erodeStep,settleSediment,drainToSea,feedTrail,feedSprings,springSupply,dryArea,addSpring,WAND_DEFAULTS,STROKE_WATER,creekRoute}from'./river-wand.mjs?v=2.12.0';
-import {createCanvasRaster} from './raster-cache.mjs?v=2.12.0';
-import {createMapDetail, packTerrainDetail} from './terrain-detail.mjs?v=2.12.0';
-import {startWalk,moveWalk} from './walk.mjs?v=2.12.0';
-import {createBasinFill, createPouredWater,MAX_WATER_DROPS} from './water-dropper.mjs?v=2.12.0';
-import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.12.0';
-import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.12.0';
-import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.12.0';
-import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.12.0';
-import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers,validRoute}from'./routes.mjs?v=2.12.0';
-import{generate,stroke,heightStroke,strengthStroke,fitHeightRange,DEFAULT_FLOOR,DEFAULT_CEILING,FLOOR_MAX,CEILING_MIN,MIN_RANGE}from'./terrain.mjs?v=2.12.0';
-import{brushDelta,resizeBrush,normalizeProject,defaultLayers,isWorldSize}from'./editor.mjs?v=2.12.0';
-import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.12.0';
-import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.12.0';
-import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.12.0';
-import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,terrainScale,verticalScale,createFrameScheduler}from'./terrain3d.mjs?v=2.12.0';
-import{initUI}from'./ui.mjs?v=2.12.0';
-import{toolIcon}from'./icons.mjs?v=2.12.0';
-import{touchesShape}from'./eraser.mjs?v=2.12.0';
-import {createReactiveWater, writeOceanSurface} from './reactive-water.mjs?v=2.12.0';
-import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.12.0';
+import{wandDab,erodeStep,settleSediment,drainToSea,feedTrail,feedSprings,springSupply,dryArea,addSpring,WAND_DEFAULTS,STROKE_WATER,creekRoute}from'./river-wand.mjs?v=2.13.0';
+import {createCanvasRaster} from './raster-cache.mjs?v=2.13.0';
+import {createMapDetail, packTerrainDetail} from './terrain-detail.mjs?v=2.13.0';
+import {startWalk,moveWalk} from './walk.mjs?v=2.13.0';
+import {createBasinFill, createPouredWater,MAX_WATER_DROPS} from './water-dropper.mjs?v=2.13.0';
+import{EARTHEN_MATERIALS,renderEarthen}from'./earthen.mjs?v=2.13.0';
+import{encodeMaterialCoverage,decodeMaterialCoverage,applyMaterialCoverage}from'./material-paint.mjs?v=2.13.0';
+import{forestStroke,buildWoodland,renderWoodland,woodlandSurface,createForestHabitatCache}from'./forests.mjs?v=2.13.0';
+import{buildLivingScene,createLivingLoop,drawLiving}from'./living.mjs?v=2.13.0';
+import{makeRoute,applyRoute,riverField,routeTouches,waterSurface,routeWork,PROJECT_WORK_LIMIT,routeRadius,routeFractions,reflowRivers,validRoute}from'./routes.mjs?v=2.13.0';
+import{generate,stroke,heightStroke,strengthStroke,fitHeightRange,DEFAULT_FLOOR,DEFAULT_CEILING,FLOOR_MAX,CEILING_MIN,MIN_RANGE}from'./terrain.mjs?v=2.13.0';
+import{brushDelta,resizeBrush,normalizeProject,defaultLayers,isWorldSize}from'./editor.mjs?v=2.13.0';
+import{openLibrary,worldMeta,activeWorlds,deletedWorlds,sortWorlds,copyName}from'./library.mjs?v=2.13.0';
+import{renderWorldCards,renderTrash,renderWorldMenu,libraryFootText}from'./library-view.mjs?v=2.13.0';
+import{drawLandmark,createLandmarkAtlas,ATLAS_TYPES}from'./landmarks.mjs?v=2.13.0';
+import{MATERIALS,blendPaint,brushWeight,coastStroke}from'./brushes.mjs?v=2.13.0';
+import{drawShape,drawProjectedShape}from'./shapes.mjs?v=2.13.0';
+import{renderTerrain,projectTerrain,pickTerrain,sampleTerrain,terrainScale,verticalScale,createFrameScheduler}from'./terrain3d.mjs?v=2.13.0';
+import{initUI}from'./ui.mjs?v=2.13.0';
+import{toolIcon}from'./icons.mjs?v=2.13.0';
+import{touchesShape}from'./eraser.mjs?v=2.13.0';
+import {createReactiveWater, writeOceanSurface} from './reactive-water.mjs?v=2.13.0';
+import{createGPUTerrain}from'./gpu-terrain.mjs?v=2.13.0';
 let N=256;const $=id=>document.getElementById(id),map=$('map'),ctx=map.getContext('2d'),mini=$('preview'),mc=mini.getContext('2d'),off=document.createElement('canvas');off.width=off.height=N;const oc=off.getContext('2d');let heights=fitHeightRange(generate(N,42)),paint=new Uint8Array(N*N),tool='raise',material=1,view='terrain',sea=62,water=true,shade=true,contours=true,grid=false,zoom=1,pan={x:0,y:0},undo=[],redo=[],down=false,last=null,modified=false,rotation=0,saveTimer,marks=[],layers=defaultLayers(),selectedShape='island',brushPosition=null,nameEditSnapshot=null,paintColors=new Uint8ClampedArray(N*N*3),paintAlpha=new Float32Array(N*N),drawings=[],brushPreset='soft',workspaceMode='2d',camera={yaw:-.65,pitch:.65,zoom:1},orbitPointer=null,paintStroke=null,textureDirty=true,sceneDirty=true,gpu=null,gpuFailed=false,gpuFailureReason='',orbitMode=false,lastFrameTime=0,averageFps=0,eraseTarget='surface',routes=[],routeDraft=null,routeHover=null,riverWater=new Float32Array(N*N).fill(-1),surfaceHeights=heights,riverWaterDirty=true;
 document.querySelectorAll('[data-tool]').forEach(button=>{button.querySelector('b').outerHTML=toolIcon(button.dataset.tool);button.title={path:'Place a path (J)',river:'Carve a river (V)',land:'Build a coast · Shift cuts channels from the ocean (C)',raise:'Raise terrain (R)',lower:'Lower terrain (L)',smooth:'Smooth terrain (Q)',flatten:'Flatten terrain (F)',paint:'Paint surface (B / P)',pan:'Pan the map (H)'}[button.dataset.tool];button.setAttribute('aria-label',button.title);});
 $('rail-settings').innerHTML=toolIcon('settings');
@@ -147,7 +149,7 @@ const materialFamilies=[...new Set(EARTHEN_MATERIALS.map(m=>m.family))];
 $('palette').innerHTML=materialFamilies.map(family=>`<div class="material-family" role="group" aria-label="${family}"><div class="material-family-title">${family}</div><div class="family-materials">${EARTHEN_MATERIALS.filter(m=>m.family===family).map(m=>`<button data-material="${m.id}" class="${m.id===1?'selected':''}" aria-pressed="${m.id===1}" title="Paint ${m.name} · automatic terrain texture"><span class="swatch" style="--c:${m.hex}"></span><span>${m.name}</span></button>`).join('')}</div></div>`).join('');
 $('forest-paint').innerHTML='<div class="material-family-title">WOODLAND · DENSITY LAYER</div><button data-material="4" aria-pressed="false" title="Paint Forest density"><span class="swatch" style="--c:#355e43"></span><span>Forest</span><small>Paint trees, not ground</small></button>';
 
-function notify(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(notify.t);notify.t=setTimeout(()=>$('toast').classList.remove('show'),2400)}
+function notify(s,action){if($('library')?.open){libraryToast(s,action);return;}$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(notify.t);notify.t=setTimeout(()=>$('toast').classList.remove('show'),2400)}
 function color(i){
  let h=heights[i],c;
  if(view==='height')return[h,h,h];
@@ -293,7 +295,7 @@ function preview(){scheduleFrame();}
 function refresh(){pourActive=hasPouredWater;surfaceDirty=true;textureDirty=true;sceneDirty=true;scheduleFrame();}
 function resize(){let d=Math.min(2,devicePixelRatio||1);for(let c of[map,mini,glCanvas,livingCanvas]){let width=Math.round((c===glCanvas?mini.clientWidth:c===livingCanvas?document.querySelector('.workspace').clientWidth:c.clientWidth)*d),height=Math.round((c===glCanvas?mini.clientHeight:c===livingCanvas?document.querySelector('.workspace').clientHeight:c.clientHeight)*d);if(c.width!==width||c.height!==height){c.width=width;c.height=height;}if(c!==glCanvas)c.getContext('2d').setTransform(d,0,0,d,0,0);}scheduleFrame();}new ResizeObserver(resize).observe(document.querySelector('.workspace'));
 function state(){const pouredWater=hasPouredWater?poured.save():[];return{version:9,floor:heightFloor,ceiling:heightCeiling,...(springs.length?{springs:springs.map(({cell,rate,remaining})=>[cell,rate,remaining])}:{}),...(pouredWater.length?{pouredWater}:{}),...(waterDrops.length?{waterDrops:structuredClone(waterDrops)}:{}),surfaceMaterials:encodeMaterialCoverage(surfaceMaterials),forest:Array.from(forest,v=>Math.round(v*10000)/10000),routes:structuredClone(routes),size:N,name:$('worldname').value,heights:Array.from(heights,v=>Math.round(v*1000)/1000),paint:Array.from(paint),paintColors:Array.from(paintColors),paintAlpha:Array.from(paintAlpha,v=>Math.round(v*10000)/10000),sea,water,shade,marks:marks.map(m=>({...m})),shapes:structuredClone(drawings),layers:structuredClone(layers)}}
-function persist(){modified=true;$('save-status').textContent='Saving changes…';$('save-badge').textContent='Saving…';clearTimeout(saveTimer);saveTimer=setTimeout(()=>{try{localStorage.setItem('worldpainter-project',JSON.stringify(state()));modified=false;$('save-status').textContent='All changes saved locally';$('save-badge').textContent='Saved in browser'}catch{$('save-status').textContent='Download project to keep changes';$('save-badge').textContent='Not saved · download';notify('Local storage full — save your project to a file.')}},600)}
+function persist(){modified=true;thumbDue=true;setSaveStatus('saving');clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,600)}
 function snapshot(record=state()){undo.push(record);if(undo.length>35)undo.shift();redo=[];historyUI()}
 function historyUI(){$('undo').disabled=!undo.length;$('redo').disabled=!redo.length}
 function restoreHistory(from,to){if(routeDraft){cancelStroke();return;}cancelStroke();if(!from.length)return;to.push(state());load(from.pop());refresh();historyUI();persist()}
@@ -493,13 +495,14 @@ $('tools').onclick=e=>{let b=e.target.closest('[data-tool]');if(b)selectTool(b.d
 $('palette').onclick=selectMaterialFrom;$('forest-paint').onclick=selectMaterialFrom;
 for(let id of['size','strength','target'])$(id).oninput=()=>{$(id+'out').value=id==='strength'?strengthText(tool):$(id).value+(id==='size'?' blocks':'')};document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b));refresh()});
 $('grid').onclick=()=>{grid=!grid;$('grid').classList.toggle('active',grid);$('grid').setAttribute('aria-pressed',grid);draw()};$('contours').onclick=()=>{contours=!contours;$('contours').classList.toggle('active',contours);$('contours').setAttribute('aria-pressed',contours);refresh()};for(const id of['height-floor','height-ceiling']){$(id).onpointerdown=()=>snapshot();$(id).onkeydown=e=>{if(e.key.startsWith('Arrow')||['Home','End','PageUp','PageDown'].includes(e.key))snapshot()};$(id).oninput=()=>{let f=+$('height-floor').value,c=+$('height-ceiling').value;if(c-f<MIN_RANGE){if(id==='height-floor')f=c-MIN_RANGE;else c=f+MIN_RANGE;}heightFloor=Math.max(0,Math.min(FLOOR_MAX,f));heightCeiling=Math.max(CEILING_MIN,Math.min(255,c));if(heightCeiling-heightFloor<MIN_RANGE)heightFloor=heightCeiling-MIN_RANGE;syncHeightRange();persist();};}syncHeightRange();$('sea').onpointerdown=()=>snapshot();$('sea').onkeydown=e=>{if(e.key.startsWith('Arrow')||['Home','End','PageUp','PageDown'].includes(e.key))snapshot()};$('sea').oninput=()=>{sea=+$('sea').value;$('seaout').value=sea;refresh();persist()};for(let id of['water','shade'])$(id).onclick=()=>{snapshot();if(id==='water'){water=!water;ocean.initialize(heights,sea,water);}else shade=!shade;let v=id==='water'?water:shade;$(id).classList.toggle('on',v);$(id).setAttribute('aria-pressed',v);refresh();persist()};$('undo').onclick=()=>restoreHistory(undo,redo);$('redo').onclick=()=>restoreHistory(redo,undo);
-function download(blob,name){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}function slug(){return $('worldname').value.replace(/[^a-z0-9 -]/gi,'').trim()||'world'}
-$('save').onclick=()=>{download(new Blob([JSON.stringify(state())],{type:'application/json'}),slug()+'.world.json');persist();notify('Project saved — keep building.')};$('export-height').onclick=()=>{$('exportdialog').close();let c=document.createElement('canvas');c.width=c.height=N;let cx=c.getContext('2d'),im=cx.createImageData(N,N);for(let i=0;i<N*N;i++){let v=Math.round(heights[i]);im.data.set([v,v,v,255],i*4)}cx.putImageData(im,0,0);c.toBlob(b=>{download(b,slug()+'-heightmap.png');notify(`${N} × ${N} heightmap exported.`)})};
-$('new').onclick=()=>{cancelRoute();$('newdialog').returnValue='';renderNewWorldPreview();$('newdialog').showModal();$('newdialog').scrollTop=0;};$('newdialog').addEventListener('close',()=>{if($('newdialog').returnValue!=='generate')return;if(!isWorldSize(+$('world-size').value))return;snapshot();setWorldSize(+$('world-size').value);heights=generate(N,+$('seed').value,{shape:selectedShape,relief:+$('relief').value/100});heightFloor=DEFAULT_FLOOR;heightCeiling=DEFAULT_CEILING;syncHeightRange();fitHeightRange(heights,heightFloor,heightCeiling);paint.fill(0);paintColors.fill(0);paintAlpha.fill(0);forest.fill(0);surfaceMaterials.fill(0);marks=[];drawings=[];routes=[];waterDrops=[];springs=[];poured=createPouredWater(N);hasPouredWater=pourActive=pouring=false;lastFlowFrame=null;riverWaterDirty=true;layers=defaultLayers();sea=62;water=true;shade=true;load({...state(),name:$('newname').value.trim()||'Untitled world'});$('worldname').value=$('newname').value.trim()||'Untitled world';$('infotitle').textContent=$('worldname').value;zoom=1;pan={x:0,y:0};camera={yaw:-.65,pitch:.65,zoom:1,panX:0,panY:0,size:N};refresh();persist();notify('Your new world is ready.')});$('help').onclick=()=>$('helpdialog').showModal();$('worldname').onfocus=()=>{nameEditSnapshot=state();};$('worldname').onblur=()=>{nameEditSnapshot=null;};$('worldname').oninput=()=>{if(nameEditSnapshot){snapshot(nameEditSnapshot);nameEditSnapshot=null;}$('infotitle').textContent=$('worldname').value;persist()};
-function setWorldSize(n){cancelRoute(false);riverWaterDirty=true;if(!isWorldSize(n))throw Error('Invalid project');if(N!==n){surfaceBounds=null;uploadedSurfaceLayout=undefined;}N=n;poured=createPouredWater(N);hasPouredWater=pourActive=pouring=false;lastFlowFrame=null;basinFill=createBasinFill(N);ocean=createReactiveWater(N);oceanOpaque=new Uint8Array(N*N);oceanLastFrame=null;oceanDirty=true;camera.size=N;off.width=off.height=tiny.width=tiny.height=N;pixels=oc.createImageData(N,N);grainNoise=Float32Array.from({length:N*N},(_,i)=>(Math.sin(i*78.233)*43758.5453)%1*4);paint=new Uint8Array(N*N);paintColors=new Uint8ClampedArray(N*N*3);paintAlpha=new Float32Array(N*N);forest=new Float32Array(N*N);surfaceMaterials=new Uint8Array(N*N*8);document.querySelectorAll('[data-dimensions]').forEach(el=>el.textContent=`${N} × ${N}`);$('heightmap-dimensions').textContent=`PNG · ${N} × ${N}`;document.querySelector('.map-scale').innerHTML=`<span></span>${N/2} blocks`;$('world-size').value=String(N);surfaceDirty=true;textureDirty=true;brushPosition=null;}
+function download(blob,name){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}function slug(name=$('worldname').value){return String(name).replace(/[^a-z0-9 -]/gi,'').trim()||'world'}
+function canvasBlob(c){return new Promise(resolve=>c.toBlob(resolve,'image/png'))}
+function heightmapCanvas(project){const n=project.size,c=document.createElement('canvas');c.width=c.height=n;let cx=c.getContext('2d'),im=cx.createImageData(n,n);for(let i=0;i<n*n;i++){let v=Math.max(0,Math.min(255,Math.round(project.heights[i])));im.data.set([v,v,v,255],i*4)}cx.putImageData(im,0,0);return c}
+$('new').onclick=()=>{cancelRoute();$('newdialog').returnValue='';renderNewWorldPreview();$('newdialog').showModal();$('newdialog').scrollTop=0;};$('newdialog').addEventListener('close',()=>{if($('newdialog').returnValue!=='generate')return;if(!isWorldSize(+$('world-size').value))return;const previous=captureCurrent();setWorldSize(+$('world-size').value);heights=generate(N,+$('seed').value,{shape:selectedShape,relief:+$('relief').value/100});heightFloor=DEFAULT_FLOOR;heightCeiling=DEFAULT_CEILING;syncHeightRange();fitHeightRange(heights,heightFloor,heightCeiling);paint.fill(0);paintColors.fill(0);paintAlpha.fill(0);forest.fill(0);surfaceMaterials.fill(0);marks=[];drawings=[];routes=[];waterDrops=[];springs=[];poured=createPouredWater(N);hasPouredWater=pourActive=pouring=false;lastFlowFrame=null;riverWaterDirty=true;layers=defaultLayers();sea=62;water=true;shade=true;load({...state(),name:$('newname').value.trim()||'Untitled world'});$('worldname').value=$('newname').value.trim()||'Untitled world';$('infotitle').textContent=$('worldname').value;zoom=1;pan={x:0,y:0};camera={yaw:-.65,pitch:.65,zoom:1,panX:0,panY:0,size:N};refresh();adoptWorld(previous);notify('Your new world is ready.')});$('help').onclick=()=>$('helpdialog').showModal();$('worldname').onfocus=()=>{nameEditSnapshot=state();};$('worldname').onblur=()=>{nameEditSnapshot=null;};$('worldname').oninput=()=>{if(nameEditSnapshot){snapshot(nameEditSnapshot);nameEditSnapshot=null;}$('infotitle').textContent=$('worldname').value;persist()};
+function setWorldSize(n){cancelRoute(false);riverWaterDirty=true;if(!isWorldSize(n))throw Error('Invalid project');if(N!==n){surfaceBounds=null;uploadedSurfaceLayout=undefined;}N=n;poured=createPouredWater(N);hasPouredWater=pourActive=pouring=false;lastFlowFrame=null;basinFill=createBasinFill(N);ocean=createReactiveWater(N);oceanOpaque=new Uint8Array(N*N);oceanLastFrame=null;oceanDirty=true;camera.size=N;off.width=off.height=tiny.width=tiny.height=N;pixels=oc.createImageData(N,N);grainNoise=Float32Array.from({length:N*N},(_,i)=>(Math.sin(i*78.233)*43758.5453)%1*4);paint=new Uint8Array(N*N);paintColors=new Uint8ClampedArray(N*N*3);paintAlpha=new Float32Array(N*N);forest=new Float32Array(N*N);surfaceMaterials=new Uint8Array(N*N*8);document.querySelectorAll('[data-dimensions]').forEach(el=>el.textContent=`${N} × ${N}`);document.querySelector('.map-scale').innerHTML=`<span></span>${N/2} blocks`;$('world-size').value=String(N);surfaceDirty=true;textureDirty=true;brushPosition=null;}
 function load(input){let s=normalizeProject(input);if(walking())exitWalk();cancelRoute(false);routes=s.routes;waterDrops=s.waterDrops??[];riverWaterDirty=true;setWorldSize(s.size);for(const [cell,depth] of s.pouredWater??[])poured.depth[cell]=depth;hasPouredWater=pourActive=!!s.pouredWater?.length;heights=Float32Array.from(s.heights);paint=Uint8Array.from(s.paint);paintColors=Uint8ClampedArray.from(s.paintColors);paintAlpha=Float32Array.from(s.paintAlpha);forest=Float32Array.from(s.forest);surfaceMaterials=decodeMaterialCoverage(s.surfaceMaterials,N);drawings=s.shapes;springs=(s.springs??[]).map(([cell,rate,remaining])=>({cell,rate,remaining:remaining??springSupply(rate)}));sea=s.sea;heightFloor=s.floor;heightCeiling=s.ceiling;syncHeightRange();water=s.water;ocean.initialize(heights,sea,water);shade=s.shade;marks=s.marks;layers=s.layers;$('worldname').value=s.name;$('infotitle').textContent=s.name;$('sea').value=sea;$('seaout').value=sea;for(let id of['water','shade']){let v=id==='water'?water:shade;$(id).classList.toggle('on',v);$(id).setAttribute('aria-pressed',v);}renderLayers();}
-$('open').onclick=()=>$('file').click();$('file').onchange=async()=>{let f=$('file').files[0];if(!f)return;try{const projectFile=f.name.endsWith('.json'),limit=projectFile?32:12;if(f.size>limit*1e6)throw Error(`File too large (${limit} MB maximum)`);if(projectFile){let s=normalizeProject(JSON.parse(await f.text()));snapshot();load(s)}else{let image=await createImageBitmap(f);snapshot();oc.clearRect(0,0,N,N);oc.drawImage(image,0,0,N,N);let d=oc.getImageData(0,0,N,N).data;for(let i=0;i<N*N;i++)heights[i]=d[i*4]*.2126+d[i*4+1]*.7152+d[i*4+2]*.0722;paint.fill(0);paintColors.fill(0);paintAlpha.fill(0);forest.fill(0);surfaceMaterials.fill(0);marks=[];drawings=[];routes=[];waterDrops=[];springs=[];poured=createPouredWater(N);hasPouredWater=pourActive=pouring=false;lastFlowFrame=null;riverWaterDirty=true;renderLayers();image.close();ocean.initialize(heights,sea,water)}refresh();persist();notify('Imported successfully.')}catch(e){notify(e.message==='Invalid project'?'This project file is invalid.':e.message||'Could not import file.')}finally{$('file').value=''}};
-document.onkeydown=e=>{if(e.target.closest('input,textarea,select,[contenteditable]:not([contenteditable=false])')||document.querySelector('dialog[open]'))return;if((e.code==='Space'||e.key===' ')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();if(down&&!last?.pan)end();spacePan=true;document.body.classList.add('space-pan');$('brush').style.display='none';draw();return;}if(e.ctrlKey||e.metaKey){if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?restoreHistory(redo,undo):restoreHistory(undo,redo)}if(e.key.toLowerCase()==='s'){e.preventDefault();$('save').click()}return}if(['d','e'].includes(e.key.toLowerCase())){if(e.altKey)return;if(tool==='flatten'){e.preventDefault();const step=e.shiftKey?10:1;$('target').value=Math.max(+$('target').min,Math.min(+$('target').max,+$('target').value+(e.key.toLowerCase()==='d'?-step:step)));$('target').oninput();draw();}else if(['raise','lower','smooth'].includes(tool)||(tool==='river'&&!waterTool())){e.preventDefault();nudgeSlider(tool==='river'?'wand-depth':'strength',e.key.toLowerCase()==='d'?-1:1,e.shiftKey);draw();}else if(usesOpacity()){e.preventDefault();$('opacity').value=Math.max(0,Math.min(100,+$('opacity').value+(e.key.toLowerCase()==='d'?-5:5)));$('opacityout').value=$('opacity').value+'%';draw();}return;}if(e.key==='Escape'){cancelStroke();return;}if(e.key==='Enter'&&routeDraft){e.preventDefault();finishRoute();return;}let delta=brushDelta(e);if(delta){e.preventDefault();adjustBrush(delta);return;}let t={r:'raise',l:'lower',q:'smooth',f:'flatten',p:'paint',b:'paint',h:'pan',m:'land',c:'land',j:'path',v:'river'}[e.key.toLowerCase()];if(t)selectTool(t)};
+$('open').onclick=()=>$('file').click();$('file').onchange=async()=>{let f=$('file').files[0];if(!f)return;try{const projectFile=f.name.endsWith('.json'),limit=projectFile?32:12;if(f.size>limit*1e6)throw Error(`File too large (${limit} MB maximum)`);const fileName=f.name.replace(/(\.world)?\.json$|\.[a-z0-9]+$/i,'').trim().slice(0,80)||'Imported world';if(projectFile){let s=normalizeProject(JSON.parse(await f.text()));const previous=captureCurrent();load(s);adoptWorld(previous)}else{let image=await createImageBitmap(f);const previous=captureCurrent();oc.clearRect(0,0,N,N);oc.drawImage(image,0,0,N,N);let d=oc.getImageData(0,0,N,N).data;for(let i=0;i<N*N;i++)heights[i]=d[i*4]*.2126+d[i*4+1]*.7152+d[i*4+2]*.0722;paint.fill(0);paintColors.fill(0);paintAlpha.fill(0);forest.fill(0);surfaceMaterials.fill(0);marks=[];drawings=[];routes=[];waterDrops=[];springs=[];poured=createPouredWater(N);hasPouredWater=pourActive=pouring=false;lastFlowFrame=null;riverWaterDirty=true;$('worldname').value=fileName;$('infotitle').textContent=fileName;renderLayers();image.close();ocean.initialize(heights,sea,water);adoptWorld(previous)}refresh();notify(`Imported ${$('worldname').value} as a new world.`)}catch(e){notify(e.message==='Invalid project'?'This project file is invalid.':e.message||'Could not import file.')}finally{$('file').value=''}};
+document.onkeydown=e=>{if(e.target.closest('input,textarea,select,[contenteditable]:not([contenteditable=false])')||document.querySelector('dialog[open]'))return;if((e.code==='Space'||e.key===' ')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();if(down&&!last?.pan)end();spacePan=true;document.body.classList.add('space-pan');$('brush').style.display='none';draw();return;}if(e.ctrlKey||e.metaKey){if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?restoreHistory(redo,undo):restoreHistory(undo,redo)}if(e.key.toLowerCase()==='s'){e.preventDefault();saveNow().then(ok=>notify(ok?'Saved in this browser.':'Not saved. Open Worlds to download a backup file.'))}if(e.key.toLowerCase()==='o'){e.preventDefault();openLibraryView()}return}if(['d','e'].includes(e.key.toLowerCase())){if(e.altKey)return;if(tool==='flatten'){e.preventDefault();const step=e.shiftKey?10:1;$('target').value=Math.max(+$('target').min,Math.min(+$('target').max,+$('target').value+(e.key.toLowerCase()==='d'?-step:step)));$('target').oninput();draw();}else if(['raise','lower','smooth'].includes(tool)||(tool==='river'&&!waterTool())){e.preventDefault();nudgeSlider(tool==='river'?'wand-depth':'strength',e.key.toLowerCase()==='d'?-1:1,e.shiftKey);draw();}else if(usesOpacity()){e.preventDefault();$('opacity').value=Math.max(0,Math.min(100,+$('opacity').value+(e.key.toLowerCase()==='d'?-5:5)));$('opacityout').value=$('opacity').value+'%';draw();}return;}if(e.key==='Escape'){cancelStroke();return;}if(e.key==='Enter'&&routeDraft){e.preventDefault();finishRoute();return;}let delta=brushDelta(e);if(delta){e.preventDefault();adjustBrush(delta);return;}let t={r:'raise',l:'lower',q:'smooth',f:'flatten',p:'paint',b:'paint',h:'pan',m:'land',c:'land',j:'path',v:'river'}[e.key.toLowerCase()];if(t)selectTool(t)};
 
 function releasePanKey(){spacePan=false;document.body.classList.remove('space-pan');draw();}
 document.addEventListener('keyup',e=>{if(e.code==='Space'||e.key===' '){releasePanKey();}});
@@ -520,20 +523,17 @@ function renderNewWorldPreview(){let n=+$('world-size').value;if(!isWorldSize(n)
 function renderPresets(){document.querySelectorAll('[data-shape]').forEach(b=>paintTerrainPreview(b.querySelector('canvas'),80,b.dataset.shape));renderNewWorldPreview();}
 $('shape-presets').onclick=e=>{let b=e.target.closest('[data-shape]');if(!b)return;selectedShape=b.dataset.shape;document.querySelectorAll('[data-shape]').forEach(el=>{el.classList.toggle('selected',el===b);el.setAttribute('aria-pressed',el===b);});renderNewWorldPreview();};
 $('world-size').onchange=renderNewWorldPreview;
-$('backup-world').onclick=()=>$('save').click();
 $('seed').oninput=renderPresets;$('relief').oninput=()=>{$('reliefout').value=+$('relief').value<70?'Gentle':+$('relief').value>115?'Dramatic':'Natural';renderPresets();};$('reroll').onclick=()=>{$('seed').value=Math.floor(Math.random()*1000000);renderPresets();};
 $('panel-toggle').onclick=()=>{let open=$('right-panel').classList.toggle('mobile-open');$('panel-toggle').setAttribute('aria-expanded',open);resize();};
 $('opacity').oninput=()=>{$('opacityout').value=$('opacity').value+'%';};
-function exportResolution(){return[1024,2048,4096].includes(+$('export-size').value)?+$('export-size').value:2048;}
-function updateExportSize(){let n=exportResolution();$('export-map-size').textContent='PNG · '+n+' × '+n;}
-$('export-size').onchange=updateExportSize;
-$('export').onclick=()=>{updateExportSize();$('exportdialog').showModal();};$('export-map').onclick=()=>{$('exportdialog').close();flushTexture();let resolution=exportResolution(),c=document.createElement('canvas');c.width=c.height=resolution;let cx=c.getContext('2d');cx.drawImage(groundMap,0,0,resolution,resolution);if(oceanSurface()){
+// Flat map image of the open world: terrain, settled water, woodland and legacy overlays; no UI.
+function composeMap(resolution){flushTexture();let c=document.createElement('canvas');c.width=c.height=resolution;let cx=c.getContext('2d');cx.drawImage(groundMap,0,0,resolution,resolution);if(oceanSurface()){
  const settled=document.createElement('canvas');settled.width=settled.height=N;
  const settledContext=settled.getContext('2d'), image=settledContext.createImageData(N,N);
  writeOceanSurface(heights,baseSurface,sea,ocean.connected,image.data);
  settledContext.putImageData(image,0,0);
  cx.drawImage(settled,0,0,resolution,resolution);
- }if(visibleForest())cx.drawImage(forestMap,0,0,resolution,resolution);cx.scale(resolution/N,resolution/N);if(layers.shapes.visible&&view!=='height')for(let s of drawings)drawShape(cx,s);if(layers.landmarks.visible&&view!=='height')for(let m of marks)drawLandmark(cx,m);c.toBlob(b=>{download(b,slug()+'-map.png');notify(resolution+' × '+resolution+' map exported.');});};
+ }if(visibleForest())cx.drawImage(forestMap,0,0,resolution,resolution);cx.scale(resolution/N,resolution/N);if(layers.shapes.visible&&view!=='height')for(let s of drawings)drawShape(cx,s);if(layers.landmarks.visible&&view!=='height')for(let m of marks)drawLandmark(cx,m);return c;}
 
 $('erase-target').onchange=()=>{eraseTarget=$('erase-target').value;$('erase-description').textContent={forests:'Thin or clear trees without changing the ground. Opacity controls removal.',surface:'Reveal the natural terrain color. Elevation stays intact.',landmarks:'Remove whole landmarks touched by the brush. Undo to restore.',shapes:'Remove whole drawings touched by the brush. Undo to restore.'}[eraseTarget];selectTool(tool);};
 function updateBrushUI(){
@@ -658,4 +658,178 @@ $('living-toggle').onclick=()=>{livingPrefs.enabled=!livingPrefs.enabled;saveLiv
 document.addEventListener('visibilitychange',syncMotionPreferences);
 motionQuery?.addEventListener?.('change',syncMotionPreferences);
 initUI();renderLayers();renderPresets();
+// ---------- Worlds library ----------
+// Every world lives in the browser library (library.mjs). The editor holds one open world; switching
+// saves it first. Undo history belongs to the open world and is cleared when another world opens.
+let library=null,currentId=null,libraryWorlds=[],librarySort='edited',libraryBusy={},renamingWorld=null,confirmPurge=null,menuWorld=null,thumbDue=true,lastThumb=0,thumbTimer,saving=Promise.resolve(true),resolveLibrary;
+const libraryReady=new Promise(resolve=>resolveLibrary=resolve),CURRENT_KEY='landwright-current',THUMB_SIZE=192,THUMB_INTERVAL=4000;
+const defaultCamera=()=>({yaw:-.65,pitch:.65,zoom:1,panX:0,panY:0,size:N});
+function rememberCurrent(){try{currentId?localStorage.setItem(CURRENT_KEY,currentId):localStorage.removeItem(CURRENT_KEY)}catch{}}
+function storedCurrent(){try{return localStorage.getItem(CURRENT_KEY)}catch{return null}}
+const metaFor=id=>libraryWorlds.find(w=>w.id===id);
+function setMeta(meta){const i=libraryWorlds.findIndex(w=>w.id===meta.id);if(i<0)libraryWorlds.push(meta);else libraryWorlds[i]=meta;}
+function thumbnail(){try{const url=composeMap(THUMB_SIZE).toDataURL('image/png');return typeof url==='string'&&url.startsWith('data:image/')&&url.length>64?url:undefined}catch{return undefined}}
+function setSaveStatus(kind){const[long,short]={saving:['Saving changes…','Saving…'],saved:['All changes saved locally','Saved in browser'],failed:['Not saved · download a backup from Worlds','Not saved · open Worlds']}[kind];$('save-status').textContent=long;$('save-badge').textContent=short;}
+function saveNow(){clearTimeout(saveTimer);saveTimer=null;if(!document.defaultView||!$('worldname'))return Promise.resolve(false);saving=saving.then(writeCurrent,writeCurrent);return saving}
+async function writeCurrent(){
+ await libraryReady;if(!document.defaultView||!$('worldname'))return false;if(!modified&&!thumbDue)return true;
+ const project=state(),id=currentId,changed=modified,now=Date.now();modified=false;let ok=true;
+ if(!library.persistent){try{localStorage.setItem('worldpainter-project',JSON.stringify(project))}catch{ok=false}}
+ if(id){
+  const old=metaFor(id)??worldMeta(project,{id,now}),meta={...old,name:project.name,size:project.size,edited:changed?now:old.edited};
+  if(thumbDue&&now-lastThumb>=THUMB_INTERVAL){const t=thumbnail();if(t)meta.thumb=t;lastThumb=now;thumbDue=false}
+  try{setMeta(await library.save(meta,changed?project:undefined))}catch{ok=false}
+ }
+ if(!ok){modified=true;notify('Browser storage is full. Open Worlds and download a backup file to keep this world.')}
+ setSaveStatus(ok?'saved':'failed');
+ clearTimeout(thumbTimer);if(thumbDue&&id)thumbTimer=setTimeout(saveNow,THUMB_INTERVAL);
+ renderLibrary();return ok;
+}
+// Snapshot the open world before the editor moves to another one, so it can be stored afterwards.
+function captureCurrent(){clearTimeout(saveTimer);saveTimer=null;if(!currentId)return null;return{id:currentId,project:state(),thumb:thumbnail(),changed:modified}}
+async function storeCapture(capture){
+ if(!capture)return;await libraryReady;
+ const old=metaFor(capture.id)??worldMeta(capture.project,{id:capture.id}),meta={...old,name:capture.project.name,size:capture.project.size,...(capture.changed?{edited:Date.now()}:{}),...(capture.thumb?{thumb:capture.thumb}:{})};
+ try{setMeta(await library.save(meta,capture.changed||!library.persistent?capture.project:undefined))}catch{notify(`${meta.name} could not be saved. Download a backup file from Worlds.`)}
+}
+function resetDocument(){undo=[];redo=[];historyUI();zoom=1;pan={x:0,y:0};camera=defaultCamera();modified=false;thumbDue=false;lastThumb=Date.now();}
+// The editor already shows a new world (created or imported): give it an id and store both worlds.
+function adoptWorld(previous){
+ const project=state(),meta=worldMeta(project),thumb=thumbnail();if(thumb)meta.thumb=thumb;
+ currentId=meta.id;setMeta(meta);rememberCurrent();resetDocument();refresh();
+ saving=saving.then(()=>storeCapture(previous)).then(async()=>{await libraryReady;try{setMeta(await library.save(meta,project));if(!library.persistent)localStorage.setItem('worldpainter-project',JSON.stringify(project));setSaveStatus('saved')}catch{setSaveStatus('failed')}renderLibrary();return true});
+ if($('library').open)closeLibrary();
+}
+async function openWorld(id,{close=true,quiet=false}={}){
+ if(id===currentId){if(close)closeLibrary();return true}
+ let project=null;try{project=await library.load(id)}catch{}
+ if(!project){notify('That world could not be opened.');return false}
+ const previous=captureCurrent();
+ try{load(project)}catch{if(previous)load(previous.project);notify('That world could not be opened.');return false}
+ currentId=id;rememberCurrent();resetDocument();refresh();setSaveStatus('saved');
+ saving=saving.then(()=>storeCapture(previous));
+ if(close)closeLibrary();else renderLibrary();
+ if(!quiet)notify('Opened '+project.name);return true;
+}
+// Render artwork for a world that is not open by loading it briefly behind the library, then putting the open world back. Nothing is saved meanwhile.
+function withWorld(project,draw){
+ const keep={project:state(),undo,redo,zoom,pan:{...pan},camera:{...camera},modified,thumbDue,timer:!!saveTimer};clearTimeout(saveTimer);saveTimer=null;
+ try{load(project);refresh();return draw()}
+ finally{load(keep.project);({undo,redo,zoom,modified,thumbDue}=keep);pan=keep.pan;camera=keep.camera;historyUI();refresh();if(keep.timer)persist()}
+}
+const nextFrame=()=>new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
+async function downloadArtwork(id,kind,resolution){
+ const meta=metaFor(id);if(!meta||libraryBusy[id])return;
+ libraryBusy[id]=kind==='map'?`Preparing ${resolution} × ${resolution} map image…`:'Preparing heightmap…';renderLibrary();await nextFrame();
+ try{
+  const project=id===currentId?null:await library.load(id);if(id!==currentId&&!project)throw Error('missing');
+  const name=slug(project?project.name:$('worldname').value);
+  if(kind==='height'){const source=project??state();download(await canvasBlob(heightmapCanvas(source)),name+'-heightmap.png');notify(`${source.size} × ${source.size} heightmap downloaded.`)}
+  else{const canvas=project?withWorld(project,()=>composeMap(resolution)):composeMap(resolution);download(await canvasBlob(canvas),name+'-map.png');notify(`${resolution} × ${resolution} map image downloaded.`)}
+ }catch{notify('That image could not be made. Open the world and try again.')}
+ finally{delete libraryBusy[id];renderLibrary()}
+}
+async function downloadBackup(id){
+ let project=null;try{project=id===currentId?state():await library.load(id)}catch{}
+ if(!project){notify('That backup file could not be made.');return}
+ download(new Blob([JSON.stringify(project)],{type:'application/json'}),slug(project.name)+'.world.json');notify('Backup file downloaded. Import it to bring this world back.');
+}
+async function duplicateWorld(id){
+ const source=metaFor(id);let project=null;try{project=id===currentId?state():await library.load(id)}catch{}
+ if(!source||!project){notify('That world could not be copied.');return}
+ const name=copyName(project.name,activeWorlds(libraryWorlds).map(w=>w.name)),copy={...project,name},meta=worldMeta(copy);if(id===currentId){const t=thumbnail();if(t)meta.thumb=t}else if(source.thumb)meta.thumb=source.thumb;
+ let stored;try{stored=await library.save(meta,copy)}catch{notify('There is no room left to copy this world. Download backups and delete worlds you no longer need.');return}
+ setMeta(stored);renderLibrary();notify('Made a copy: '+name,{label:'Open',run:()=>openWorld(meta.id)});
+}
+async function renameWorld(id,value){
+ renamingWorld=null;const meta=metaFor(id),name=String(value).trim().slice(0,80);
+ if(!meta||!name||name===meta.name){renderLibrary();return}
+ if(id===currentId){snapshot();$('worldname').value=name;$('infotitle').textContent=name;setMeta({...meta,name});persist();saveNow()}
+ else{try{const project=await library.load(id);project.name=name;const next={...meta,name};setMeta(await library.save(next,project))}catch{notify('That world could not be renamed.');renderLibrary();return}}
+ renderLibrary();notify('Renamed to '+name);
+}
+async function deleteWorld(id){
+ const meta=metaFor(id);if(!meta)return;const wasCurrent=id===currentId;
+ if(wasCurrent)await saveNow();
+ const next={...meta,deleted:Date.now()};try{setMeta(await library.save(next))}catch{notify('That world could not be deleted.');return}
+ if(wasCurrent){const other=sortWorlds(activeWorlds(libraryWorlds))[0];if(!other||!await openWorld(other.id,{close:false,quiet:true})){currentId=null;rememberCurrent()}}
+ renderLibrary();notify('Deleted '+meta.name,{label:'Undo',run:()=>restoreWorld(id,wasCurrent)});
+}
+async function restoreWorld(id,reopen=false){
+ const meta=metaFor(id);if(!meta)return;const{deleted,...restored}=meta;
+ try{setMeta(await library.save(restored))}catch{notify('That world could not be restored.');return}if(reopen||!currentId)await openWorld(id,{close:false,quiet:true});renderLibrary();notify('Restored '+meta.name);
+}
+async function purgeWorld(id){
+ const meta=metaFor(id);if(!meta)return;
+ if(confirmPurge!==id){confirmPurge=id;renderLibrary();clearTimeout(purgeWorld.t);purgeWorld.t=setTimeout(()=>{if(confirmPurge===id){confirmPurge=null;renderLibrary()}},5000);return}
+ confirmPurge=null;try{await library.remove(id)}catch{notify('That world could not be removed.');return}
+ libraryWorlds=libraryWorlds.filter(w=>w.id!==id);renderLibrary();notify(meta.name+' was removed for good.');
+}
+function libraryModel(){return{now:Date.now(),currentId,busy:libraryBusy,renaming:renamingWorld,confirmPurge,persistent:library?.persistent??true,worlds:sortWorlds(activeWorlds(libraryWorlds),librarySort),deleted:deletedWorlds(libraryWorlds)}}
+const cardActions={open:id=>openWorld(id),menu:(id,button)=>openMenu(id,button),rename:(id,v)=>renameWorld(id,v),cancelRename:()=>{renamingWorld=null;renderLibrary()}};
+const trashActions={restore:id=>restoreWorld(id),purge:id=>purgeWorld(id)};
+function renderLibrary(){
+ if(!$('library').open)return;const model=libraryModel();
+ if(menuWorld&&!metaFor(menuWorld.id))closeMenu();
+ renderWorldCards($('library-grid'),model,cardActions);renderTrash($('trash-list'),$('trash-count'),model,trashActions);$('library-foot').textContent=libraryFootText(model);
+ $('library-back').hidden=!currentId;$('library-back-label').textContent=currentId?'Back to '+$('worldname').value:'';
+ if(menuWorld){const button=$('library-grid').querySelector(`[data-world="${menuWorld.id}"] .world-more`);if(button){menuWorld.button=button;button.setAttribute('aria-expanded','true')}}
+ const input=$('library-grid').querySelector('.world-rename');if(input&&document.activeElement!==input){input.focus();input.select?.()}
+}
+function openMenu(id,button){
+ if(menuWorld?.id===id){closeMenu();return}closeMenu();const meta=metaFor(id);if(!meta)return;
+ menuWorld={id,button};button.setAttribute('aria-expanded','true');
+ const close=run=>(...args)=>{closeMenu();run(...args)};
+ renderWorldMenu($('world-menu'),meta,{current:id===currentId},{open:close(id=>openWorld(id)),startRename:close(id=>{renamingWorld=id;renderLibrary()}),duplicate:close(duplicateWorld),art:close(downloadArtwork),backup:close(downloadBackup),remove:close(deleteWorld),reposition:placeMenu});
+ $('world-menu').hidden=false;placeMenu();$('world-menu').querySelector('button')?.focus();
+}
+function placeMenu(){
+ if(!menuWorld)return;const menu=$('world-menu'),view=document.defaultView,r=menuWorld.button.getBoundingClientRect(),w=menu.offsetWidth,h=menu.offsetHeight;
+ let left=Math.max(12,Math.min(r.right-w,view.innerWidth-w-12)),top=r.bottom+6;if(top+h>view.innerHeight-12)top=Math.max(12,r.top-h-6);
+ menu.style.left=left+'px';menu.style.top=top+'px';
+}
+function closeMenu(){if(!menuWorld)return;const{button}=menuWorld,hadFocus=$('world-menu').contains(document.activeElement);menuWorld=null;$('world-menu').hidden=true;button.setAttribute('aria-expanded','false');if(hadFocus&&button.isConnected)button.focus()}
+function libraryToast(text,action){const toast=$('library-toast'),[label,button]=toast.children;label.textContent=text;button.hidden=!action;button.textContent=action?.label??'';button.onclick=action?()=>{toast.hidden=true;action.run()}:null;toast.hidden=false;clearTimeout(libraryToast.t);libraryToast.t=setTimeout(()=>toast.hidden=true,action?6500:3200)}
+function openLibraryView(){
+ if($('library').open)return;if(down)end();cancelRoute();if(walking())exitWalk();
+ renamingWorld=null;confirmPurge=null;$('library-toast').hidden=true;
+ $('library').showModal();$('library-body').scrollTop=0;renderLibrary();$('new').focus();
+ if(currentId){thumbDue=true;lastThumb=0;saveNow()}
+}
+function closeLibrary(){if(!currentId||!$('library').open)return false;closeMenu();renamingWorld=null;$('library').close();$('worlds').focus();return true}
+$('worlds').onclick=openLibraryView;
+$('library-back').onclick=closeLibrary;
+$('library-sort').onchange=()=>{librarySort=$('library-sort').value;renderLibrary()};
+$('library').addEventListener('cancel',e=>{e.preventDefault();if(menuWorld)closeMenu();else closeLibrary()});
+$('library').addEventListener('pointerdown',e=>{if(menuWorld&&!$('world-menu').contains(e.target)&&!e.target.closest?.('.world-more'))closeMenu()});
+$('library').addEventListener('keydown',e=>{
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='o'){e.preventDefault();closeLibrary();return}
+ if(!menuWorld||!['ArrowDown','ArrowUp','Home','End'].includes(e.key))return;
+ const items=[...$('world-menu').querySelectorAll('button')].filter(b=>!b.closest('[hidden]'));if(!items.length)return;e.preventDefault();
+ const i=items.indexOf(document.activeElement),next=e.key==='Home'?0:e.key==='End'?items.length-1:(i+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;items[next].focus();
+});
+$('library-body').addEventListener('scroll',closeMenu);document.defaultView.addEventListener('resize',closeMenu);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&(saveTimer||modified))saveNow()});
+document.defaultView.addEventListener('pagehide',()=>{if(saveTimer||modified)saveNow()});
+async function startLibrary(){
+ let lib,list=[];try{lib=await openLibrary()}catch{lib=await openLibrary(null)}
+ try{await lib.purgeExpired();list=await lib.list()}catch{}
+ library=lib;const known=new Set(list.map(w=>w.id));libraryWorlds=[...list,...libraryWorlds.filter(w=>!known.has(w.id))];
+ if(!currentId&&lib.persistent){
+  const active=sortWorlds(activeWorlds(list)),chosen=active.find(w=>w.id===storedCurrent())??active[0];
+  if(chosen){try{const project=await lib.load(chosen.id);if(project&&!currentId){load(project);currentId=chosen.id;resetDocument();refresh()}}catch{}}
+ }
+ // First run, or moving the single browser save into the library: store what the editor shows.
+ if(!currentId&&!(lib.persistent&&list.length)){
+  const project=state(),meta=worldMeta(project),thumb=thumbnail();if(thumb)meta.thumb=thumb;currentId=meta.id;setMeta(meta);
+  try{setMeta(await lib.save(meta,project));if(lib.persistent)localStorage.removeItem('worldpainter-project')}catch{}
+ }
+ rememberCurrent();document.body.classList.remove('library-loading');resolveLibrary();setSaveStatus('saved');
+ if(!currentId)openLibraryView();
+}
+export const projectState=()=>state();
+export const libraryState=()=>({currentId,persistent:library?.persistent,worlds:libraryWorlds.map(w=>({...w}))});
+export const worldsReady=()=>libraryReady.then(()=>saving);
+document.body.classList.add('library-loading');setTimeout(()=>document.body.classList.remove('library-loading'),1500);
 try{let saved=localStorage.getItem('worldpainter-project');if(saved)load(JSON.parse(saved))}catch{}ocean.initialize(heights,sea,water);selectTool(tool);historyUI();refresh();resize();
+startLibrary();

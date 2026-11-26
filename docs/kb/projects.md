@@ -2,11 +2,13 @@
 
 ## Keep an editable backup
 
-Use Download project or Ctrl/Cmd+S. The `.world.json` file contains terrain, paint, forest density, route geometry/levels and layers. Import it to continue editing. Browser autosave is specific to this browser and hosting origin, has finite storage, and is not a cloud backup. The save badge distinguishes saving from a completed local save.
+Every world is kept in **Worlds** (header button, or Ctrl/Cmd+O) and saves itself as you edit; Ctrl/Cmd+S saves immediately. That library lives in this browser for this site only: it has finite storage, is erased if you clear the site's data, and is not a cloud backup. For a file you can keep, open Worlds, select **⋯** on a world, then **Download backup file**. The `.world.json` file contains terrain, paint, forest density, route geometry/levels and layers; **Import** in Worlds adds it back as a world. The save badge distinguishes saving from a completed save, and reads *Not saved · open Worlds* if the browser refuses to store more.
 
-New world replaces the active canvas. Download anything important first; session undo is useful but is not a substitute for a file. Supported grid sizes are 128², 192², 256², and experimental 512². Versions 1–8 import into v9; new saves include compact material coverage, forest density and routes. Retired settlement records and old town symbols are omitted; terrain and other supported content remain. Older app versions cannot read v9. Download a backup before editing an important older project. Old painted RGB colors and opacity are preserved; new material texture is applied as you repaint. Legacy dark-green Forest paint remains color until you paint new forest density deliberately.
+New world and Import add a world; they never replace the one you have open. Undo history belongs to the open world and starts fresh when you open another. **Delete** moves a world to *Recently deleted* at the bottom of Worlds for 30 days (with an immediate Undo); *Delete forever* asks for a second click. Supported grid sizes are 128², 192², 256², and experimental 512². Versions 1–8 import into v9; new saves include compact material coverage, forest density and routes. Retired settlement records and old town symbols are omitted; terrain and other supported content remain. Older app versions cannot read v9. Download a backup before editing an important older project. Old painted RGB colors and opacity are preserved; new material texture is applied as you repaint. Legacy dark-green Forest paint remains color until you paint new forest density deliberately.
 
 ## Export types
+
+All three are in each world's **⋯** menu in Worlds, for open and closed worlds alike.
 
 - Map image:1024², 2048², or 4096² top-down PNG of the selected visualization and visible content, including static forests and visible legacy artwork.
 - Heightmap:N² grayscale PNG of actual terrain, including the carved river bed, without water surfaces, trees, or buildings.

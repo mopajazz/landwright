@@ -1,7 +1,7 @@
 # Landwright — engineering and product handoff
 
-**Documentation date:** November 23, 2026 (America/New_York)<br>
-**Displayed release:** `v2.12` · **Cache revision:** `2.12.0` · **Project schema written:** `9`<br>
+**Documentation date:** November 26, 2026 (America/New_York)<br>
+**Displayed release:** `v2.13` · **Cache revision:** `2.13.0` · **Project schema written:** `9`<br>
 **Repository:** https://github.com/mopajazz/landwright · **Live app:** https://mopajazz.github.io/landwright/
 
 This document describes **the app as it is now**. It is edited in place whenever behavior changes; it is not appended to. Release-by-release engineering notes (why decisions were made, measurements, rejected directions) live in [docs/release-history.md](docs/release-history.md). Source and tests are authoritative where this document and the code disagree; fix the document when that happens.
@@ -10,8 +10,8 @@ This document describes **the app as it is now**. It is edited in place whenever
 
 | Contract | Current state |
 | --- | --- |
-| Release | **v2.12**: River has one setting (Carve depth); strokes follow the hand and leave a creek; the droplet adds water. On top of v2.11.2 (PR #14: short-lived springs, Drain floodwater) and v2.11.1 (Strength restored). |
-| Live deployment | Last verified live on November 23, 2026: v2.11.1 (`e78fd9e`, Pages run 45094010821); v2.11.2 (`143bd54`) was merged by PR #14. After merging v2.12, confirm the Pages run for the exact merge commit and the live footer. |
+| Release | **v2.13**: the **Worlds library**, a full-screen screen that holds every world in the browser (open, rename, duplicate, download artwork or a backup file, delete with 30-day recovery, New world, Import). Download and Export map left the header. On top of v2.12 (River: one Carve depth setting, creeks, droplet). |
+| Live deployment | Last verified live on November 23, 2026: v2.11.1 (`e78fd9e`, Pages run 45094010821); v2.11.2 and v2.12 were merged after that by PRs #14 and #15. After merging v2.13, confirm the Pages run for the exact merge commit and the live footer. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
 | Project format | Writes **9**, imports **1–9**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
 | Toolbar | **Nine** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint, Pan. |
@@ -22,11 +22,12 @@ This document describes **the app as it is now**. It is edited in place whenever
 | Height | Hard limits 0–255. Each world has a working range, *Seabed floor* (default 20) to *Highest peak* (default 190), that Raise, Lower and Flatten never pass. 3D draws every size with the same proportions. |
 | Water | Sea-connected reactive ocean; **River strokes** that carve a channel and leave a still-water **creek** (a river route record), plus a little running water from a short-lived spring; the **droplet** for deliberate extra water; basin fill/drain; and rivers from older maps (fixed levels, Reflow). |
 | Look | Eight earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
-| Exports | Map PNG 1024² / 2048² (default) / 4096². Heightmap PNG at N² with bed elevations only. Editable project JSON. |
-| Tests | `npm test`: **199 passed, 0 failed** (November 23, 2026). |
+| Worlds | Every world is stored in the browser's IndexedDB (§8). The app reopens the last world; **Worlds** (header, Ctrl/Cmd+O) is the only way to create, switch, import, copy, delete or download. |
+| Exports | From each world's menu in Worlds: Map PNG 1024² / 2048² (default) / 4096², Heightmap PNG at N² with bed elevations only, and the editable project JSON ("backup file"). Works for closed worlds too. |
+| Tests | `npm test`: **220 passed, 0 failed** (November 26, 2026). |
 | Settlements | **Parked.** Removed in v2.9; the user may want them back in a different form (§12). |
 
-**Preserve:** beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep nine tools. Never save derived water, canopy or texture geometry into bed heights or project files.
+**Preserve:** the header has no Download or Export button; the user removed them in favour of the Worlds library. Beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep nine tools. Never save derived water, canopy or texture geometry into bed heights or project files.
 
 ## 1. Working agreement
 
@@ -77,7 +78,7 @@ Do not restore: Drawing, Details, Forest Scatter, generated tree stamps, the set
 
 ### 4.1 New world
 
-New world opens a modal: world name (required, up to 80 characters, default `Untitled world`), six starting shapes with thumbnails, terrain detail, a large live preview at the exact chosen grid, collapsed *Generation settings* (seed, relief), a *Download current project first* action, Cancel/X/Escape and native Enter/Create. Previews never modify the current map.
+The **New world** tile in Worlds opens a modal over the library: world name (required, up to 80 characters, default `Untitled world`), six starting shapes with thumbnails, terrain detail, a large live preview at the exact chosen grid, collapsed *Generation settings* (seed, relief), Cancel/X/Escape and native Enter/Create. Previews never modify the current map. Create adds a **separate** world beside the others and opens it with an empty undo history; the previous world is saved first and is not changed.
 
 | ID | Label | Behavior |
 | --- | --- | --- |
@@ -128,7 +129,8 @@ New world opens a modal: world name (required, up to 80 characters, default `Unt
 | Enter / double-click | Finish a route draft |
 | Escape | Cancel a route draft or stop the current gesture; exits Walk |
 | Ctrl/Cmd + Z, + Shift + Z | Undo/redo; a route draft is cancelled first without consuming history |
-| Ctrl/Cmd + S | Download project JSON |
+| Ctrl/Cmd + S | Save the open world now (it also autosaves) |
+| Ctrl/Cmd + O | Open or close Worlds |
 
 Shortcuts are ignored while typing in inputs, selects, textareas or contenteditable elements, and while a dialog is open. Ctrl/Meta/Alt combinations do not trigger D/E.
 
@@ -231,8 +233,8 @@ One World Settings toggle (default on), with *Water motion*, *Clouds & soft shad
 
 - Toolbox: default 228px, stored 180–360px, effective width `max(128, min(preferred, 360, viewport − reserve))` with reserve 180 (≤800px), 470 (≤1100px), else 510. Collapsed rail: 64px track, 40px buttons, 28px icons. New visitors below 800px start collapsed; saved preferences win.
 - Toolbox order: footprint → brush controls (Size, Opacity where used) → Sculpt (Strength; Flatten target and edge option) → Paint material and Shift erase target (Paint only).
-- Header: world name, autosave badge ("Saving…", "Saved in browser", "Not saved · download"), theme toggle naming the destination mode, Shortcuts, **Download** (visible at every width; icon-only below 800px), **Export map**.
-- Nav: New world, Import, undo/redo, 2D/3D/Walk, view choices (filled selected state) and Grid/Contours **toggles** (dot indicator, `aria-pressed`), which are deliberately styled unlike the view choices.
+- Header: world name, autosave badge ("Saving…", "Saved in browser", "Not saved · open Worlds"), theme toggle naming the destination mode, Shortcuts, **Worlds** (primary; its label stays visible at every width).
+- Nav: undo/redo, 2D/3D/Walk, view choices (filled selected state) and Grid/Contours **toggles** (dot indicator, `aria-pressed`), which are deliberately styled unlike the view choices.
 - Selected tool: filled background, inset accent ring, semibold label, 4px edge marker. Layer rows use SVG eye and padlock icons in 32×32 targets.
 - Canvas chip reads **MAP** plus dimensions; the overview subtitle is "Custom terrain".
 
@@ -263,7 +265,9 @@ Semantic color tokens live in `theme.css`, loaded after `style.css`:
 | --- | --- |
 | `index.html` | Shell, dialogs, toolbar, canvases, forms, help copy |
 | `style.css`, `theme.css` | Base layout (with some obsolete selectors); semantic tokens, responsive toolbox and later overrides |
-| `app.mjs` | State, events, history/autosave, composition, rendering orchestration, import/export |
+| `app.mjs` | State, events, history/autosave, composition, rendering orchestration, import/export, the Worlds controller (open/switch, artwork for closed worlds, delete/restore) |
+| `library.mjs` | World storage: IndexedDB `landwright` with `worlds` (metadata, thumbnail) and `projects` (JSON text) stores; memory fallback; sorting, trash expiry, copy names |
+| `library-view.mjs` | Draws library cards, Recently deleted and the per-world menu; no storage |
 | `editor.mjs` | Project validation, migration (v1–v9), sizes, default layers, brush-size helpers |
 | `terrain.mjs` | Deterministic generation and bounded sculpt strokes |
 | `brushes.mjs` | Material table, footprints, alpha compositing, Land operation |
@@ -354,22 +358,34 @@ type ProjectV9 = {
 
 ## 8. Persistence, history and exports
 
+Worlds live in IndexedDB database `landwright` (version 1):
+
+| Store | Key | Contents |
+| --- | --- | --- |
+| `worlds` | `id` | `{ id, name, size, created, edited, bytes, thumb?, deleted? }`. `thumb` is a 192² PNG data URL; `deleted` is a timestamp. |
+| `projects` | world id | The v9 project as a JSON string (the same text as a backup file) |
+
 | Browser key | Contents |
 | --- | --- |
-| `worldpainter-project` | Current v9 project (key name kept for existing users) |
+| `landwright-current` | Id of the world to reopen next visit |
+| `worldpainter-project` | Before v2.13, the single saved project. On the first v2.13 visit it becomes the first library world and the key is removed once IndexedDB has it. Still written as the only save when IndexedDB is unavailable. |
 | `landwright-ui` | `{ theme, sidebarWidth, collapsed }` |
 | `landwright-living` | `{ enabled, clouds, waterMotion, vegetationMotion }` |
 
-Autosave is debounced by 600 ms and per origin/browser. Storage failure shows "Not saved · download" instead of claiming success; painted 512 worlds can exceed the quota. There is no cloud sync or account recovery, so downloads matter.
+Startup: the editor draws (hidden for up to 1.5 s), the library opens, worlds deleted 30+ days ago are purged, then the remembered world (or the most recently edited) loads. If IndexedDB is empty, whatever the editor shows (the old single save, or the default island) is stored as the first world. If every world is in Recently deleted, Worlds opens and cannot be dismissed until one is restored or created.
+
+Autosave is debounced by 600 ms and writes only the open world; the thumbnail refreshes at most every 4 s and whenever the world is closed or Worlds opens. Switching worlds saves the current one first. Saving also flushes on `pagehide` and when the tab is hidden. Failure shows "Not saved · open Worlds" instead of claiming success. If IndexedDB is missing or refuses to open, a memory library keeps the session working, the old single-slot key keeps the open world, and the library footer says only the open world survives a visit. There is no cloud sync or account recovery, so backup files matter.
+
+Artwork for a closed world: `withWorld` loads its project into the editor behind the full-screen library, composes the image, and loads the open world back with its undo history, camera and pending-save state. Nothing is saved during the swap.
 
 Not saved: undo/redo, current tool/material/footprint, slider settings, workspace mode, camera, zoom, view, grid/contours, generation options, route drafts, Living World state.
 
-Undo keeps 35 full project snapshots. A new edit clears redo. Route commits and basin fills are single undo steps, and pouring is undoable; name typing groups per focus session. Undo with an open route draft cancels the draft first. Escape stops a brush stroke but does not roll it back.
+Undo keeps 35 full project snapshots for the open world and is cleared when another world opens. A new edit clears redo. Route commits and basin fills are single undo steps, and pouring is undoable; name typing groups per focus session. Undo with an open route draft cancels the draft first. Escape stops a brush stroke but does not roll it back.
 
 | Export | Size | Content |
 | --- | --- | --- |
 | Project | JSON | Authoritative data (§7) |
-| Map PNG | 1024² / 2048² (default) / 4096² (session choice) | Top-down visible terrain, materials, settled water, woodland, legacy overlays. No grid, cursor, drafts, UI, HUD or Living World. |
+| Map PNG | 1024² / 2048² (default) / 4096², chosen in the world's menu | Top-down visible terrain, materials, settled water, woodland, legacy overlays. No grid, cursor, drafts, UI, HUD or Living World. |
 | Heightmap PNG | N², 8-bit gray | Rounded bed elevations; no water, canopy or detail |
 
 ## 9. Development, verification and release
@@ -395,7 +411,7 @@ Also run `node --check` on changed modules and `git diff --check`.
 
 ### Manual checks before a release
 
-1. New world at each size; save, import, undo back.
+1. Worlds: create at each size, switch, rename, duplicate, import, delete + Undo, Restore, Delete forever; reload reopens the last world; a v2.12 single save migrates.
 2. Paint each material and Forest; footprints never switch tools; Shift erase each target.
 3. Raise/Lower/Smooth/Flatten and Land near edges; Flatten rim opt-out; D/E behavior per tool.
 4. Path and River drafts in 2D and 3D: Enter, double-click, Finish, Escape, one-point no-op, middle-pan during a draft, undo during a held drag.
@@ -403,14 +419,14 @@ Also run `node --check` on changed modules and `git diff --check`.
 6. Walk in and out; Esc restores the previous view.
 7. Living World on/off and each option; pauses during edits and reduced motion; absent from exports.
 8. Both themes, collapsed rail, narrow sidebar, ~500px window, settings flyout.
-9. Map PNG at each size and Heightmap PNG in a real browser.
+9. Map PNG at each size and Heightmap PNG in a real browser, for the open world and a closed one.
 10. A real GPU browser and the Canvas fallback.
 
 ### Releasing
 
 GitHub Pages builds `main:/` automatically (legacy build; no workflow file). Before merging a release PR:
 
-- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.10.1`. Update the footer version when appropriate. Documentation-only changes need no bump.
+- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.13.0`. Update the footer version when appropriate. Documentation-only changes need no bump.
 - Check help text, tutorial and KB against the implemented controls.
 
 After merging, find the Pages run for the exact merge commit, wait for success, then load the live site and confirm the footer and the changed flow. A push is not a deployment. To roll back, revert the faulty commits through a PR and verify Pages again; note any schema implications for files saved by the newer version.
