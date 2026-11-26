@@ -10,12 +10,12 @@ Strength is sculpting power. **Opacity is separate:** it affects Paint, Path, su
 
 ## 1. Choose a starting canvas
 
-1. Open New world.
+1. Select **Worlds** in the header, then the **New world** tile.
 2. Choose **Flat grass** for this exercise. It starts completely level at height 80.
 3. Choose **Quick sketch · Small (128×128)** under Terrain detail. Standard uses 192×192; Detailed uses 256×256. The live preview follows your choices. Image export size is separate.
-4. Give it a name. Use Download current project first if you need a backup, then select Create world.
+4. Give it a name, then select Create world.
 
-Other starts include Island, Archipelago, Continent, Atoll, and Open ocean. Generation settings contains Seed and Relief. Creating a world replaces the active canvas, so download an important existing project first; undo is available within the current session.
+Other starts include Island, Archipelago, Continent, Atoll, and Open ocean. Generation settings contains Seed and Relief. Creating a world adds it beside your other worlds and opens it. The world you had open is saved and stays in Worlds unchanged.
 
 ## 2. Raise a ridge and lower a valley
 
@@ -88,9 +88,9 @@ The effects do not enter project history or exports. See [Living World](kb/livin
 
 ## 8. Save something you can return to
 
-Use **Download project** in the header, or Ctrl/Cmd+S. Keep the `.world.json` file: it contains editable terrain, paint, forest density, river records and layer settings. Browser autosave is useful but tied to this browser and hosting origin.
+Your world saves itself as you work, and Ctrl/Cmd+S saves immediately. Every world is kept in **Worlds**, but only in this browser: clearing the site's data erases them. For anything you care about, open Worlds, select **⋯** on the world, then **Download backup file**. Keep the `.world.json` file: it contains editable terrain, paint, forest density, river records and layer settings, and **Import** in Worlds brings it back in any browser.
 
-Open Export map, choose 1024, 2048 or 4096 pixels, then Map image for a square top-down PNG. This changes image resolution without changing terrain detail. Export Heightmap for the actual bed elevations at your selected map size. Neither export includes the cursor, route preview, editor UI, or Living World effects. Map export is not a screenshot of your 3D camera.
+For a picture, open Worlds, select **⋯** on the world, then **Download artwork** and a Map image size (1024, 2048 or 4096 pixels) for a square top-down PNG. This changes image resolution without changing terrain detail. Heightmap gives the actual bed elevations at the world's size. This works for worlds that are not open, too. Neither export includes the cursor, route preview, editor UI, or Living World effects. Map export is not a screenshot of your 3D camera.
 
 ## Next steps
 

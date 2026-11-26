@@ -10,14 +10,15 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 
 ## Create → sculpt → paint
 
+- **Worlds** in the header (Ctrl/Cmd+O) opens your library: every world you make is kept in this browser with a thumbnail. Open, rename, duplicate, download artwork (map image or heightmap) or a backup file, and delete with 30 days to change your mind. New world and Import live there too, and both add a world instead of replacing the one you have open. The app reopens the last world you worked on.
 - Start with Island, Archipelago, Continent, Atoll, Open ocean, or Flat grass. Each has a generated preview. Seed and relief live under Generation settings.
 - Sculpt elevation with Raise, Lower, Smooth, or Flatten. Raise/Lower start at 8% Strength and stay inside each world's Seabed floor–Highest peak range without making needle spikes; Smooth/Flatten keep their own Strength (35%). 3D and Walk show every map size with the same proportions. The toolbox follows the active tool: footprint and size first, then Strength for sculpt tools; the paint material palette appears only with Paint. Terrain and woodland textures stay sharp during held strokes, with cached local updates. Four brush footprints cover Soft Round, Hard Round, Coastline, and Grain. Grain gives scattered coverage; material textures remain independent. Brush and material selections keep the current tool and survive tool changes. Coastline paints any selected material without changing height; use the explicit Land tool (C or M) to add or remove terrain. Strength controls sculpting. Opacity applies only to Paint, Path, and surface Erase; surface paint opacity is capped within a single stroke and builds across separate strokes.
 - Paint eight procedural ground materials—Grass, Loam, Clay, Bedrock, Scree, Mud, Sand, and Snow—grouped by family. Their textures automatically respond to slope, shelter and nearby water. Forest paints a separate tree-density layer. Forest has its own density control and conditional layer/eraser; it keeps ground colors unchanged. Drawing and Details creation tools have been removed to keep the toolbox focused on terrain. Existing drawings and landmarks still load, render, export, and save.
 - Hold Shift while clicking/dragging with Paint to erase. Paint’s Shift erase target defaults to Surface paint for ground materials and Forests for Forest; River water and saved-object targets appear when that content exists. Surface erasing uses brush opacity and reveals the natural terrain color without changing heights. Landmark/drawing erasing removes whole touched objects; undo restores them. Hidden and locked layers are protected.
 - Hide and lock Surface and Relief. Legacy Drawings and Landmarks layers appear only when a project contains that content. Relief visibility controls shading/contours, while elevation remains the world foundation. Hidden or locked layers cannot be edited. Water has its own toggle and sea-level control.
 - Toggle the main workspace between 2D Map and 3D Terrain. All editing tools work directly on the 3D terrain. Left-drag edits with the active tool; right-drag or Alt-drag orbits and tilts; middle-drag, Space + drag or a two-finger touch drag moves the camera. Scroll zooms, Shift+scroll resizes the brush, and Reset view recenters. The Orbit toggle supports touch; selecting a tool returns to editing while staying in 3D. Switch to terrain, heightmap, or biome visualization.
-- Export a 1024×1024, 2048×2048, or 4096×4096 PNG of the current map view, including visible drawings and landmarks, or an 8-bit PNG heightmap at the selected world size. Map exports omit editor overlays such as grid and cursor.
-- Undo/redo retains 35 states, including stamps, layer settings, names, translucent paint, drawings, and world generation. Editable project files and local autosaves use schema v9 and accept v1–v8 projects. Older Forest paint remains color, without automatically adding trees.
+- Download artwork from any world's menu in Worlds, open or not: a 1024×1024, 2048×2048, or 4096×4096 map PNG, including visible drawings and landmarks, or an 8-bit PNG heightmap at the world's size. Map images omit editor overlays such as grid and cursor.
+- Undo/redo retains 35 states for the open world, including stamps, layer settings, names, translucent paint and drawings; opening another world starts a fresh history. Editable project files and local autosaves use schema v9 and accept v1–v8 projects. Older Forest paint remains color, without automatically adding trees.
 
 ## Shortcuts
 
@@ -39,7 +40,8 @@ A minimalist, dependency-free browser map builder, inspired by WorldPainter's te
 | Shift + Paint | Erase the chosen target |
 | Ctrl or Cmd + Z | Undo |
 | Ctrl or Cmd + Shift + Z | Redo |
-| Ctrl or Cmd + S | Download editable project |
+| Ctrl or Cmd + S | Save the open world now (it also autosaves) |
+| Ctrl or Cmd + O | Open or close Worlds |
 
 Brush sizing follows [Inkarnate's documented controls](https://help.inkarnate.com/articles/4018103-brush-tool). Smooth moved from S to Q to avoid a conflict.
 
@@ -47,7 +49,7 @@ Brush sizing follows [Inkarnate's documented controls](https://help.inkarnate.co
 
 Serve this directory with any static HTTP server. GitHub Pages serves the root of `main`; `.nojekyll` bypasses Jekyll. There is no build step. Install test-only dependencies with `npm ci`, then run `npm test`. The application itself needs no dependencies. DOM interaction tests stub canvas drawing; they do not verify browser rendering or PNG encoding.
 
-The app is a map builder, without WorldBox's civilization simulation. It does not load WorldPainter `.world` files or export Minecraft region files. The biome view is a surface visualization, rather than Minecraft biome IDs. Drawings are limited to 500 objects, 1,000 points per freehand path, and 100,000 total points. Landmarks are decorative 2D symbols; the GPU 3D workspace shows the terrain with drawings draped on its surface and landmarks rendered as billboards. Projects stay in the current browser unless downloaded; autosave is specific to each hosting origin. Optional Google Fonts fall back to system fonts when blocked.
+The app is a map builder, without WorldBox's civilization simulation. It does not load WorldPainter `.world` files or export Minecraft region files. The biome view is a surface visualization, rather than Minecraft biome IDs. Drawings are limited to 500 objects, 1,000 points per freehand path, and 100,000 total points. Landmarks are decorative 2D symbols; the GPU 3D workspace shows the terrain with drawings draped on its surface and landmarks rendered as billboards. Worlds stay in the current browser (IndexedDB) unless you download backup files; the library is specific to each hosting origin and is erased if you clear the site's data. Optional Google Fonts fall back to system fonts when blocked.
 
 ## 3D rendering
 
@@ -115,6 +117,10 @@ New World now offers a live preview of the selected terrain and detail, descript
 ## Earthen material study — awaiting art-direction feedback
 
 [Open the standalone swatch sheet](https://mopajazz.github.io/landwright/studies/earthen/). Eight proposed procedural materials — Grass, Loam, Clay, Bedrock, Scree, Mud, Sand and Snow — appear on identical flat/relief terrain against parchment and midnight frames. Includes a mixed landscape, interface theme switch and downloadable comparison PNG. This is a visual prototype, not the editor palette or a physical erosion simulation. No app data, tools, forests or schema changes.
+
+## v2.14 — the Worlds library
+
+Worlds replaces the single browser save. It is a full-screen library of every world, with New world, Import, rename, duplicate, artwork and backup downloads, and Recently deleted (30 days). The header's Download and Export map buttons are gone; their jobs live in each world's menu. Your existing saved world moves into the library automatically on the first visit. Project files are unchanged (schema 9).
 
 ## v2.9 — terrain first
 
