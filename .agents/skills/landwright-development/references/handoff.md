@@ -1,7 +1,7 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 26, 2026 (America/New_York)<br>
-**Displayed release:** `v2.14` · **Cache revision:** `2.14.0` · **Project schema written:** `9`<br>
+**Displayed release:** `v2.15` · **Cache revision:** `2.15.0` · **Project schema written:** `9` or `10`<br>
 **Repository:** https://github.com/mopajazz/landwright · **Live app:** https://mopajazz.github.io/landwright/
 
 This document describes **the app as it is now**. It is edited in place whenever behavior changes; it is not appended to. Release-by-release engineering notes (why decisions were made, measurements, rejected directions) live in [docs/release-history.md](https://github.com/mopajazz/landwright/blob/main/docs/release-history.md). Source and tests are authoritative where this document and the code disagree; fix the document when that happens.
@@ -10,10 +10,10 @@ This document describes **the app as it is now**. It is edited in place whenever
 
 | Contract | Current state |
 | --- | --- |
-| Release | **v2.14**: the **Worlds library**, a full-screen screen that holds every world in the browser (open, rename, duplicate, download artwork or a backup file, delete with 30-day recovery, New world, Import). Download and Export map left the header. On top of v2.13.0 (compact toolbox: one tool group with key badges, swatches, no Pan tool). |
-| Live deployment | Last verified live on November 23, 2026: v2.12 (`e071ee3`, Pages run 45256066960). v2.13.0 was merged by PR #17 after that. After merging v2.14, confirm the Pages run for the exact merge commit and the live footer. |
+| Release | **v2.15** adds Parchment view and ink brushes. **v2.14** introduced the **Worlds library**, a full-screen screen that holds every world in the browser (open, rename, duplicate, download artwork or a backup file, delete with 30-day recovery, New world, Import). Download and Export map left the header. On top of v2.13.0 (compact toolbox: one tool group with key badges, swatches, no Pan tool). |
+| Live deployment | **v2.15 verified November 26, 2026.** [PR #21](https://github.com/mopajazz/landwright/pull/21) merged as `3abf98e`. [Pages run 45921115449](https://github.com/mopajazz/landwright/actions/runs/45921115449) succeeded. The [public build](https://mopajazz.github.io/landwright/) served the v2.15 footer, cache revision `2.15.0`, and the Parchment renderer. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
-| Project format | Writes **9**, imports **1–9**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
+| Project format | Writes **9 or 10**, imports **1–10**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
 | Toolbar | **Eight** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint. |
 | Erasing | **Shift + Paint** with Paint's *Shift erase target*. There is no Erase tool. |
 | D / E keys | Strength for Raise/Lower/Smooth (1% steps up to 10%, then 5%), River Carve per stroke (0.25), Paint/Path Opacity (5%), Flatten target (1). Shift = four steps (Flatten: 10). Land ignores them. |
@@ -21,10 +21,10 @@ This document describes **the app as it is now**. It is edited in place whenever
 | Terrain sizes | 128², 192², 256² (default), and **experimental 512²**. |
 | Height | Hard limits 0–255. Each world has a working range, *Seabed floor* (default 20) to *Highest peak* (default 190), that Raise, Lower and Flatten never pass. 3D draws every size with the same proportions. |
 | Water | Sea-connected reactive ocean; **River strokes** that carve a channel and leave a still-water **creek** (a river route record), plus a little running water from a short-lived spring; the **droplet** for deliberate extra water; basin fill/drain; and rivers from older maps (fixed levels, Reflow). |
-| Look | Eight earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
+| Look | Eleven earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
 | Worlds | Every world is stored in the browser's IndexedDB (§8). The app reopens the last world; **Worlds** (header, Ctrl/Cmd+O) is the only way to create, switch, import, copy, delete or download. |
 | Exports | From each world's menu in Worlds: Map PNG 1024² / 2048² (default) / 4096², Heightmap PNG at N² with bed elevations only, and the editable project JSON ("backup file"). Works for closed worlds too. |
-| Tests | `npm test`: **220 passed, 0 failed** (November 26, 2026). |
+| Tests | `npm test`: **242 passed, 0 failed** (November 26, 2026). |
 | Settlements | **Parked.** Removed in v2.9; the user may want them back in a different form (§12). |
 
 **Preserve:** the header has no Download or Export button; the user removed them in favour of the Worlds library. Beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep eight tools. Never save derived water, canopy or texture geometry into bed heights or project files.
@@ -158,7 +158,7 @@ Footprints: **Soft Round** `(1 − d²)²`; **Hard Round** full coverage inside 
 
 ### 4.4 Paint: ground materials and forest
 
-Paint shows eight ground materials as colour swatches (in family order; name and family on hover, accessible name on each), followed by a separate **Forest** density swatch.
+Paint shows eleven ground swatches and a **Forest** density swatch. The **Biomes** row offers Jungle, Volcanic Field, and Alpine Tundra. A biome paints editable Surface and Forests layers together with one undo entry, skips wet ground, and preserves elevation. Shift clears paint and canopy on editable layers.
 
 | ID | Material | Family | Swatch |
 | --- | --- | --- | --- |
@@ -170,10 +170,13 @@ Paint shows eight ground materials as colour swatches (in family order; name and
 | 9 | Mud | Wet ground | `#645841` |
 | 2 | Sand | Dry & cold | `#c2ae7d` |
 | 5 | Snow | Dry & cold | `#dde2d9` |
+| 10 | Moss | Living ground | `#576c2f` |
+| 11 | Lava | Stone | `#342623` |
+| 12 | Metamorphic Rock | Stone | `#7d7c84` |
 | 4 | Forest | — | density, not a ground color |
 
 - **Ground texture** is procedural (`earthen.mjs`) and responds to slope, curvature/shelter, light and proximity to sea and river water. It is visual, not erosion or sediment transport. Diagnostic views bypass it.
-- **Coverage** is stored per cell as eight bytes, one per ground material (`material-paint.mjs`), alongside legacy blended RGB/alpha. Within one held stroke, coverage is capped against the pre-stroke state so repeated samples do not compound opacity; separate strokes build up.
+- **Coverage** is stored per cell as eight bytes in schema 9 or eleven in schema 10, one per ground material (`material-paint.mjs`), alongside legacy blended RGB/alpha. Within one held stroke, coverage is capped against the pre-stroke state so repeated samples do not compound opacity; separate strokes build up.
 - **Forest** paints a density field 0–1. Woodland (`forests.mjs`) is a continuous procedural canopy that grows only on eligible terrain: above sea +2, adjacent height difference ≤ 6, not under water, not on committed paths. Density is kept where trees cannot grow and reappears if the terrain changes. Canopy adds under 3 blocks of derived visual relief, never saved.
 - **Shift erase target** lists only targets that exist: Surface paint, Forests, River water, and legacy landmarks/drawings. Choosing a ground material resets the target to Surface; choosing Forest selects Forests. Surface/Forest erasing honors Opacity; whole-object targets ignore it.
 - Path surfaces: Loam (default), Bedrock, Sand.
@@ -215,6 +218,7 @@ Work estimate: `(1 + Σ max(1, ceil(segmentLength × 2))) × (ceil(width × 1.5)
 
 - **3D proportions.** `verticalScale(n) = 0.65 × n / 512` height units per map block, used by the WebGL shader, Canvas 3D, picking, Walk and sprite depth. Every map size therefore has the same proportions (a 128 map is a 512 one in miniature). Before v2.10, 0.65 was used at every size, so smaller maps were drawn far steeper (64% of the default 256 island was steeper than 45° in 3D). This changes drawing only; saved heights are untouched.
 - **Workspace:** 2D Map, 3D Terrain, **Walk**: an eye-level WebGL camera (`walk.mjs`). It arrives hovering 14 blocks above lowland (the lowest quarter of dry, gentle ground nearest the land's centroid) facing the centroid, so the first view is a landscape rather than the face of the central summit. W/A/S/D move; **Space** flies up and **Shift** descends at 12 blocks/s; with neither held the camera hovers at its altitude (pushed up over higher ground, capped at 60 blocks above the highest possible peak). Descending to eye height lands, after which the camera follows the ground. Arrow keys or click-to-look; Esc or *Exit walk* restores the previous view. Walk's key handler runs first, so Space does not start a map pan while walking. Walk is transient: no project field, editing or export effect.
+- **Parchment view:** Map and Orbit render an ink chart on sharper paper folds. Raise, Lower and Land redraw the chart live. Contours controls elevation lines and shoreline echoes. Paint offers Hatch, Stipple, Woodland and Fine Line alongside all eleven materials, Forest and the three biome brushes. Materials use their own ink patterns and the biomes combine those patterns with the existing canopy coverage. The inks use existing Grass, Sand, Forest density and Loam channels respectively, so project files retain the edits without another schema change. The selected view controls Map artwork downloads.
 - **Views:** Terrain, Heightmap, Biomes (a visualization, not Minecraft biome data). Toggles: Grid, Contours, Water, Hill shading. Sea level 10–150, default 62. World Settings also holds the height range: *Seabed floor* 0–120 (default 20) and *Highest peak* 100–255 (default 190), at least 30 apart; changes are undoable and saved. **Smooth spikes** runs `removeSpikes` over the whole map in one undoable step (refused while Relief is hidden or locked; says so when nothing matches). On the user's Evergreen Island it changed 216 cells (0.33%); on a freshly generated island it changes about 11 (the summit crease).
 - **Close zoom:** in Terrain view, world-aligned shader detail for stone, ground and canopy fades in, hill shading adds nearby occlusion, and WebGL 3D adds distance haze (`terrain-detail.mjs`). Screen-space only; exports and saved data are unchanged.
 - **Layers** (rows appear only when relevant): Surface, Relief (`elevation`), Forests, River water (`rivers`), legacy Landmarks, legacy Drawings. Hidden or locked layers are protected from editing. River creation also needs Relief visible and unlocked.
@@ -269,7 +273,7 @@ Semantic color tokens live in `theme.css`, loaded after `style.css`:
 | `app.mjs` | State, events, history/autosave, composition, rendering orchestration, import/export, the Worlds controller (open/switch, artwork for closed worlds, delete/restore) |
 | `library.mjs` | World storage: IndexedDB `landwright` with `worlds` (metadata, thumbnail) and `projects` (JSON text) stores; memory fallback; sorting, trash expiry, copy names |
 | `library-view.mjs` | Draws library cards, Recently deleted and the per-world menu; no storage |
-| `editor.mjs` | Project validation, migration (v1–v9), sizes, default layers, brush-size helpers |
+| `editor.mjs` | Project validation, migration (v1–v10), sizes, default layers, brush-size helpers |
 | `terrain.mjs` | Deterministic generation and bounded sculpt strokes |
 | `brushes.mjs` | Material table, footprints, alpha compositing, Land operation |
 | `earthen.mjs` | Earthen material definitions and procedural ground renderer |
@@ -300,7 +304,7 @@ All cell arrays are row-major `i = y × N + x`. Internally X/Y are horizontal; t
 | --- | --- | --- | --- |
 | `heights` | Float32Array N² | yes | Authoritative bed |
 | `paint`, `paintColors`, `paintAlpha` | Uint8 N², Uint8Clamped 3N², Float32 N² | yes | Legacy material marker, blended RGB, coverage |
-| `surfaceMaterials` | 8 bytes × N² | yes (Base64) | Ground material coverage |
+| `surfaceMaterials` | 11 bytes × N² | yes (Base64) | Ground material coverage |
 | `forest` | Float32Array N² | yes | Forest density 0–1 |
 | `routes` | Array | yes | Committed Path/River records |
 | `waterDrops`, poured water | Arrays | yes, when non-empty | Basin fills, poured water |
@@ -326,16 +330,16 @@ Keep effective water geometry consistent across rendering, cursor projection and
 Downloads are JSON named `<sanitized-name>.world.json` (not the WorldPainter desktop format).
 
 ```ts
-type ProjectV9 = {
-  version: 9;
+type Project = {
+  version: 9 | 10;
   size: 128 | 192 | 256 | 512;      // missing size → 256
   floor: number; ceiling: number;    // integers; floor 0..120, ceiling 100..255, ≥ 30 apart; missing → 20 / 190
   name: string;                      // ≤ 80 chars
   heights: number[];                 // N², 0..255 (3 decimals)
-  paint: number[];                   // N², 0..9
+  paint: number[];                   // N², 0..9 in v9 or 0..12 in v10
   paintColors: number[];             // 3N², 0..255
   paintAlpha: number[];              // N², 0..1 (4 decimals)
-  surfaceMaterials: string;          // Base64 of N×N×8 coverage bytes, '' when empty
+  surfaceMaterials: string;          // Base64 of N² × 8 (v9) or N² × 11 (v10) bytes, '' when empty
   forest: number[];                  // N², 0..1 (4 decimals)
   sea: number;                       // 10..150
   water: boolean; shade: boolean;
@@ -403,7 +407,7 @@ Open `http://localhost:8000/` (serve over HTTP; do not open the file directly). 
 
 ### Tests
 
-214 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
+242 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
 
 - `interactions.test.mjs` compares whole project states. A failing `deepEqual` on large arrays can exhaust memory and kill the process instead of printing a diff; run the file alone with `node --test --test-reporter=spec tests/interactions.test.mjs` to find the test.
 - Living World tests need queued animation frames: bind the loop to `document.defaultView.requestAnimationFrame`, not a synchronous stub (see `living-interactions.test.mjs`).
@@ -415,7 +419,7 @@ Also run `node --check` on changed modules and `git diff --check`.
 1. Worlds: create at each size, switch, rename, duplicate, import, delete + Undo, Restore, Delete forever; reload reopens the last world; a v2.12 single save migrates.
 2. Paint each material and Forest; footprints never switch tools; Shift erase each target.
 3. Raise/Lower/Smooth/Flatten and Land near edges; Flatten rim opt-out; D/E behavior per tool.
-4. Path and River drafts in 2D and 3D: Enter, double-click, Finish, Escape, one-point no-op, middle-pan during a draft, undo during a held drag.
+4. Path and River freehand strokes in 2D and 3D. Check gesture completion, Undo, panning, and the River droplet and basin controls separately.
 5. Water: cut a channel into a dry basin, fill/drain a basin, pour and remove water, Water off, River water hidden/locked, Reflow.
 6. Walk in and out; Esc restores the previous view.
 7. Living World on/off and each option; pauses during edits and reduced motion; absent from exports.
@@ -423,18 +427,35 @@ Also run `node --check` on changed modules and `git diff --check`.
 9. Map PNG at each size and Heightmap PNG in a real browser, for the open world and a closed one.
 10. A real GPU browser and the Canvas fallback.
 
+### v2.15 Parchment acceptance checks
+
+Use the public v2.15 build for a release smoke test or run the repository at merge commit `3abf98e` for controlled testing. Use a fresh 128² or 256² test world and a separate test copy for destructive actions. Report the build, browser, renderer (GPU or Canvas), and observable failures.
+
+| Check | Expected result |
+| --- | --- |
+| Enter and leave Parchment | The view is available in Map and 3D Terrain. Switching to Terrain and back preserves project data and restores the corresponding rendering. |
+| Sculpt a ridge, a valley, and a coastal cut | Raise, Lower, and Land update ink during the gesture. Contours follow elevation and the shoreline updates with the cut. Orbit shows the same ink following the sharper folds. One Undo and Redo restore each sculpt gesture and the corresponding ink. |
+| Toggle Contours, Hill shading, Water, and each relevant layer | Contours controls elevation lines and shoreline echoes. Surface controls ground ink, Forests controls tree symbols, and a locked layer is protected from edits. Water off reveals the underlying bed. |
+| Paint and erase | Check Hatch, Stipple, Woodland, Fine Line and the material swatches. Compare Lava fissures, Moss stipple and Metamorphic Rock bands. Jungle, Volcanic Field, and Alpine Tundra should work in Parchment and retain their terrain and layer rules. Shift erase and Undo should follow the active Paint target. |
+| Save, reopen, and export from Worlds | Reopen a test world and reselect Parchment. Compare terrain, paint and canopy. Download a Map PNG with Parchment selected, for both the open world and a closed test world. Confirm the Heightmap PNG still encodes the bed and that a schema 9 backup imports alongside a schema 10 backup. |
+| Review visuals and input | Check a dense coastline, steep folds and a large forest at normal zoom and close zoom. Compare Map, WebGL Orbit and Canvas Orbit. Check narrow layouts, the collapsed toolbox, dark/light themes and touch if available. |
+
+Ridge Stamp was removed before release. A world saved during the preview can still contain those marks as legacy Drawings. Volcanic Field currently uses Metamorphic Rock on steep faces, Lava in sheltered areas, and Scree elsewhere. Basalt was discussed as a possible art and geology change.
+
+Release verification covered 242 passing automated tests, local browser checks of the Parchment palette and both views, and public delivery of the release modules. The checks above include remaining manual coverage for actual Parchment PNG downloads, touch, and performance on a real GPU.
+
 ### Releasing
 
 GitHub Pages builds `main:/` automatically (legacy build; no workflow file). Before merging a release PR:
 
-- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.14.0`. Update the footer version when appropriate. Documentation-only changes need no bump.
+- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.15.0`. Update the footer version when appropriate. Documentation-only changes need no bump.
 - Check help text, tutorial and KB against the implemented controls.
 
 After merging, find the Pages run for the exact merge commit, wait for success, then load the live site and confirm the footer and the changed flow. A push is not a deployment. To roll back, revert the faulty commits through a PR and verify Pages again; note any schema implications for files saved by the newer version.
 
 ## 10. Reusable development skill
 
-This skill folder contains [`SKILL.md`](../SKILL.md) and `references/handoff.md`, a snapshot of this document with links rebased for use outside the repository. Refresh the snapshot in the same PR whenever this document changes. In a checkout, this file and the code take precedence over any installed snapshot.
+`.agents/skills/landwright-development/` contains `SKILL.md` and `references/handoff.md`, a snapshot of this document with links rebased for use outside the repository. Refresh the snapshot in the same PR whenever this document changes. In a checkout, this file and the code take precedence over any installed snapshot.
 
 Fresh-session prompt: **"Use landwright-development to continue Landwright. Read the current handoff, inspect HEAD and open PRs, and implement the requested change on a branch while keeping the tutorial and KB current."**
 
