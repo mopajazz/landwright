@@ -1,4 +1,4 @@
-import {sampleTerrain,verticalScale} from './terrain3d.mjs?v=2.14.0-textures.1';
+import {sampleTerrain,verticalScale} from './terrain3d.mjs?v=2.15.0';
 
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 export const EYE_HEIGHT=1.7,FLY_SPEED=12,FLY_CEILING=60,START_HOVER=14;

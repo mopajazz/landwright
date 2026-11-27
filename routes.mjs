@@ -1,5 +1,5 @@
-import{applyMaterialCoverage}from'./material-paint.mjs?v=2.14.0-textures.1';
-import{MATERIALS,blendPaint}from'./brushes.mjs?v=2.14.0-textures.1';
+import{applyMaterialCoverage}from'./material-paint.mjs?v=2.15.0';
+import{MATERIALS,blendPaint}from'./brushes.mjs?v=2.15.0';
 // Project-wide limits. Raised in v2.13.0 from 64 routes / 32,768 points: every
 // River stroke now leaves a creek, and real maps reached 64 creeks while using
 // ~1% of the raster-work budget. riverField for 512 typical creeks is ~90 ms

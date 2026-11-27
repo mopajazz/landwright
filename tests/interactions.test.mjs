@@ -260,3 +260,78 @@ test('biome brushes paint surface and canopy in one undo and respect each layer 
  assert.notDeepEqual(alpine.forest,volcanic.forest);
  lock('surface');
 });
+
+
+test('Parchment exposes ink in Paint and edits the existing world with undo',async()=>{
+ flatTestWorld();
+ clickTool('paint');
+ const view=name=>doc.querySelector(`[data-view="${name}"]`);
+ const before=await state();
+ view('parchment').click();
+ assert.equal($('ink-palette').hidden,false);
+ assert.equal($('palette').hidden,false);
+ assert.equal($('biome-palette').parentElement.hidden,false);
+ assert.deepEqual(await state(),before);
+ const fineLine=doc.querySelector('[data-ink][aria-label="Fine Line"]');
+ fineLine.click();
+ assert.equal(fineLine.getAttribute('aria-pressed'),'true');
+ assert.equal($('size').value,'4');
+ pointer('pointerdown');pointer('pointerup');
+ const inked=await state();
+ assert.ok(inked.paint.includes(6));
+ assert.deepEqual(inked.heights,before.heights);
+ $('undo').click();
+ assert.deepEqual(await state(),before);
+ view('terrain').click();
+ assert.equal($('palette').hidden,false);
+ assert.equal($('ink-palette').hidden,true);
+});
+
+
+test('Parchment sculpting tools use one undo per stroke and no drawn objects',async()=>{
+ flatTestWorld();
+ doc.querySelector('[data-view="parchment"]').click();
+ assert.equal($('ridge-stamp'),null);
+ doc.querySelector('[data-brush="soft"]').click();
+ $('size').value='36';
+ const before=await state();
+ for(const [tool,sign] of [['raise',1],['lower',-1],['land',1]]){
+  clickTool(tool);$('strength').value='65';
+  pointer('pointerdown');pointer('pointermove',546,380);pointer('pointerup',546,380);
+  const after=await state();
+  assert.ok(after.heights.some((height,i)=>(height-before.heights[i])*sign>0));
+  assert.deepEqual(after.shapes,before.shapes);
+  assert.deepEqual(after.paint,before.paint);
+  $('undo').click();assert.deepEqual(await state(),before);
+ }
+ doc.querySelector('[data-view="terrain"]').click();
+});
+
+
+test('Parchment exposes every material and paints biome coverage with the full palette',async()=>{
+ flatTestWorld();
+ doc.querySelector('[data-view="parchment"]').click();
+ clickTool('paint');
+ doc.querySelector('[data-brush="hard"]').click();
+ $('opacity').value='100';$('size').value='32';
+ assert.equal($('palette').querySelectorAll('button').length,11);
+ assert.equal($('biome-palette').querySelectorAll('button').length,3);
+ const before=await state();
+ const place=()=>{pointer('pointerdown');pointer('pointerup');};
+ for(const [id,name] of [[10,'Moss'],[11,'Lava'],[12,'Metamorphic Rock']]){
+  doc.querySelector(`#palette [data-material="${id}"]`).click();
+  assert.match($('paint-status').textContent,new RegExp(name));
+  place();
+  const after=await state();
+  assert.ok(after.paint.includes(id));
+  assert.deepEqual(after.heights,before.heights);
+  $('undo').click();
+ }
+ doc.querySelector('[data-biome-brush="jungle"]').click();
+ place();
+ const jungle=await state();
+ assert.ok(jungle.forest.some(density=>density>.7));
+ assert.ok(jungle.paint.includes(10));
+ $('undo').click();assert.deepEqual(await state(),before);
+ doc.querySelector('[data-view="terrain"]').click();
+});

@@ -1,7 +1,7 @@
 # Landwright — engineering and product handoff
 
 **Documentation date:** November 26, 2026 (America/New_York)<br>
-**Displayed release:** `v2.14` · **Cache revision:** `2.14.0-textures.1` · **Project schema written:** `9` or `10`<br>
+**Displayed release:** `v2.15` · **Cache revision:** `2.15.0` · **Project schema written:** `9` or `10`<br>
 **Repository:** https://github.com/mopajazz/landwright · **Live app:** https://mopajazz.github.io/landwright/
 
 This document describes **the app as it is now**. It is edited in place whenever behavior changes; it is not appended to. Release-by-release engineering notes (why decisions were made, measurements, rejected directions) live in [docs/release-history.md](docs/release-history.md). Source and tests are authoritative where this document and the code disagree; fix the document when that happens.
@@ -10,7 +10,7 @@ This document describes **the app as it is now**. It is edited in place whenever
 
 | Contract | Current state |
 | --- | --- |
-| Release | **v2.14**: the **Worlds library**, a full-screen screen that holds every world in the browser (open, rename, duplicate, download artwork or a backup file, delete with 30-day recovery, New world, Import). Download and Export map left the header. On top of v2.13.0 (compact toolbox: one tool group with key badges, swatches, no Pan tool). |
+| Release | **v2.15** adds Parchment view and ink brushes. **v2.14** introduced the **Worlds library**, a full-screen screen that holds every world in the browser (open, rename, duplicate, download artwork or a backup file, delete with 30-day recovery, New world, Import). Download and Export map left the header. On top of v2.13.0 (compact toolbox: one tool group with key badges, swatches, no Pan tool). |
 | Live deployment | Last verified live on November 23, 2026: v2.12 (`e071ee3`, Pages run 45256066960). v2.13.0 was merged by PR #17 after that. After merging v2.14, confirm the Pages run for the exact merge commit and the live footer. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
 | Project format | Writes **9 or 10**, imports **1–10**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
@@ -24,7 +24,7 @@ This document describes **the app as it is now**. It is edited in place whenever
 | Look | Eleven earthen ground materials with terrain-responsive texture; terrain-integrated woodland; close-zoom surface detail; Living World motion and cumulus clouds. |
 | Worlds | Every world is stored in the browser's IndexedDB (§8). The app reopens the last world; **Worlds** (header, Ctrl/Cmd+O) is the only way to create, switch, import, copy, delete or download. |
 | Exports | From each world's menu in Worlds: Map PNG 1024² / 2048² (default) / 4096², Heightmap PNG at N² with bed elevations only, and the editable project JSON ("backup file"). Works for closed worlds too. |
-| Tests | `npm test`: **220 passed, 0 failed** (November 26, 2026). |
+| Tests | `npm test`: **242 passed, 0 failed** (November 26, 2026). |
 | Settlements | **Parked.** Removed in v2.9; the user may want them back in a different form (§12). |
 
 **Preserve:** the header has no Download or Export button; the user removed them in favour of the Worlds library. Beginner guidance must prominently say to start Raise/Lower at **5–10% Strength**, use short strokes, inspect, and increase gradually. Keep eight tools. Never save derived water, canopy or texture geometry into bed heights or project files.
@@ -218,6 +218,7 @@ Work estimate: `(1 + Σ max(1, ceil(segmentLength × 2))) × (ceil(width × 1.5)
 
 - **3D proportions.** `verticalScale(n) = 0.65 × n / 512` height units per map block, used by the WebGL shader, Canvas 3D, picking, Walk and sprite depth. Every map size therefore has the same proportions (a 128 map is a 512 one in miniature). Before v2.10, 0.65 was used at every size, so smaller maps were drawn far steeper (64% of the default 256 island was steeper than 45° in 3D). This changes drawing only; saved heights are untouched.
 - **Workspace:** 2D Map, 3D Terrain, **Walk**: an eye-level WebGL camera (`walk.mjs`). It arrives hovering 14 blocks above lowland (the lowest quarter of dry, gentle ground nearest the land's centroid) facing the centroid, so the first view is a landscape rather than the face of the central summit. W/A/S/D move; **Space** flies up and **Shift** descends at 12 blocks/s; with neither held the camera hovers at its altitude (pushed up over higher ground, capped at 60 blocks above the highest possible peak). Descending to eye height lands, after which the camera follows the ground. Arrow keys or click-to-look; Esc or *Exit walk* restores the previous view. Walk's key handler runs first, so Space does not start a map pan while walking. Walk is transient: no project field, editing or export effect.
+- **Parchment view:** Map and Orbit render an ink chart on sharper paper folds. Raise, Lower and Land redraw the chart live. Contours controls elevation lines and shoreline echoes. Paint offers Hatch, Stipple, Woodland and Fine Line alongside all eleven materials, Forest and the three biome brushes. Materials use their own ink patterns and the biomes combine those patterns with the existing canopy coverage. The inks use existing Grass, Sand, Forest density and Loam channels respectively, so project files retain the edits without another schema change. The selected view controls Map artwork downloads.
 - **Views:** Terrain, Heightmap, Biomes (a visualization, not Minecraft biome data). Toggles: Grid, Contours, Water, Hill shading. Sea level 10–150, default 62. World Settings also holds the height range: *Seabed floor* 0–120 (default 20) and *Highest peak* 100–255 (default 190), at least 30 apart; changes are undoable and saved. **Smooth spikes** runs `removeSpikes` over the whole map in one undoable step (refused while Relief is hidden or locked; says so when nothing matches). On the user's Evergreen Island it changed 216 cells (0.33%); on a freshly generated island it changes about 11 (the summit crease).
 - **Close zoom:** in Terrain view, world-aligned shader detail for stone, ground and canopy fades in, hill shading adds nearby occlusion, and WebGL 3D adds distance haze (`terrain-detail.mjs`). Screen-space only; exports and saved data are unchanged.
 - **Layers** (rows appear only when relevant): Surface, Relief (`elevation`), Forests, River water (`rivers`), legacy Landmarks, legacy Drawings. Hidden or locked layers are protected from editing. River creation also needs Relief visible and unlocked.
@@ -430,7 +431,7 @@ Also run `node --check` on changed modules and `git diff --check`.
 
 GitHub Pages builds `main:/` automatically (legacy build; no workflow file). Before merging a release PR:
 
-- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.14.0`. Update the footer version when appropriate. Documentation-only changes need no bump.
+- Bump the cache revision **everywhere at once**: the `?v=` query on `style.css`, `theme.css` and `app.mjs` in `index.html`, and on every local module import. `assets.test.mjs` checks they match. Current value: `2.15.0`. Update the footer version when appropriate. Documentation-only changes need no bump.
 - Check help text, tutorial and KB against the implemented controls.
 
 After merging, find the Pages run for the exact merge commit, wait for success, then load the live site and confirm the footer and the changed flow. A push is not a deployment. To roll back, revert the faulty commits through a PR and verify Pages again; note any schema implications for files saved by the newer version.

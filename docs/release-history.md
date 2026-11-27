@@ -437,3 +437,8 @@ New world and Import used to replace the open world in one undoable step. Now ea
 Found while testing: an autosave redraw of the library threw away a rename in progress, so the card being renamed is now kept across redraws and a library rename saves immediately; a metadata-only save erased the stored size. Two old tests had passed by accident on history left over from earlier tests (one relied on a dispatched `pointerdown` that jsdom does not route to `onpointerdown`) and were made self-contained.
 
 Verified: 220 tests, including storage tests against an in-process IndexedDB stand-in and app tests for migration, switching, rename, duplicate, delete/restore/purge, import, artwork and reopening. In headless Chromium: a single-slot save migrated and the old key cleared; a 2048² map PNG (3.2 MB) downloaded from a closed world while another stayed open; a reload reopened the last world with its edit; both themes and a 390px width had no horizontal overflow and no console errors. Real-GPU and touch checks remain outstanding.
+
+
+## v2.15 — Parchment cartography
+
+Parchment renders the existing editable terrain as a paper map in 2D and 3D. Raise, Lower, and Land redraw elevation ink as the terrain changes. The paper relief sharpens folds visually. All eleven materials use distinct pen textures, and existing biome brushes mix those textures with canopy coverage. The Ink brushes write existing material and Forest channels. Parchment Map PNGs use the same raster as the workspace.
