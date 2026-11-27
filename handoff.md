@@ -11,7 +11,7 @@ This document describes **the app as it is now**. It is edited in place whenever
 | Contract | Current state |
 | --- | --- |
 | Release | **v2.15** adds Parchment view and ink brushes. **v2.14** introduced the **Worlds library**, a full-screen screen that holds every world in the browser (open, rename, duplicate, download artwork or a backup file, delete with 30-day recovery, New world, Import). Download and Export map left the header. On top of v2.13.0 (compact toolbox: one tool group with key badges, swatches, no Pan tool). |
-| Live deployment | Last verified live on November 23, 2026: v2.12 (`e071ee3`, Pages run 45256066960). v2.13.0 was merged by PR #17 after that. After merging v2.14, confirm the Pages run for the exact merge commit and the live footer. |
+| Live deployment | **v2.15 verified November 26, 2026.** [PR #21](https://github.com/mopajazz/landwright/pull/21) merged as `3abf98e`. [Pages run 45921115449](https://github.com/mopajazz/landwright/actions/runs/45921115449) succeeded. The [public build](https://mopajazz.github.io/landwright/) served the v2.15 footer, cache revision `2.15.0`, and the Parchment renderer. |
 | Runtime | Static HTML/CSS/ES modules served by GitHub Pages from `main:/`. No build step, backend, accounts or runtime packages. |
 | Project format | Writes **9 or 10**, imports **1–10**. Saved: terrain, paint, material coverage, forest density, routes, basin fills, poured water, legacy drawings/landmarks, layer flags. |
 | Toolbar | **Eight** tools: Raise, Lower, Smooth, Flatten, River, Land, Path, Paint. |
@@ -407,7 +407,7 @@ Open `http://localhost:8000/` (serve over HTTP; do not open the file directly). 
 
 ### Tests
 
-214 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
+242 tests in `tests/` (Node unit tests plus jsdom interaction tests with stubbed canvas). They verify data, events, history and rendering logic, not GPU pixels, PNG encoding, touch, or perceived quality. Notes:
 
 - `interactions.test.mjs` compares whole project states. A failing `deepEqual` on large arrays can exhaust memory and kill the process instead of printing a diff; run the file alone with `node --test --test-reporter=spec tests/interactions.test.mjs` to find the test.
 - Living World tests need queued animation frames: bind the loop to `document.defaultView.requestAnimationFrame`, not a synchronous stub (see `living-interactions.test.mjs`).
@@ -419,13 +419,30 @@ Also run `node --check` on changed modules and `git diff --check`.
 1. Worlds: create at each size, switch, rename, duplicate, import, delete + Undo, Restore, Delete forever; reload reopens the last world; a v2.12 single save migrates.
 2. Paint each material and Forest; footprints never switch tools; Shift erase each target.
 3. Raise/Lower/Smooth/Flatten and Land near edges; Flatten rim opt-out; D/E behavior per tool.
-4. Path and River drafts in 2D and 3D: Enter, double-click, Finish, Escape, one-point no-op, middle-pan during a draft, undo during a held drag.
+4. Path and River freehand strokes in 2D and 3D. Check gesture completion, Undo, panning, and the River droplet and basin controls separately.
 5. Water: cut a channel into a dry basin, fill/drain a basin, pour and remove water, Water off, River water hidden/locked, Reflow.
 6. Walk in and out; Esc restores the previous view.
 7. Living World on/off and each option; pauses during edits and reduced motion; absent from exports.
 8. Both themes, collapsed rail, narrow sidebar, ~500px window, settings flyout.
 9. Map PNG at each size and Heightmap PNG in a real browser, for the open world and a closed one.
 10. A real GPU browser and the Canvas fallback.
+
+### v2.15 Parchment acceptance checks
+
+Use the public v2.15 build for a release smoke test or run the repository at merge commit `3abf98e` for controlled testing. Use a fresh 128² or 256² test world and a separate test copy for destructive actions. Report the build, browser, renderer (GPU or Canvas), and observable failures.
+
+| Check | Expected result |
+| --- | --- |
+| Enter and leave Parchment | The view is available in Map and 3D Terrain. Switching to Terrain and back preserves project data and restores the corresponding rendering. |
+| Sculpt a ridge, a valley, and a coastal cut | Raise, Lower, and Land update ink during the gesture. Contours follow elevation and the shoreline updates with the cut. Orbit shows the same ink following the sharper folds. One Undo and Redo restore each sculpt gesture and the corresponding ink. |
+| Toggle Contours, Hill shading, Water, and each relevant layer | Contours controls elevation lines and shoreline echoes. Surface controls ground ink, Forests controls tree symbols, and a locked layer is protected from edits. Water off reveals the underlying bed. |
+| Paint and erase | Check Hatch, Stipple, Woodland, Fine Line and the material swatches. Compare Lava fissures, Moss stipple and Metamorphic Rock bands. Jungle, Volcanic Field, and Alpine Tundra should work in Parchment and retain their terrain and layer rules. Shift erase and Undo should follow the active Paint target. |
+| Save, reopen, and export from Worlds | Reopen a test world and reselect Parchment. Compare terrain, paint and canopy. Download a Map PNG with Parchment selected, for both the open world and a closed test world. Confirm the Heightmap PNG still encodes the bed and that a schema 9 backup imports alongside a schema 10 backup. |
+| Review visuals and input | Check a dense coastline, steep folds and a large forest at normal zoom and close zoom. Compare Map, WebGL Orbit and Canvas Orbit. Check narrow layouts, the collapsed toolbox, dark/light themes and touch if available. |
+
+Ridge Stamp was removed before release. A world saved during the preview can still contain those marks as legacy Drawings. Volcanic Field currently uses Metamorphic Rock on steep faces, Lava in sheltered areas, and Scree elsewhere. Basalt was discussed as a possible art and geology change.
+
+Release verification covered 242 passing automated tests, local browser checks of the Parchment palette and both views, and public delivery of the release modules. The checks above include remaining manual coverage for actual Parchment PNG downloads, touch, and performance on a real GPU.
 
 ### Releasing
 
