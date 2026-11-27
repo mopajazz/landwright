@@ -272,3 +272,13 @@ dialog.library::backdrop{background:var(--bg)}
 .biome-swatch.jungle{background:linear-gradient(135deg,#315b43 48%,#72864b 49% 72%,#675641 73%)}
 .biome-swatch.volcanic{background:linear-gradient(135deg,#4e4140 45%,#c56a3f 46% 58%,#574f4c 59%)}
 .biome-swatch.alpine{background:linear-gradient(135deg,#e1e5da 43%,#81838e 44% 72%,#6b7953 73%)}
+
+
+#palette-section #ink-palette[hidden],#palette-section #palette[hidden],#palette-section #forest-paint[hidden]{display:none}
+#ink-palette{display:flex;gap:5px}
+#ink-palette button{width:32px;aspect-ratio:1;padding:3px;border-radius:6px}
+#ink-palette .swatch{display:block;width:100%;height:100%;border-radius:4px;background:var(--c)}
+.parchment-workspace .workspace{background:#827460}
+.biome-row[hidden]{display:none}
+
+#ink-palette-label[hidden]{display:none}

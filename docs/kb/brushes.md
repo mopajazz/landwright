@@ -42,3 +42,10 @@ Flatten approaches Target height. For Flatten, D lowers / E raises the target by
 Undo, lower Strength (press D), and build with several short strokes instead of one. To cap a whole world, lower *Highest peak* in World Settings; Raise will not go past it. Terrain made before v2.10 may already exceed the range; Raise leaves it as it is, and Smooth or Lower can bring it down.
 
 Material texture is independent of footprint. Grain is available again: it gives deterministic scattered coverage with soft edges, using any selected material. It also works with sculpt tools and Forest density without switching tools. See [Earthen materials](materials.md) for blending, terrain response and old-project compatibility.
+
+
+## Parchment
+
+Choose **Parchment** in the View bar. Raise, Lower, and Land update the elevation ink as you sculpt. Use **Contours** to control elevation lines and shore echoes. Switch to **3D Terrain** to see the same marks follow the paper relief.
+
+**Paint** offers Hatch, Stipple, Woodland, and Fine Line alongside the full material and biome palettes. The ink brushes share the project's existing Grass, Sand, Forest density, and Loam channels, so switching between Terrain and Parchment shows the same edits in each style. To download parchment artwork, select Parchment before opening **Worlds** and choosing a Map PNG.

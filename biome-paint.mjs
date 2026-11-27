@@ -1,4 +1,4 @@
-import {noise} from './brushes.mjs?v=2.14.0-textures.1';
+import {noise} from './brushes.mjs?v=2.15.0';
 
 export const BIOME_BRUSHES = [
   {key:'jungle', name:'Jungle', description:'Dense canopy, moss and damp soil.'},
